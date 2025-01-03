@@ -1,16 +1,12 @@
-local fs = require("@std/fs")
-type Path = {
-    hello: (self: Path) -> (),
-    parent_path: (self: Path) -> Path,
-    absolute: (self: Path) -> Path,
-}
-local Path = cimport("halua-std.dll", "Path") :: (path: string) -> Path
-local my_path = Path("std")
-print(my_path, typeof(my_path))
-my_path:hello()
-local parent_path = my_path:absolute():parent_path();
-print(`parent {parent_path}`)
-for i, v in fs do
-    print(`[fs]: {i} = {v}`)
+local fs = require("@std/filesystem")
+local console = require("@std/console")
+local Color = console.Color
+console.set_foreground_color(Color.Red)
+for i, v in Color do
+    print(`{i} = {v}`)
 end
-
+console.ansi("[0m")
+local p: fs.Path = fs.Path("std")
+local paren = p:absolute():parent_path();
+print(paren)
+print(p:exists())

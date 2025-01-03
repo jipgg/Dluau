@@ -8,6 +8,7 @@ add_subdirectory(luau-dll)
 
 file (GLOB_RECURSE STD_SOURCE ${CMAKE_SOURCE_DIR}/std/*.cpp)
 add_library(halua-std SHARED ${STD_SOURCE})
+target_include_directories(halua-std PRIVATE ${CMAKE_SOURCE_DIR}/std)
 target_compile_definitions(halua-std PRIVATE HALUA_API_EXPORT)
 target_link_libraries(halua-std PRIVATE Luau.VM)
 
@@ -21,5 +22,4 @@ target_link_libraries(halua PRIVATE
     Luau.VM
     Luau.Compiler
     Luau.Config
-    halua-std
 )

@@ -45,7 +45,7 @@ int halua_main(std::string_view args) {
     luaL_register(L, nullptr, lib);
     lua_pop(L, 1);
     if (auto error = spawn_script(L, "test.luau")) {
-        std::cerr << *error;
+        printerr(error->message());
         return 1;
     }
     lua_close(L);

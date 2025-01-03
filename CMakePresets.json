@@ -1,0 +1,20 @@
+{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "default",
+            "hidden": false,
+            "generator": "Visual Studio 17",
+            "binaryDir": "${sourceDir}/cmake-out",
+            "cacheVariables": {
+                "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/bin"
+            }
+        },
+        {
+            "name": "compilation-database",
+            "hidden": false,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/compilation-database"
+        }
+    ]
+}

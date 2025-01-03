@@ -1,1 +1,1 @@
-declare function cimport(dll: string, symbol: string): unknown
+declare cimport: <Arg..., Ret...>(dll: string, symbol: string) -> ((Arg...) -> (Ret...))

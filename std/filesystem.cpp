@@ -4,24 +4,24 @@
 #include <iostream>
 namespace fs = std::filesystem;
 
-HALUA_FILESYSTEM_API int absolute(lua_State* L) {
+static int absolute(lua_State* L) {
     auto path = fs::absolute(luaL_checkstring(L, 1));
     lua_pushstring(L, path.string().c_str());
     return 1;
 }
-HALUA_FILESYSTEM_API int current_path(lua_State* L) {
+static int current_path(lua_State* L) {
     lua_pushstring(L, fs::current_path().string().c_str());
     return 1;
 }
-HALUA_FILESYSTEM_API int temp_directory_path(lua_State* L) {
+static int temp_directory_path(lua_State* L) {
     lua_pushstring(L, fs::temp_directory_path().string().c_str());
     return 1;
 }
-HALUA_FILESYSTEM_API int relative(lua_State* L) {
+static int relative(lua_State* L) {
     lua_pushstring(L, fs::relative(luaL_checkstring(L, 1), luaL_optstring(L, 2, fs::current_path().string().c_str())).string().c_str());
     return 1;
 }
-HALUA_FILESYSTEM_API int children(lua_State* L) {
+static int directory_iterator(lua_State* L) {
     int i{1};
     lua_newtable(L);
     for (const auto& entry : fs::directory_iterator(luaL_checkstring(L, 1))) {
@@ -32,7 +32,7 @@ HALUA_FILESYSTEM_API int children(lua_State* L) {
     }
     return 1;
 }
-HALUA_FILESYSTEM_API int descendants(lua_State* L) {
+static int recursive_directory_iterator(lua_State* L) {
     int i{1};
     lua_newtable(L);
     for (const auto& entry : fs::recursive_directory_iterator(luaL_checkstring(L, 1))) {
@@ -43,31 +43,46 @@ HALUA_FILESYSTEM_API int descendants(lua_State* L) {
     }
     return 1;
 }
-HALUA_FILESYSTEM_API int is_directory(lua_State* L) {
+static int is_directory(lua_State* L) {
     lua_pushboolean(L, fs::is_directory(luaL_checkstring(L, 1)));
     return 1;
 }
-HALUA_FILESYSTEM_API int is_fifo(lua_State* L) {
+static int is_fifo(lua_State* L) {
     lua_pushboolean(L, fs::is_fifo(luaL_checkstring(L, 1)));
     return 1;
 }
-HALUA_FILESYSTEM_API int is_regular_file(lua_State* L) {
+static int is_regular_file(lua_State* L) {
     lua_pushboolean(L, fs::is_regular_file(luaL_checkstring(L, 1)));
     return 1;
 }
-HALUA_FILESYSTEM_API int is_character_file(lua_State* L) {
+static int is_character_file(lua_State* L) {
     lua_pushboolean(L, fs::is_character_file(luaL_checkstring(L, 1)));
     return 1;
 }
-HALUA_FILESYSTEM_API int is_block_file(lua_State* L) {
+static int is_block_file(lua_State* L) {
     lua_pushboolean(L, fs::is_block_file(luaL_checkstring(L, 1)));
     return 1;
 }
-HALUA_FILESYSTEM_API int is_symlink(lua_State* L) {
+static int is_symlink(lua_State* L) {
     lua_pushboolean(L, fs::is_symlink(luaL_checkstring(L, 1)));
     return 1;
 }
-HALUA_FILESYSTEM_API int exists(lua_State* L) {
+static int exists(lua_State* L) {
     lua_pushboolean(L, fs::exists(luaL_checkstring(L, 1)));
+    return 1;
+}
+static const luaL_Reg library[] = {
+    {"absolute", absolute},
+    {"current_path", current_path},
+    {"temp_directory_path", temp_directory_path},
+    {"relative", relative},
+    {"directory_iterator", directory_iterator},
+    {"recursive_directory_iterator", recursive_directory_iterator},
+    {"is_directory", is_directory},
+    {nullptr, nullptr}
+};
+HALUA_API int filesystem(lua_State* L) {
+    lua_newtable(L);
+    luaL_register(L, nullptr, library);
     return 1;
 }

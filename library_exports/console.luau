@@ -18,12 +18,14 @@ export type Color = {
     LightCyan: number,
     White: number,
 }
-export type Module = {
+export type console_library = {
     set_foreground_color: (color: number) -> (),
     set_background_color: (color: number) -> (),
-    --- ansi escape sequence (\033) ---
+    --- ansi escape sequence ("\033")
+    --- "\033[0m" to reset all
     ansi: (escape_sequence: string) -> (),
+    read: () -> string,
     Color: Color,
 }
 
-return cimport("halua-std.dll", "stdconsole")() :: Module
+return cimport("halua-lib.dll", "console_library")() :: console_library

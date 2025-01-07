@@ -5,6 +5,7 @@
 #include <optional>
 #include <format>
 #include "luacode.h"
+#include "lua_base.hpp"
 #include <filesystem>
 #include <lualib.h>
 namespace fs = std::filesystem;
@@ -15,7 +16,7 @@ std::variant<lua_State*, Error> load_script(lua_State* L, const fs::path& script
     auto identifier = script_path.filename().string();
     identifier = "=" + identifier;
     size_t outsize;
-    char* bc = luau_compile(source->data(), source->size(), nullptr, &outsize);
+    char* bc = luau_compile(source->data(), source->size(), compile_options(), &outsize);
     std::string bytecode{bc, outsize};
     std::free(bc);
     lua_State* script_thread = lua_newthread(L);

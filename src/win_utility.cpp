@@ -1,5 +1,6 @@
 #include <Windows.h>
 #include <cstdio>
+#include <ios>
 
 namespace win_utility {
 bool simulate_key_press(int key) {
@@ -34,6 +35,7 @@ bool redirect_console_output() {
     freopen_s(&stream, "CONOUT$", "w", stdout);
     freopen_s(&stream, "CONOUT$", "w", stderr);
     freopen_s(&stream, "CONIN$", "r", stdin);
+    std::ios::sync_with_stdio(true);
     return alloc;
 }
 void enable_virtual_terminal_processing() {

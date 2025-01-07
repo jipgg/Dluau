@@ -1,6 +1,6 @@
-#include "api.hpp"
 #include <lualib.h>
 #include <filesystem>
+#include "halua/libapi.h"
 #include "defs.hpp"
 #include <iostream>
 namespace fs = std::filesystem;
@@ -80,10 +80,10 @@ static const luaL_Reg library[] = {
     {"directory_iterator", directory_iterator},
     {"recursive_directory_iterator", recursive_directory_iterator},
     {"is_directory", is_directory},
-    {"Path", filesystem::path_ctor},
+    {"path", filesystem::path_ctor},
     {nullptr, nullptr}
 };
-HALUA_API int stdfilesystem(lua_State* L) {
+HALUA_API int filesystem_library(lua_State* L) {
     filesystem::init_path(L);
     lua_newtable(L);
     luaL_register(L, nullptr, library);

@@ -1,21 +1,20 @@
 #include "defs.hpp"
 #include <lualib.h>
+#include "halua/libapi.h"
 #include <filesystem>
 #include <unordered_map>
-#include <iostream>
 using std::filesystem::path;
 namespace fs = std::filesystem;
 using filesystem::create_path;
 using NamecallFunction = int(*)(lua_State*, path&);
 static std::unordered_map<int, NamecallFunction> namecalls{};
+static int tag = halua_newtypetag();
 
 static int div(lua_State* L) {
     if (lua_isstring(L, 1)) {
-        int tag = lua_userdatatag(L, 2);
         path& self = *static_cast<path*>(lua_touserdatatagged(L, 2, tag));
         return create_path(L, lua_tostring(L, 1) / self);
     }
-    int tag = lua_userdatatag(L, 1);
     path& self = *static_cast<path*>(lua_touserdatatagged(L, 1, tag));
     if (lua_userdatatag(L, 1) == lua_userdatatag(L, 2)) {
         return create_path(L, self / *static_cast<path*>(lua_touserdatatagged(L, 2, tag)));
@@ -28,7 +27,6 @@ static int absolute(lua_State* L, path& self) {
     return create_path(L, fs::absolute(self));
 }
 static int namecall(lua_State* L) {
-    const int tag = lua_userdatatag(L, 1);
     path& self = *static_cast<path*>(lua_touserdatatagged(L, 1, tag));
     int atom;
     lua_namecallatom(L, &atom);
@@ -37,7 +35,6 @@ static int namecall(lua_State* L) {
     return found_it->second(L, self);
 }
 static int tostring(lua_State* L) {
-    const int tag = lua_userdatatag(L, 1);
     path& self = *static_cast<path*>(lua_touserdatatagged(L, 1, tag));
     lua_pushstring(L, self.string().c_str());
     return 1;
@@ -59,8 +56,8 @@ static int register_namecall(lua_State* L, std::string_view key, NamecallFunctio
 
 namespace filesystem {
 int create_path(lua_State* L, const std::filesystem::path& p) {
-    path* self = static_cast<path*>(lua_newuserdatatagged(L, sizeof(path), filesystem::path_tag));
-    luaL_getmetatable(L, typeid(path).name());
+    path* self = static_cast<path*>(lua_newuserdatatagged(L, sizeof(path), tag));
+    luaL_getmetatable(L, path_type);
     lua_setmetatable(L, -2);
     new (self) path{p};
     return 1;
@@ -69,14 +66,11 @@ int path_ctor(lua_State* L) {
     return create_path(L, luaL_checkstring(L, 1));
 }
 void init_path(lua_State* L) {
-    if (luaL_newmetatable(L, typeid(path).name())) {
-        constexpr const char* type_name = "std.fs.Path";
+    tag = 1;
+    if (luaL_newmetatable(L, path_type)) {
         luaL_register(L, nullptr, meta);
-        lua_pushstring(L, type_name);
+        lua_pushstring(L, path_type);
         lua_setfield(L, -2, "__type");
-        lua_setuserdatadtor(L, filesystem::path_tag, [](lua_State* L, void* data) -> void {
-            static_cast<path*>(data)->~path();
-        });
         register_namecall(L, "parent_path", [](lua_State* L, path& self) -> int {
             return create_path(L, self.parent_path());
         });
@@ -116,6 +110,10 @@ void init_path(lua_State* L) {
         register_namecall(L, "exists", [](lua_State* L, path& self) -> int {
             lua_pushboolean(L, fs::exists(self));
             return 1;
+        });
+        //lua_setuserdatametatable(L, path_tag, -1);
+        lua_setuserdatadtor(L, tag, [](lua_State* L, void* data) -> void {
+            static_cast<path*>(data)->~path();
         });
     }
     lua_pop(L, 1);

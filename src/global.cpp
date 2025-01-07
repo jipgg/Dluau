@@ -13,13 +13,13 @@ struct Global_options {
     int debugLevel = 1;
 } global_opts;
 static bool codegen = true;
-lua_CompileOptions compile_options() {
-    lua_CompileOptions result = {};
+lua_CompileOptions* compile_options() {
+    static lua_CompileOptions result = {};
     result.optimizationLevel = global_opts.optimizationLevel;
     result.debugLevel = global_opts.debugLevel;
     result.typeInfoLevel = 1;
     //result.userdataTypes = userdata_types;
-    return result;
+    return &result;
 }
 static int lua_loadstring(lua_State* L) {
     size_t l = 0;
@@ -27,7 +27,7 @@ static int lua_loadstring(lua_State* L) {
     const char* chunkname = luaL_optstring(L, 2, s);
     lua_setsafeenv(L, LUA_ENVIRONINDEX, false);
     size_t outsize;
-    char* bc = luau_compile(s, l, nullptr, &outsize);
+    char* bc = luau_compile(s, l, compile_options(), &outsize);
     std::string bytecode(s, outsize);
     std::free(bc);
     if (luau_load(L, chunkname, bytecode.data(), bytecode.size(), 0) == 0)
@@ -163,7 +163,7 @@ static int lua_require(lua_State* L)
 
     // now we can compile & run module on the new thread
     size_t outsize;
-    char* bytecode_data = luau_compile(resolvedRequire.sourceCode.data(), resolvedRequire.sourceCode.length(), nullptr, &outsize);
+    char* bytecode_data = luau_compile(resolvedRequire.sourceCode.data(), resolvedRequire.sourceCode.length(), compile_options(), &outsize);
     std::string bytecode{bytecode_data, outsize};
     std::free(bytecode_data);
     if (luau_load(ML, resolvedRequire.identifier.c_str(), bytecode.data(), bytecode.size(), 0) == 0)
@@ -213,7 +213,7 @@ void push_luau_module(lua_State* L, const fs::path& path) {
     assert(source);
     std::string name = path.stem().string();
     size_t outsize;
-    char* bc = luau_compile(source->data(), source->length(), nullptr, &outsize);
+    char* bc = luau_compile(source->data(), source->length(), compile_options(), &outsize);
     std::string bytecode(bc, outsize);
     std::free(bc);
     if (luau_load(L, name.c_str(), bytecode.data(), bytecode.size(), 0)) {

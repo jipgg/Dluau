@@ -1,12 +1,40 @@
-local fs = require("@std/filesystem")
-local console = require("@std/console")
-local Color = console.Color
-console.set_foreground_color(Color.Red)
-for i, v in Color do
-    print(`{i} = {v}`)
+local SDL = require("@halua/SDL2")
+local EventType = SDL.EventType
+local RendererFlags = SDL.RendererFlags
+local WindowFlags = SDL.WindowFlags
+local WINDOWPOS_CENTERED = SDL.WINDOWPOS_CENTERED
+local Event = SDL.Event
+local Rect = SDL.Rect
+
+SDL.Init()
+local e = Event.new()
+local quit = false
+local window  = SDL.CreateWindow(
+    "my window", WINDOWPOS_CENTERED,
+    WINDOWPOS_CENTERED, 800, 600,
+    bit32.bor(WindowFlags.SHOWN,
+        WindowFlags.RESIZABLE)
+)
+local renderer = SDL.CreateRenderer(window, -1,
+    bit32.bor(RendererFlags.ACCELERATED,
+        RendererFlags.PRESENTVSYNC)
+)
+
+local myRect = Rect.new(10, 10, 100, 100)
+while not quit do
+    while SDL.PollEvent(e) do
+        if e.type == EventType.QUIT then
+            quit = true
+        end
+    end
+
+    SDL.SetRenderDrawColor(renderer, 0, 0, 0, 0xff)
+    SDL.RenderClear(renderer)
+    SDL.SetRenderDrawColor(renderer, 0, 0xff, 0xff, 0xff)
+    SDL.RenderFillRect(renderer, myRect)
+    SDL.RenderPresent(renderer)
 end
-console.ansi("[0m")
-local p: fs.Path = fs.Path("std")
-local paren = p:absolute():parent_path();
-print(paren)
-print(p:exists())
+
+SDL.DestroyRenderer(renderer)
+SDL.DestroyWindow(window)
+SDL.Quit()

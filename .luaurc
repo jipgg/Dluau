@@ -1,6 +1,6 @@
 {
     "languageMode": "strict",
     "aliases": {
-        "std": "./stdexports/"
+        "halua": "./library_exports/"
     }
 }

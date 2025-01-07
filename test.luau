@@ -1,40 +1,15 @@
 local SDL = require("@halua/SDL2")
-local EventType = SDL.EventType
-local RendererFlags = SDL.RendererFlags
-local WindowFlags = SDL.WindowFlags
-local WINDOWPOS_CENTERED = SDL.WINDOWPOS_CENTERED
-local Event = SDL.Event
-local Rect = SDL.Rect
-
 SDL.Init()
-local e = Event.new()
+local window = SDL.Window("hellobro", SDL.WINDOWPOS_CENTERED, SDL.WINDOWPOS_CENTERED, 800, 600, bit32.bor(SDL.WindowFlags.SHOWN))
+local event = SDL.Event()
 local quit = false
-local window  = SDL.CreateWindow(
-    "my window", WINDOWPOS_CENTERED,
-    WINDOWPOS_CENTERED, 800, 600,
-    bit32.bor(WindowFlags.SHOWN,
-        WindowFlags.RESIZABLE)
-)
-local renderer = SDL.CreateRenderer(window, -1,
-    bit32.bor(RendererFlags.ACCELERATED,
-        RendererFlags.PRESENTVSYNC)
-)
 
-local myRect = Rect.new(10, 10, 100, 100)
+window:setOpacity(0.5)
 while not quit do
-    while SDL.PollEvent(e) do
-        if e.type == EventType.QUIT then
+    while SDL.PollEvent(event) do
+        if event.type == SDL.EventType.QUIT then
             quit = true
         end
     end
-
-    SDL.SetRenderDrawColor(renderer, 0, 0, 0, 0xff)
-    SDL.RenderClear(renderer)
-    SDL.SetRenderDrawColor(renderer, 0, 0xff, 0xff, 0xff)
-    SDL.RenderFillRect(renderer, myRect)
-    SDL.RenderPresent(renderer)
 end
 
-SDL.DestroyRenderer(renderer)
-SDL.DestroyWindow(window)
-SDL.Quit()

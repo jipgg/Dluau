@@ -1,6 +1,20 @@
 export type Event = {
     type: number,
 }
+export type Window = {
+    opacity: number,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    title: string,
+    getPosition: (self: Window) -> (number, number),
+    setPosition: (self: Window, x: number, y: number) -> (),
+    getSize: (self: Window) -> (number, number),
+    setSize: (self: Window, w: number, h: number) -> (),
+    getOpacity: (self: Window) -> number,
+    setOpacity: (self: Window, opacity: number) -> ()
+}
 export type EventType = {
     QUIT: number,
     KEYUP: number,
@@ -56,17 +70,17 @@ export type RendererFlags = {
     PRESENTVSYNC: number,
     TARGETTEXTURE: number,
 }
-export type Rect = {
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-}
+export type Rect = {x: number, y: number, w: number, h: number}
+export type FRect = {x: number, y: number, w: number, h: number}
+export type Point = {x: number, y: number}
+export type FPoint = {x: number, y: number}
+export type Color = {r: number, g: number, b: number, a: number}
 export type SDL2 = {
     Init: () -> (),
     GetError: () -> string,
     Quit: () -> (),
     CreateWindow: (title: string, x: number, y: number, w: number, h: number, window_flags: number) -> opaque,
+    Window: (title: string, x: number, y: number, w: number, h: number, window_flags: number) -> Window,
     DestroyWindow: (window: opaque) -> (),
     CreateRenderer: (window: opaque, index: number, renderFlags: number) -> opaque,
     DestroyRenderer: (renderer: opaque) -> (),
@@ -75,8 +89,8 @@ export type SDL2 = {
     SetRenderDrawColor: (renderer: opaque, r: number, g: number, b: number, a: number) -> (),
     RenderDrawRect: (renderer: opaque, rect: Rect) -> (),
     RenderFillRect: (renderer: opaque, rect: Rect) -> (),
-    Event: {new: () -> Event},
-    Rect: {new: (x: number?, y: number?, w: number?, h: number?) -> Rect},
+    Event: () -> Event,
+    Rect: (x: number?, y: number?, w: number?, h: number?) -> Rect,
     EventType: EventType,
     WindowFlags: WindowFlags,
     RendererFlags: RendererFlags,

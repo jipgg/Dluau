@@ -58,8 +58,8 @@ static int SetRenderDrawColor(lua_State* L) {
     return 0;
 }
 static int PollEvent(lua_State* L) {
-    SDL_Event& event = *static_cast<SDL_Event*>(lua_touserdatatagged(L, 1, event_tag()));
-    lua_pushboolean(L, SDL_PollEvent(&event));
+    SDL_Event* event = toevent(L, 1);
+    lua_pushboolean(L, SDL_PollEvent(event));
     return 1;
 }
 HALUASDL2_API int sdl_library(lua_State* L) {
@@ -77,28 +77,27 @@ HALUASDL2_API int sdl_library(lua_State* L) {
         {"PollEvent", PollEvent},
         {"RenderDrawRect", [](lua_State* L) -> int {
             SDL_Renderer* renderer = static_cast<SDL_Renderer*>(halua_toopaque(L, 1));
-            SDL_Rect* rect = to_rect(L, 2);
+            SDL_Rect* rect = torect(L, 2);
             if (SDL_RenderDrawRect(renderer, rect)) luaL_errorL(L, SDL_GetError());
             return 0;
         }},
         {"RenderFillRect", [](lua_State* L) -> int {
             SDL_Renderer* renderer = static_cast<SDL_Renderer*>(halua_toopaque(L, 1));
-            SDL_Rect* rect = to_rect(L, 2);
+            SDL_Rect* rect = torect(L, 2);
             if (SDL_RenderFillRect(renderer, rect)) luaL_errorL(L, SDL_GetError());
             return 0;
         }},
         {nullptr, nullptr}
     };
-    event_init(L);
     lua_newtable(L);
     lua_pushinteger(L, SDL_WINDOWPOS_CENTERED);
     lua_setfield(L, -2, "WINDOWPOS_CENTERED");
     lua_pushinteger(L, SDL_WINDOWPOS_UNDEFINED);
     lua_setfield(L, -2, "WINDOWPOS_UNDEFINED");
-    event_ctor(L);
-    lua_setfield(L, -2, "Event");
     register_enums(L);
     register_rect(L);
+    register_event(L);
+    register_window(L);
     luaL_register(L, nullptr, functions);
     return 1;
 }

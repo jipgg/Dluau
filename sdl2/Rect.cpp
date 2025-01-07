@@ -1,8 +1,9 @@
 #include "common.hpp"
 #include <lualib.h>
 #include "halua/libapi.h"
+#include <iostream>
 static const int tag = halua_newtypetag();
-constexpr const char* type = "SDL2.SDL_Event";
+constexpr const char* tname = "SDL2.Rect";
 
 int rect_tag() {
     return tag;
@@ -51,19 +52,19 @@ static int newindex(lua_State* L) {
 }
 
 int rect_ctor_new(lua_State* L) {
-    if (luaL_newmetatable(L, type)) {
+    if (luaL_newmetatable(L, tname)) {
         const luaL_Reg meta[] = {
             {"__index", index},
             {"__newindex", newindex},
             {nullptr, nullptr}
         };
         luaL_register(L, nullptr, meta);
-        lua_pushstring(L, type);
+        lua_pushstring(L, tname);
         lua_setfield(L, -2, "__type");
     }
     lua_pop(L, 1);
     SDL_Rect* p = static_cast<SDL_Rect*>(lua_newuserdatatagged(L, sizeof(SDL_Rect), tag));
-    luaL_getmetatable(L, type);
+    luaL_getmetatable(L, tname);
     lua_setmetatable(L, -2);
     *p = SDL_Rect{
         .x = luaL_optinteger(L, 1, 0),
@@ -74,11 +75,9 @@ int rect_ctor_new(lua_State* L) {
     return 1;
 }
 void register_rect(lua_State* L) {
-    lua_newtable(L);
-    lua_pushcfunction(L, rect_ctor_new, "SDL_Rect.new");
-    lua_setfield(L, -2, "new");
+    lua_pushcfunction(L, rect_ctor_new, "SDL_Rect");
     lua_setfield(L,-2, "Rect");
 }
-SDL_Rect* to_rect(lua_State* L, int idx) {
+SDL_Rect* torect(lua_State* L, int idx) {
     return static_cast<SDL_Rect*>(lua_touserdatatagged(L, idx, tag));
 }

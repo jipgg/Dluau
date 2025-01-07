@@ -52,3 +52,18 @@ halua_Opaque halua_toopaque(lua_State *L, int idx) {
 bool halua_isopaque(lua_State *L, int idx) {
     return lua_userdatatag(L, idx) == opaque_tag;
 }
+bool halua_samemeta(lua_State *L, int idx, czstring tname) {
+    luaL_getmetatable(L, tname);
+    if (lua_isnil(L, -1)) {
+        lua_pop(L, 1);
+        return false;
+    }
+    lua_getmetatable(L, idx);
+    if (lua_isnil(L, -1)) {
+        lua_pop(L, 2);
+        return false;
+    }
+    const bool eq = lua_rawequal(L, -1, -2);
+    lua_pop(L, 2);
+    return eq;
+}

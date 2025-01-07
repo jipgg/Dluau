@@ -57,7 +57,7 @@ static int register_namecall(lua_State* L, std::string_view key, NamecallFunctio
 namespace filesystem {
 int create_path(lua_State* L, const std::filesystem::path& p) {
     path* self = static_cast<path*>(lua_newuserdatatagged(L, sizeof(path), tag));
-    luaL_getmetatable(L, path_type);
+    luaL_getmetatable(L, path_tname);
     lua_setmetatable(L, -2);
     new (self) path{p};
     return 1;
@@ -67,9 +67,9 @@ int path_ctor(lua_State* L) {
 }
 void init_path(lua_State* L) {
     tag = 1;
-    if (luaL_newmetatable(L, path_type)) {
+    if (luaL_newmetatable(L, path_tname)) {
         luaL_register(L, nullptr, meta);
-        lua_pushstring(L, path_type);
+        lua_pushstring(L, path_tname);
         lua_setfield(L, -2, "__type");
         register_namecall(L, "parent_path", [](lua_State* L, path& self) -> int {
             return create_path(L, self.parent_path());

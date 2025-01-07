@@ -2,6 +2,7 @@
 #include <lualib.h>
 #include "halua/libapi.h"
 static const int tag = halua_newtypetag();
+static const char* tname = "SDL_Event";
 
 static int index(lua_State* L) {
     SDL_Event& self = *static_cast<SDL_Event*>(lua_touserdatatagged(L, 1, tag));
@@ -13,18 +14,14 @@ static int index(lua_State* L) {
     luaL_argerrorL(L, 2, "invalid index");
 }
 
-int event_tag() {
-    return tag;
-}
-
-void event_init(lua_State* L) {
+static void init(lua_State* L) {
     const luaL_Reg meta[] = {
         {"__index", index},
         {nullptr, nullptr}
     };
-    if (luaL_newmetatable(L, event_type)) {
+    if (luaL_newmetatable(L, tname)) {
         luaL_register(L, nullptr, meta);
-        lua_pushstring(L, event_type);
+        lua_pushstring(L, tname);
         lua_setfield(L, -2, "__type");
         lua_setuserdatadtor(L, tag, [](lua_State* L, void* ud) {
             static_cast<SDL_Event*>(ud)->~SDL_Event();
@@ -34,14 +31,16 @@ void event_init(lua_State* L) {
 }
 int event_ctor_new(lua_State* L) {
     SDL_Event* ud = static_cast<SDL_Event*>(lua_newuserdatatagged(L, sizeof(SDL_Event), tag));
-    luaL_getmetatable(L, event_type);
+    luaL_getmetatable(L, tname);
     lua_setmetatable(L, -2);
     new (ud) SDL_Event{};
     return 1;
 }
-int event_ctor(lua_State *L) {
-    lua_newtable(L);
-    lua_pushcfunction(L, event_ctor_new, "SDL2.Event.new");
-    lua_setfield(L, -2, "new");
-    return 1;
+void register_event(lua_State *L) {
+    init(L);
+    lua_pushcfunction(L, event_ctor_new, "SDL2.Event");
+    lua_setfield(L, -2, "Event");
+}
+SDL_Event* toevent(lua_State* L, int idx) {
+    return static_cast<SDL_Event*>(lua_touserdatatagged(L, idx, tag));
 }

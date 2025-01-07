@@ -8,5 +8,4 @@ int path_ctor(lua_State* L);
 void init_path(lua_State* L);
 int create_path(lua_State* L, const std::filesystem::path& p);
 }
-constexpr const char* path_type{"fs.Path"};
-constexpr const char* types_key = "_TYPES";
+constexpr const char* path_tname{"filesystem.Path"};

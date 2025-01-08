@@ -1,5 +1,5 @@
 #include "common.hpp"
-#include "halua/libapi.h"
+#include "minluau.h"
 #include <iostream>
 static int Init(lua_State* L) {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -62,26 +62,26 @@ static int PollEvent(lua_State* L) {
     lua_pushboolean(L, SDL_PollEvent(event));
     return 1;
 }
-HALUASDL2_API int sdl_library(lua_State* L) {
+MINLUAU_MODULES_API int sdl_library(lua_State* L) {
     const luaL_Reg functions[] = {
-        {"Init", Init},
-        {"GetError", GetError},
-        {"Quit", Quit},
-        {"CreateWindow", CreateWindow},
-        {"DestroyWindow", DestroyWindow},
-        {"CreateRenderer", CreateRenderer},
-        {"DestroyRenderer", DestroyRenderer},
-        {"RenderClear", RenderClear},
-        {"RenderPresent", RenderPresent},
-        {"SetRenderDrawColor", SetRenderDrawColor},
-        {"PollEvent", PollEvent},
-        {"RenderDrawRect", [](lua_State* L) -> int {
+        {"init", Init},
+        {"get_error", GetError},
+        {"quit", Quit},
+        {"create_window", CreateWindow},
+        {"destroy_window", DestroyWindow},
+        {"create_renderer", CreateRenderer},
+        {"destroy_renderer", DestroyRenderer},
+        {"render_clear", RenderClear},
+        {"render_present", RenderPresent},
+        {"set_render_draw_color", SetRenderDrawColor},
+        {"poll_event", PollEvent},
+        {"render_draw_rect", [](lua_State* L) -> int {
             SDL_Renderer* renderer = static_cast<SDL_Renderer*>(halua_toopaque(L, 1));
             SDL_Rect* rect = torect(L, 2);
             if (SDL_RenderDrawRect(renderer, rect)) luaL_errorL(L, SDL_GetError());
             return 0;
         }},
-        {"RenderFillRect", [](lua_State* L) -> int {
+        {"render_fill_rect", [](lua_State* L) -> int {
             SDL_Renderer* renderer = static_cast<SDL_Renderer*>(halua_toopaque(L, 1));
             SDL_Rect* rect = torect(L, 2);
             if (SDL_RenderFillRect(renderer, rect)) luaL_errorL(L, SDL_GetError());

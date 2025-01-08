@@ -1,6 +1,6 @@
 #include "defs.hpp"
 #include <lualib.h>
-#include "halua/libapi.h"
+#include "minluau.h"
 #include <filesystem>
 #include <unordered_map>
 using std::filesystem::path;

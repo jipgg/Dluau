@@ -1,8 +1,7 @@
 #include <lualib.h>
 #include <filesystem>
-#include "halua/libapi.h"
+#include "minluau.h"
 #include "defs.hpp"
-#include <iostream>
 namespace fs = std::filesystem;
 
 static int absolute(lua_State* L) {
@@ -83,7 +82,7 @@ static const luaL_Reg library[] = {
     {"path", filesystem::path_ctor},
     {nullptr, nullptr}
 };
-HALUA_API int filesystem_library(lua_State* L) {
+MINLUAU_API int filesystem_library(lua_State* L) {
     filesystem::init_path(L);
     lua_newtable(L);
     luaL_register(L, nullptr, library);

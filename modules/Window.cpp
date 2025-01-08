@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include <lualib.h>
-#include "halua/libapi.h"
+#include "minluau.h"
 #include <iostream>
 #include <unordered_map>
 using Namecall = int(*)(lua_State*, SDL_Window*);
@@ -90,6 +90,10 @@ void register_window(lua_State* L) {
         SDL_DestroyWindow(*static_cast<Window_ptr*>(ud));
         std::cout << "Destroying window\n";
     });
+    lua_newtable(L);
     lua_pushcfunction(L, window_new, "window_ctor");
-    lua_setfield(L, -2, "Window");
+    lua_setfield(L, -2, "create");
+    push_window_flags(L);
+    lua_setfield(L, -2, "flags");
+    lua_setfield(L, -2, "window");
 }

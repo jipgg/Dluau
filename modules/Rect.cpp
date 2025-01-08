@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include <lualib.h>
-#include "halua/libapi.h"
+#include "minluau.h"
 #include <iostream>
 static const int tag = halua_newtypetag();
 constexpr const char* tname = "SDL2.Rect";

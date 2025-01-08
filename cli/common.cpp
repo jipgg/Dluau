@@ -1,7 +1,6 @@
 #include "common.hpp"
 #include <fstream>
 #include "Error.hpp"
-#include "common.hpp"
 #include <optional>
 #include <format>
 #include "luacode.h"

@@ -18,6 +18,27 @@ export type Color = {
     LightCyan: number,
     White: number,
 }
+export type console_color = {
+    default: () -> opaque,
+    black: () -> opaque,
+    req: () -> opaque,
+    green: () -> opaque,
+    yellow: () -> opaque,
+    blue: () -> opaque,
+    magenta: () -> opaque,
+    cyan: () -> opaque,
+    light_gray: () -> opaque,
+    gray: () -> opaque,
+    light_red: () -> opaque,
+    light_green: () -> opaque,
+    light_blue: () -> opaque,
+    light_magenta: () -> opaque,
+    white: () -> opaque,
+}
+export type console = {
+    print: <T...>(T...) -> (),
+    background_color: console_color,
+}
 export type console_library = {
     set_foreground_color: (color: number) -> (),
     set_background_color: (color: number) -> (),
@@ -25,7 +46,9 @@ export type console_library = {
     --- "\033[0m" to reset all
     ansi: (escape_sequence: string) -> (),
     read: () -> string,
+    color: console_color,
     Color: Color,
+    create: () -> console,
 }
 
 return cimport("halua-lib.dll", "console_library")() :: console_library

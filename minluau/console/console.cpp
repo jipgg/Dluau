@@ -1,4 +1,4 @@
-#include "halua/libapi.h"
+#include <minluau.h>
 #include <lualib.h>
 #include <iostream>
 enum class Color {
@@ -103,7 +103,7 @@ static const luaL_Reg library[] = {
     {"ansi", ansi},
     {nullptr, nullptr}
 };
-HALUA_API int console_library(lua_State* L) {
+MINLUAU_API int console_library(lua_State* L) {
     lua_newtable(L);
     luaL_register(L, nullptr, library);
     color_table(L);

@@ -1,19 +1,25 @@
 export type Event = {
     type: number,
 }
-export type Window = {
+export type window = {
     opacity: number,
     x: number,
     y: number,
     w: number,
     h: number,
     title: string,
-    getPosition: (self: Window) -> (number, number),
-    setPosition: (self: Window, x: number, y: number) -> (),
-    getSize: (self: Window) -> (number, number),
-    setSize: (self: Window, w: number, h: number) -> (),
-    getOpacity: (self: Window) -> number,
-    setOpacity: (self: Window, opacity: number) -> ()
+    getPosition: (self: window) -> (number, number),
+    setPosition: (self: window, x: number, y: number) -> (),
+    getSize: (self: window) -> (number, number),
+    setSize: (self: window, w: number, h: number) -> (),
+    getOpacity: (self: window) -> number,
+    setOpacity: (self: window, opacity: number) -> ()
+}
+type window_table = {
+    create: (title: string, x: number, y: number, w: number, h: number, window_flags: number) -> window,
+    flags: window_flags,
+    UNDEFINED: number,
+    CENTERED: number,
 }
 export type EventType = {
     QUIT: number,
@@ -38,7 +44,7 @@ export type EventType = {
     MOUSEBUTTONUP: number,
     MOUSEBUTTONDOWN: number,
 }
-export type WindowFlags = {
+export type window_flags = {
     SHOWN: number,
     RESIZABLE: number,
     METAL: number,
@@ -80,7 +86,7 @@ export type SDL2 = {
     GetError: () -> string,
     Quit: () -> (),
     CreateWindow: (title: string, x: number, y: number, w: number, h: number, window_flags: number) -> opaque,
-    Window: (title: string, x: number, y: number, w: number, h: number, window_flags: number) -> Window,
+    window: window_table,
     DestroyWindow: (window: opaque) -> (),
     CreateRenderer: (window: opaque, index: number, renderFlags: number) -> opaque,
     DestroyRenderer: (renderer: opaque) -> (),
@@ -92,7 +98,6 @@ export type SDL2 = {
     Event: () -> Event,
     Rect: (x: number?, y: number?, w: number?, h: number?) -> Rect,
     EventType: EventType,
-    WindowFlags: WindowFlags,
     RendererFlags: RendererFlags,
     PollEvent: (event: Event) -> boolean,
     WINDOWPOS_CENTERED: number,

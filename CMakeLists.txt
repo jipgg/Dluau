@@ -12,8 +12,7 @@ set(LUA_IMPORT "LUA_API=extern \"C\" __declspec(dllimport)")
 set(LUACODE_IMPORT "LUACODE_API=extern \"C\" __declspec(dllimport)")
 set(LUACODEGEN_IMPORT "LUACODEGEN_API=extern \"C\" __declspec(dllimport)")
 
-find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
-find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
+find_package(SDL2 CONFIG REQUIRED)
 find_package(SDL2_ttf REQUIRED)
 find_package(SDL2_image REQUIRED)
 find_package(SDL2_mixer REQUIRED)
@@ -41,13 +40,13 @@ target_link_libraries(minluau.cli PRIVATE minluau Luau.Config)
 set_target_properties(minluau.cli PROPERTIES OUTPUT_NAME minluau)
 
 target_compile_definitions(minluau.modules PRIVATE MINLUAU_MODULES_EXPORT_API)
+target_link_options(minluau.modules PRIVATE /NODEFAULTLIB:LIBCMTD)
 target_include_directories(minluau.modules PRIVATE modules)
 target_link_libraries(minluau.modules PRIVATE
-    SDL2::SDL2main
-    SDL2::SDL2
-    SDL2_ttf::SDL2_ttf
-    SDL2_image::SDL2_image
-    SDL2_mixer::SDL2_mixer
+    SDL2::SDL2-static
+    SDL2_ttf::SDL2_ttf-static
+    SDL2_image::SDL2_image-static
+    SDL2_mixer::SDL2_mixer-static
     minluau
 )
 

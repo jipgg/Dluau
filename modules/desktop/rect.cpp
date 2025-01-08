@@ -1,4 +1,4 @@
-#include "common.hpp"
+#include "desktop.hpp"
 #include <lualib.h>
 #include "minluau.h"
 static const int tag = minluau_newtypetag();
@@ -74,8 +74,10 @@ int rect_ctor_new(lua_State* L) {
     return 1;
 }
 void register_rect(lua_State* L) {
+    lua_newtable(L);
     lua_pushcfunction(L, rect_ctor_new, "SDL_Rect");
-    lua_setfield(L,-2, "Rect");
+    lua_setfield(L, -2, "create");
+    lua_setfield(L,-2, "rect");
 }
 SDL_Rect* torect(lua_State* L, int idx) {
     return static_cast<SDL_Rect*>(lua_touserdatatagged(L, idx, tag));

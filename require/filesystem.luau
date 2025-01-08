@@ -27,7 +27,7 @@ type _path = {
     --- returns true if the path actually exists
     exists: (self: path) -> boolean,
 }
-export type standard_module = {
+export type filesystem = {
     --- absolute path
     absolute: (path: string) -> string,
     -- current working directory path
@@ -40,4 +40,4 @@ export type standard_module = {
     -- Path class constructor
     path: (path: string) -> path,
 }
-return dllimport("minluau.modules.dll", "import_filesystem")() :: standard_module
+return dllimport("minluau.modules.dll", "import_filesystem")() :: filesystem

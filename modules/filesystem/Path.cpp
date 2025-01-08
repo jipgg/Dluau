@@ -1,11 +1,10 @@
-#include "defs.hpp"
+#include "filesystem.hpp"
 #include <lualib.h>
 #include "minluau.h"
 #include <filesystem>
 #include <unordered_map>
 using std::filesystem::path;
 namespace fs = std::filesystem;
-using filesystem::create_path;
 using NamecallFunction = int(*)(lua_State*, path&);
 static std::unordered_map<int, NamecallFunction> namecalls{};
 static int tag = minluau_newtypetag();
@@ -54,7 +53,6 @@ static int register_namecall(lua_State* L, std::string_view key, NamecallFunctio
     return atom;
 }
 
-namespace filesystem {
 int create_path(lua_State* L, const std::filesystem::path& p) {
     path* self = static_cast<path*>(lua_newuserdatatagged(L, sizeof(path), tag));
     luaL_getmetatable(L, path_tname);
@@ -117,5 +115,4 @@ void init_path(lua_State* L) {
         });
     }
     lua_pop(L, 1);
-}
 }

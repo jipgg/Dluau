@@ -1,4 +1,4 @@
-#include "common.hpp"
+#include "desktop.hpp"
 #include <lualib.h>
 #include "minluau.h"
 static const int tag = minluau_newtypetag();
@@ -38,8 +38,10 @@ int event_ctor_new(lua_State* L) {
 }
 void register_event(lua_State *L) {
     init(L);
+    lua_newtable(L);
     lua_pushcfunction(L, event_ctor_new, "SDL2.Event");
-    lua_setfield(L, -2, "Event");
+    lua_setfield(L, -2, "create");
+    lua_setfield(L, -2, "event");
 }
 SDL_Event* toevent(lua_State* L, int idx) {
     return static_cast<SDL_Event*>(lua_touserdatatagged(L, idx, tag));

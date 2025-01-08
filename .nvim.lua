@@ -11,7 +11,7 @@ require"lspconfig".luau_lsp.setup {
             require = {
                 mode = "relativeToFile",
                 directoryAliases = {
-                    ["@minluau"] = "./lib/",
+                    ["@minluau"] = "./require/",
                 },
             },
         }

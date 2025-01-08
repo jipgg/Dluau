@@ -29,7 +29,7 @@ static int lua_cimport(lua_State* L) {
     return 1;
 }
 const luaL_Reg lib[] = {
-    {"cimport", lua_cimport},
+    {"dllimport", lua_cimport},
     {nullptr, nullptr}
 };
 static int16_t useratom(const char* key, size_t size) {

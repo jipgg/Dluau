@@ -1,3 +1,4 @@
+#include "minluau_modules_api.h"
 #include <lualib.h>
 #include <filesystem>
 #include "minluau.h"
@@ -82,7 +83,7 @@ static const luaL_Reg library[] = {
     {"path", filesystem::path_ctor},
     {nullptr, nullptr}
 };
-MINLUAU_API int filesystem_library(lua_State* L) {
+MINLUAU_MODULES_API inline int import_filesystem(lua_State* L) {
     filesystem::init_path(L);
     lua_newtable(L);
     luaL_register(L, nullptr, library);

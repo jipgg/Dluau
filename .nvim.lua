@@ -1,7 +1,7 @@
 require"lspconfig".luau_lsp.setup {
     cmd = {"luau-lsp",
         "lsp",
-        "--definitions=haluau.definitions.luau",
+        "--definitions=minluau.definitions.luau",
     },
     settings = {
         ["luau-lsp"] = {
@@ -11,7 +11,7 @@ require"lspconfig".luau_lsp.setup {
             require = {
                 mode = "relativeToFile",
                 directoryAliases = {
-                    ["@halua"] = "./library_exports/",
+                    ["@minluau"] = "./lib/",
                 },
             },
         }

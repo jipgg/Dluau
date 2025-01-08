@@ -8,7 +8,7 @@ namespace fs = std::filesystem;
 using filesystem::create_path;
 using NamecallFunction = int(*)(lua_State*, path&);
 static std::unordered_map<int, NamecallFunction> namecalls{};
-static int tag = halua_newtypetag();
+static int tag = minluau_newtypetag();
 
 static int div(lua_State* L) {
     if (lua_isstring(L, 1)) {

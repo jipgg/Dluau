@@ -1,6 +1,6 @@
 {
     "languageMode": "strict",
     "aliases": {
-        "halua": "./library_exports/"
+        "minluau": "./lib/"
     }
 }

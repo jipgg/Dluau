@@ -1,4 +1,3 @@
 compilation-database/
 cmake-out/
 bin/
-*.ps1

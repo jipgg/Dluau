@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include <lualib.h>
 #include "minluau.h"
-static const int tag = halua_newtypetag();
+static const int tag = minluau_newtypetag();
 static const char* tname = "SDL_Event";
 
 static int index(lua_State* L) {

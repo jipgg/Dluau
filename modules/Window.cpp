@@ -5,7 +5,7 @@
 #include <unordered_map>
 using Namecall = int(*)(lua_State*, SDL_Window*);
 static std::unordered_map<int, Namecall> namecalls{};
-static const int tag = halua_newtypetag();
+static const int tag = minluau_newtypetag();
 constexpr const char* tname = "SDL_Window";
 using Window_ptr = SDL_Window*;
 

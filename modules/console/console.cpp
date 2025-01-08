@@ -1,3 +1,4 @@
+#include "minluau_modules_api.h"
 #include <minluau.h>
 #include <lualib.h>
 #include <iostream>
@@ -103,7 +104,7 @@ static const luaL_Reg library[] = {
     {"ansi", ansi},
     {nullptr, nullptr}
 };
-MINLUAU_API int console_library(lua_State* L) {
+MINLUAU_MODULES_API inline int import_console(lua_State* L) {
     lua_newtable(L);
     luaL_register(L, nullptr, library);
     color_table(L);

@@ -27,7 +27,7 @@ type _path = {
     --- returns true if the path actually exists
     exists: (self: path) -> boolean,
 }
-export type filesystem_library = {
+export type standard_module = {
     --- absolute path
     absolute: (path: string) -> string,
     -- current working directory path
@@ -40,4 +40,4 @@ export type filesystem_library = {
     -- Path class constructor
     path: (path: string) -> path,
 }
-return cimport("halua-lib.dll", "filesystem_library")() :: filesystem_library 
+return dllimport("minluau.modules.dll", "import_filesystem")() :: standard_module

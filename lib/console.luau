@@ -35,11 +35,7 @@ export type console_color = {
     light_magenta: () -> opaque,
     white: () -> opaque,
 }
-export type console = {
-    print: <T...>(T...) -> (),
-    background_color: console_color,
-}
-export type console_library = {
+export type standard_module = {
     set_foreground_color: (color: number) -> (),
     set_background_color: (color: number) -> (),
     --- ansi escape sequence ("\033")
@@ -48,7 +44,6 @@ export type console_library = {
     read: () -> string,
     color: console_color,
     Color: Color,
-    create: () -> console,
 }
 
-return cimport("halua-lib.dll", "console_library")() :: console_library
+return dllimport("minluau.modules.dll", "import_console")() :: standard_module

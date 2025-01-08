@@ -2,11 +2,6 @@
 #include <string>
 #include <SDL.h>
 #include <lualib.h>
-#ifdef MINLUAU_MODULES_API_EXPORT 
-#define MINLUAU_MODULES_API extern "C" __declspec(dllexport)
-#else
-#define MINLUAU_MODULES_API extern "C" __declspec(dllimport)
-#endif
 
 void register_event(lua_State* L);
 void push_window_flags(lua_State* L);

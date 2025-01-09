@@ -21,7 +21,7 @@ static int poll_event(lua_State* L) {
     lua_pushboolean(L, SDL_PollEvent(event));
     return 1;
 }
-STDMINLU_API inline int import_desktop(lua_State* L) {
+STDMINLU_API inline int stdminlu_desktop(lua_State* L) {
     const luaL_Reg functions[] = {
         {"get_error", get_error},
         {"poll_event", poll_event},

@@ -23,7 +23,7 @@ export type ansi_codes = {
     bg: ansi_color_codes,
 }
 --- Standard Console Module
-export type console = {
+export type stdminlu_console = {
     --- ansi escape sequence ("\033")
     --- "\033[0m" to reset all
     ansi_code: (escape_sequence: string) -> (),
@@ -32,4 +32,4 @@ export type console = {
     codes: ansi_codes,
 }
 
-return dllimport("stdminlu.dll", "import_console")() :: console
+return dllimport("stdminlu", "stdminlu_console")() :: stdminlu_console

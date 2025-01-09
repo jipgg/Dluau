@@ -63,7 +63,7 @@ static void push_ansi_codes(lua_State* L, const ansi_code_map& map) {
         lua_setfield(L, -2, key.c_str());
     }
 }
-STDMINLU_API inline int import_console(lua_State* L) {
+STDMINLU_API inline int stdminlu_console(lua_State* L) {
     lua_newtable(L);
     luaL_register(L, nullptr, library);
     lua_newtable(L);

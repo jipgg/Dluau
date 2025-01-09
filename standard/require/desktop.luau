@@ -79,7 +79,7 @@ export type RendererFlags = {
     TARGETTEXTURE: number,
 }
 export type color = {r: number, g: number, b: number, a: number}
-export type desktop = {
+export type stdminlu_desktop = {
     Init: () -> (),
     GetError: () -> string,
     Quit: () -> (),
@@ -93,4 +93,4 @@ export type desktop = {
     WINDOWPOS_UNDEFINED: number,
 }
 
-return dllimport("stdminlu.dll", "import_desktop")() :: desktop
+return dllimport("stdminlu", "stdminlu_desktop")() :: stdminlu_desktop

@@ -83,7 +83,7 @@ static const luaL_Reg library[] = {
     {"path", path_ctor},
     {nullptr, nullptr}
 };
-STDMINLU_API inline int import_filesystem(lua_State* L) {
+STDMINLU_API inline int stdminlu_filesystem(lua_State* L) {
     init_path(L);
     lua_newtable(L);
     luaL_register(L, nullptr, library);

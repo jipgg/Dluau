@@ -1,49 +1,35 @@
-export type ColorItem = number
-export type Color = {
-    Default: number,
-    Black: number,
-    Red: number,
-    Green: number,
-    Yellow: number,
-    Blue: number,
-    Magenta: number,
-    Cyan: number,
-    LightGray: number,
-    DarkGray: number,
-    LightRed: number,
-    LightGreen: number,
-    LightYellow: number,
-    LightBlue: number,
-    LightMagenta: number,
-    LightCyan: number,
-    White: number,
+export type ansi_color_codes = {
+    default: string,
+    black: string,
+    red: string,
+    green: string,
+    yellow: string,
+    blue: string,
+    magenta: string,
+    cyan: string,
+    white: string,
+    gray: string,
+    light_red: string,
+    light_green: string,
+    light_yellow: string,
+    light_blue: string,
+    light_magenta: string,
+    light_cyan: string,
+    bright_white: string,
 }
-export type console_color = {
-    default: () -> opaque,
-    black: () -> opaque,
-    req: () -> opaque,
-    green: () -> opaque,
-    yellow: () -> opaque,
-    blue: () -> opaque,
-    magenta: () -> opaque,
-    cyan: () -> opaque,
-    light_gray: () -> opaque,
-    gray: () -> opaque,
-    light_red: () -> opaque,
-    light_green: () -> opaque,
-    light_blue: () -> opaque,
-    light_magenta: () -> opaque,
-    white: () -> opaque,
+export type ansi_codes = {
+    reset: string,
+    fg: ansi_color_codes,
+    bg: ansi_color_codes,
 }
-export type standard_module = {
-    set_foreground_color: (color: number) -> (),
-    set_background_color: (color: number) -> (),
+--- Standard Console Module
+export type console = {
     --- ansi escape sequence ("\033")
     --- "\033[0m" to reset all
-    ansi: (escape_sequence: string) -> (),
-    read: () -> string,
-    color: console_color,
-    Color: Color,
+    ansi_code: (escape_sequence: string) -> (),
+    reset_attributes: () -> (),
+    clear: () -> (),
+    codes: ansi_codes,
 }
 
-return dllimport("minluau.modules.dll", "import_console")() :: standard_module
+return dllimport("minluau.modules.dll", "import_console")() :: console

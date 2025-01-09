@@ -1,5 +1,6 @@
 local console = require("@minluau/console")
 local desktop = require("@minluau/desktop")
+local cc = console.codes
 
 local window = desktop.window.create(
     "hello", 30, 30, 800, 600,
@@ -8,14 +9,16 @@ local window = desktop.window.create(
 )
 local quit = false
 local event = desktop.event.create()
-console.set_foreground_color(console.Color.Magenta)
+
+print(`{cc.fg.red} yoo`)
 print(`window title: {window.title}`)
+print(`{cc.reset}frfr`)
 window.title = "new title"
-console.set_foreground_color(console.Color.Default)
 
 while not quit do
     while desktop.poll_event(event) do
-        if event.type == desktop.EVENT_TYPE.QUIT then
+        local type = desktop.EVENT_TYPE
+        if event.type == type.QUIT then
             quit = true
         end
     end

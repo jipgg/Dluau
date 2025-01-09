@@ -1,13 +1,13 @@
 #include "filesystem.hpp"
 #include <lualib.h>
-#include "minluau.h"
+#include "minlu.h"
 #include <filesystem>
 #include <unordered_map>
 using std::filesystem::path;
 namespace fs = std::filesystem;
 using NamecallFunction = int(*)(lua_State*, path&);
 static std::unordered_map<int, NamecallFunction> namecalls{};
-static int tag = minluau_newtypetag();
+static int tag = minlu_newtypetag();
 
 static int div(lua_State* L) {
     if (lua_isstring(L, 1)) {

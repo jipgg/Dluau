@@ -1,12 +1,12 @@
 #include "desktop.hpp"
 #include <lualib.h>
 #include <string_view>
-#include "minluau.h"
+#include "minlu.h"
 #include <iostream>
 #include <unordered_map>
 using Namecall = int(*)(lua_State*, SDL_Window*);
 static std::unordered_map<int, Namecall> namecalls{};
-static const int tag = minluau_newtypetag();
+static const int tag = minlu_newtypetag();
 constexpr const char* tname = "desktop.window";
 
 static int index(lua_State* L) {

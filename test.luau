@@ -1,5 +1,5 @@
-local console = require("@minluau/console")
-local desktop = require("@minluau/desktop")
+local console = require("@stdminlu/console")
+local desktop = require("@stdminlu/desktop")
 local cc = console.codes
 
 local window = desktop.window.create(

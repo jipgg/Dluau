@@ -5,31 +5,11 @@
 #include "common.hpp"
 #include "win_utility.hpp"
 #include "lua_base.hpp"
+#include <minlu.h>
 #include <unordered_map>
 static std::unordered_map<std::string, HMODULE> cmodules{};
-static int lua_cimport(lua_State* L) {
-    const char* dllpath = luaL_checkstring(L, 1);
-    const char* symbol = luaL_checkstring(L, 2);
-    if (auto it = cmodules.find(dllpath); it == cmodules.end()) {
-        HMODULE hModule = LoadLibrary(dllpath);
-        if (hModule == NULL) {
-            luaL_errorL(L, "failed to load dll");
-            return 0;
-        }
-        cmodules.emplace(std::string(dllpath), hModule);
-    }
-    HMODULE hmodule = cmodules[dllpath];
-    FARPROC pProc = GetProcAddress(hmodule, symbol);
-    if (pProc == NULL) {
-        luaL_errorL(L, "failed to get proc address");
-        FreeLibrary(hmodule);
-        return 0;
-    }
-    lua_pushcfunction(L, (lua_CFunction)pProc, symbol);
-    return 1;
-}
 const luaL_Reg lib[] = {
-    {"dllimport", lua_cimport},
+    {"dllimport", minlufn_dllimport},
     {nullptr, nullptr}
 };
 static int16_t useratom(const char* key, size_t size) {

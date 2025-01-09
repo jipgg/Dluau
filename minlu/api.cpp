@@ -1,4 +1,4 @@
-#include "minluau.h"
+#include "minlu.h"
 #include <lualib.h>
 #include <string>
 #include <luacode.h>
@@ -6,27 +6,27 @@
 #include <luaconf.h>
 #include <luacodegen.h>
 
-int minluau_newtypetag() {
+int minlu_newtypetag() {
     static int curr_type_tag = 1;
     return curr_type_tag++; 
 }
 
-static int uint_tag = minluau_newtypetag();
+static int uint_tag = minlu_newtypetag();
 
 static int uint_tostring(lua_State* L) {
-    lua_pushstring(L, std::to_string(*minluau_touint(L, 1)).c_str());
+    lua_pushstring(L, std::to_string(*minlu_touint(L, 1)).c_str());
     return 1;
 }
 
-bool minluau_isuint(lua_State* L, int idx) {
+bool minlu_isuint(lua_State* L, int idx) {
     return lua_userdatatag(L, idx) == uint_tag;
 }
 
-uint32_t* minluau_touint(lua_State* L, int idx) {
+uint32_t* minlu_touint(lua_State* L, int idx) {
     return static_cast<uint32_t*>(lua_touserdatatagged(L, idx, uint_tag));
 }
 
-uint32_t* minluau_newuint(lua_State *L, uint32_t uint) {
+uint32_t* minlu_newuint(lua_State *L, uint32_t uint) {
     if (luaL_newmetatable(L, "uint")) {
         const luaL_Reg meta[] = {
             {"__tostring", uint_tostring},
@@ -43,20 +43,20 @@ uint32_t* minluau_newuint(lua_State *L, uint32_t uint) {
     *p = uint;
     return p;
 }
-static const int opaque_tag = minluau_newtypetag();
-halua_Opaque minluau_newopaque(lua_State* L, halua_Opaque opaque) {
+static const int opaque_tag = minlu_newtypetag();
+halua_Opaque minlu_newopaque(lua_State* L, halua_Opaque opaque) {
     halua_Opaque* p = static_cast<halua_Opaque*>(lua_newuserdatatagged(L, sizeof(halua_Opaque), opaque_tag));
     *p = opaque;
     return *p;
 }
-halua_Opaque minluau_toopaque(lua_State *L, int idx) {
+halua_Opaque minlu_toopaque(lua_State *L, int idx) {
     halua_Opaque* p = static_cast<halua_Opaque*>(lua_touserdatatagged(L, idx, opaque_tag));
     return *p;
 }
-bool minluau_isopaque(lua_State *L, int idx) {
+bool minlu_isopaque(lua_State *L, int idx) {
     return lua_userdatatag(L, idx) == opaque_tag;
 }
-bool minluau_samemeta(lua_State *L, int idx, czstring tname) {
+bool minlu_samemeta(lua_State *L, int idx, czstring tname) {
     luaL_getmetatable(L, tname);
     if (lua_isnil(L, -1)) {
         lua_pop(L, 1);

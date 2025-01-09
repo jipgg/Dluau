@@ -93,4 +93,4 @@ export type desktop = {
     WINDOWPOS_UNDEFINED: number,
 }
 
-return dllimport("minluau.modules.dll", "import_desktop")() :: desktop
+return dllimport("stdminlu.dll", "import_desktop")() :: desktop

@@ -1,6 +1,6 @@
 {
     "languageMode": "strict",
     "aliases": {
-        "minluau": "./require/"
+        "stdminlu": "./standard/require/"
     }
 }

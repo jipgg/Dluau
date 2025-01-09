@@ -1,4 +1,4 @@
-#include "minluau.h"
+#include "minlu.h"
 #include <lualib.h>
 #include <luacode.h>
 #include <lua.h>

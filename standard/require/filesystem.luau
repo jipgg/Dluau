@@ -40,4 +40,4 @@ export type filesystem = {
     -- Path class constructor
     path: (path: string) -> path,
 }
-return dllimport("minluau.modules.dll", "import_filesystem")() :: filesystem
+return dllimport("stdminlu.dll", "import_filesystem")() :: filesystem

@@ -32,4 +32,4 @@ export type console = {
     codes: ansi_codes,
 }
 
-return dllimport("minluau.modules.dll", "import_console")() :: console
+return dllimport("stdminlu.dll", "import_console")() :: console

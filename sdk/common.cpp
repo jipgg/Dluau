@@ -17,10 +17,6 @@ std::variant<lua_State*, error_info> load_script(lua_State* L, const fs::path& s
     std::string bytecode{bc, outsize};
     std::free(bc);
     lua_State* script_thread = lua_newthread(L);
-    lua_newtable(L);
-    lua_pushstring(L, fs::absolute(script_path).string().c_str());
-    lua_setfield(L, -2, "absolute_path");
-    lua_setglobal(L, "script");
     const int load_status = luau_load(script_thread, identifier.c_str(), bytecode.data(), bytecode.size(), 0);
     if (load_status == LUA_OK) {
         luaL_sandboxthread(script_thread);

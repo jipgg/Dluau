@@ -1,7 +1,8 @@
 require"lspconfig".luau_lsp.setup {
     cmd = {"luau-lsp",
         "lsp",
-        "--definitions=luminglobals.d.luau",
+        "--definitions=globals.d.luau",
+        "--definitions=date_time.d.luau",
     },
     settings = {
         ["luau-lsp"] = {

@@ -4,9 +4,9 @@
 #include <chrono>
 #include "userdata_lazybuilder.hpp"
 using lb = userdata_lazybuilder<duration>;
-template<> const char* lb::type_name(){return "duration";}
+template<> const char* lb::type_name(){return "date_time.duration";}
 
-duration* toduration(lua_State* L, int idx) {
+duration* to_duration(lua_State* L, int idx) {
     return &lb::check_udata(L, idx);
 }
 static std::string default_format(duration amount) {
@@ -44,25 +44,25 @@ static const lb::registry indices = {
 
 static int sub(lua_State* L) {
     if (lb::is_type(L, 1) and lb::is_type(L, 2)) {
-        lb::new_udata(L, *toduration(L, 1) - *toduration(L, 2));
+        lb::new_udata(L, *to_duration(L, 1) - *to_duration(L, 2));
         return 1;
     }
     luaL_errorL(L, "unknown arithmetic operation");
 }
 static int add(lua_State* L) {
     if (lb::is_type(L, 1) and lb::is_type(L, 2)) {
-        lb::new_udata(L, *toduration(L, 1) + *toduration(L, 2));
+        lb::new_udata(L, *to_duration(L, 1) + *to_duration(L, 2));
         return 1;
     }
     luaL_errorL(L, "unknown arithmetic operation");
 }
 
 static int tostring(lua_State* L) {
-    duration* p = toduration(L, 1);
+    duration* p = to_duration(L, 1);
     lua_pushstring(L, default_format(*p).c_str());
     return 1;
 }
-duration& newduration(lua_State* L, const duration& v) {
+duration& new_duration(lua_State* L, const duration& v) {
     if (not lb::initialized(L)) {
         const luaL_Reg meta[] = {
             {"__tostring", tostring},

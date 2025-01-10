@@ -11,15 +11,10 @@ int lumin_main(std::string_view args) {
     lua_callbacks(L)->useratom = lumin_useratom;
     luaL_openlibs(L);
     lumin_loadfuncs(L);
-    if (auto error = spawn_script(L, "test.luau")) {
-#ifdef MINLU_TRACE_CPP_ERROR 
-        printerr(error->formatted());
-#else
-        printerr(error->message());
-#endif
+    if (auto err = spawn_script(L, "test.luau")) {
+        printerr(err->message());
         return -1;
     }
-    lua_close(L);
     return 0;
 }
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {

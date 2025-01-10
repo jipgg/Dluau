@@ -3,43 +3,43 @@
 #include <format>
 #include <chrono>
 #include "userdata_lazybuilder.hpp"
-using lb = userdata_lazybuilder<datetime>;
-template<> const char* lb::type_name(){return "datetime";}
+using lb = userdata_lazybuilder<time_point>;
+template<> const char* lb::type_name(){return "time_point";}
 
-datetime* todatetime(lua_State* L, int idx) {
+time_point* to_time_point(lua_State* L, int idx) {
     return &lb::check_udata(L, idx);
 }
 
 static const lb::registry index = {
-    {"year", [](lua_State* L, datetime& tp) -> int {
+    {"year", [](lua_State* L, time_point& tp) -> int {
         ch::year_month_day ymd{ch::floor<ch::days>(tp)};
         lua_pushinteger(L, static_cast<int>(ymd.year()));
         return 1;
     }},
-    {"month", [](lua_State* L, datetime& tp) -> int {
+    {"month", [](lua_State* L, time_point& tp) -> int {
         ch::year_month_day ymd{ch::floor<ch::days>(tp)};
         lua_pushinteger(L, static_cast<unsigned int>(ymd.month()));
         return 1;
     }},
-    {"day", [](lua_State* L, datetime& tp) -> int {
+    {"day", [](lua_State* L, time_point& tp) -> int {
         ch::year_month_day ymd{ch::floor<ch::days>(tp)};
         lua_pushinteger(L, static_cast<unsigned int>(ymd.day()));
         return 1;
     }},
-    {"hour", [](lua_State* L, datetime& tp) -> int {
+    {"hour", [](lua_State* L, time_point& tp) -> int {
         const auto midnight = tp - ch::floor<ch::days>(tp);
         const auto hours = ch::duration_cast<ch::hours>(midnight);
         lua_pushinteger(L, hours.count());
         return 1;
     }},
-    {"minute", [](lua_State* L, datetime& tp) -> int {
+    {"minute", [](lua_State* L, time_point& tp) -> int {
         const auto midnight = tp - ch::floor<ch::days>(tp);
         const auto hours = ch::duration_cast<ch::hours>(midnight);
         const auto minutes = ch::duration_cast<ch::minutes>(midnight - hours);
         lua_pushinteger(L, minutes.count());
         return 1;
     }},
-    {"second", [](lua_State* L, datetime& tp) -> int {
+    {"second", [](lua_State* L, time_point& tp) -> int {
         const auto midnight = tp - ch::floor<ch::days>(tp);
         const auto hours = ch::duration_cast<ch::hours>(midnight);
         const auto minutes = ch::duration_cast<ch::minutes>(midnight - hours);
@@ -50,12 +50,12 @@ static const lb::registry index = {
 };
 
 static int tostring(lua_State* L) {
-    datetime& tp = lb::check_udata(L, 1);
+    time_point& tp = lb::check_udata(L, 1);
     lua_pushstring(L, std::format("{}", tp).c_str());
     return 1;
 }
 
-datetime& newdatetime(lua_State* L, const datetime& v) {
+time_point& new_time_point(lua_State* L, const time_point& v) {
     if (not lb::initialized(L)) {
         const luaL_Reg meta[] = {
             {"__tostring", tostring},

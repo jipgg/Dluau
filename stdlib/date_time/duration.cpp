@@ -2,16 +2,12 @@
 #include <lumin.h>
 #include <format>
 #include <chrono>
-#include <unordered_map>
-#include "lazy_type_utils.hpp"
-using ltu = lazy_type_utils<duration>;
-using namecall_function = int(*)(lua_State*, duration&);
-using index_function = int(*)(lua_State*, duration&, std::string_view);
-static std::unordered_map<int, namecall_function> namecalls{};
-constexpr const char* tname = "duration";
+#include "userdata_lazybuilder.hpp"
+using lb = userdata_lazybuilder<duration>;
+template<> const char* lb::type_name(){return "duration";}
 
 duration* toduration(lua_State* L, int idx) {
-    return &ltu::check(L, idx);
+    return &lb::check_udata(L, idx);
 }
 static std::string default_format(duration amount) {
     using ch::duration_cast;
@@ -22,17 +18,12 @@ static std::string default_format(duration amount) {
     auto seconds = std::chrono::duration_cast<std::chrono::seconds>(amount);
     amount -= seconds;
     auto nanoseconds = amount;
-
-    // Format the result
-    std::string result = std::format("{:02}:{:02}:{:02}.{:09}",
-                                     hours.count(),
-                                     minutes.count(),
-                                     seconds.count(),
-                                     nanoseconds.count());
+    std::string result = std::format("{:02}:{:02}:{:02}.{:09}", hours.count(),
+        minutes.count(), seconds.count(), nanoseconds.count());
     return result;
 }
 
-static const ltu::map indices = {
+static const lb::registry indices = {
     {"seconds", [](lua_State* L, duration& self) -> int {
         lua_pushnumber(L, ch::duration<double>(self).count());
         return 1;
@@ -52,19 +43,15 @@ static const ltu::map indices = {
 };
 
 static int sub(lua_State* L) {
-    const int tag1 = lua_userdatatag(L, 1);
-    const int tag2 = lua_userdatatag(L, 2);
-    if (tag1 == tag2) {
-        newduration(L, *toduration(L, 1) - *toduration(L, 2));
+    if (lb::is_type(L, 1) and lb::is_type(L, 2)) {
+        lb::new_udata(L, *toduration(L, 1) - *toduration(L, 2));
         return 1;
     }
     luaL_errorL(L, "unknown arithmetic operation");
 }
 static int add(lua_State* L) {
-    const int tag1 = lua_userdatatag(L, 1);
-    const int tag2 = lua_userdatatag(L, 2);
-    if (tag1 == tag2) {
-        newduration(L, *toduration(L, 1) + *toduration(L, 2));
+    if (lb::is_type(L, 1) and lb::is_type(L, 2)) {
+        lb::new_udata(L, *toduration(L, 1) + *toduration(L, 2));
         return 1;
     }
     luaL_errorL(L, "unknown arithmetic operation");
@@ -76,16 +63,19 @@ static int tostring(lua_State* L) {
     return 1;
 }
 duration& newduration(lua_State* L, const duration& v) {
-    if (not ltu::initialized()) {
+    if (not lb::initialized(L)) {
         const luaL_Reg meta[] = {
             {"__tostring", tostring},
             {"__sub", sub},
             {"__add", add},
             {nullptr, nullptr}
         };
-        ltu::init(L, "duration", indices, {}, {}, meta);
+        lb::init(L, {
+            .index = indices,
+            .meta = meta,
+        });
     }
-    return ltu::create(L, v);
+    return lb::new_udata(L, v);
 }
 
 void register_duration(lua_State *L) {

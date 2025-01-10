@@ -2,18 +2,15 @@
 #include <lumin.h>
 #include <format>
 #include <chrono>
-#include <unordered_map>
-#include "lazy_type_utils.hpp"
-using tutils = lazy_type_utils<datetime>;
-using namecall_function = int(*)(lua_State*, datetime&);
-using index_function = int(*)(lua_State*, datetime&, std::string_view);
-static std::unordered_map<int, namecall_function> namecalls{};
+#include "userdata_lazybuilder.hpp"
+using lb = userdata_lazybuilder<datetime>;
+template<> const char* lb::type_name(){return "datetime";}
 
 datetime* todatetime(lua_State* L, int idx) {
-    return &tutils::check(L, idx);
+    return &lb::check_udata(L, idx);
 }
 
-static const tutils::map index = {
+static const lb::registry index = {
     {"year", [](lua_State* L, datetime& tp) -> int {
         ch::year_month_day ymd{ch::floor<ch::days>(tp)};
         lua_pushinteger(L, static_cast<int>(ymd.year()));
@@ -53,18 +50,21 @@ static const tutils::map index = {
 };
 
 static int tostring(lua_State* L) {
-    datetime& tp = tutils::check(L, 1);
+    datetime& tp = lb::check_udata(L, 1);
     lua_pushstring(L, std::format("{}", tp).c_str());
     return 1;
 }
 
 datetime& newdatetime(lua_State* L, const datetime& v) {
-    if (not tutils::initialized()) {
+    if (not lb::initialized(L)) {
         const luaL_Reg meta[] = {
             {"__tostring", tostring},
             {nullptr, nullptr}
         };
-        tutils::init(L, "datetime", index, {}, {}, meta);
+        lb::init(L, {
+            .index = index,
+            .meta = meta,
+        });
     }
-    return tutils::create(L, v);
+    return lb::new_udata(L, v);
 }

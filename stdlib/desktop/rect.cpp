@@ -1,9 +1,10 @@
 #include "desktop.hpp"
 #include <lualib.h>
-#include "lazy_type_utils.hpp"
+#include "userdata_lazybuilder.hpp"
 #include "lumin.h"
-using tutils = lazy_type_utils<SDL_Rect>;
-static const tutils::map index = {
+using lb = userdata_lazybuilder<SDL_Rect>;
+template<> const char* lb::type_name(){return "rect";}
+static const lb::registry index = {
     {"x", [](lua_State* L, SDL_Rect& self) {
         lua_pushinteger(L, self.x);
         return 1;
@@ -18,7 +19,7 @@ static const tutils::map index = {
         return 1;
     }},
 };
-static const tutils::map newindex = {
+static const lb::registry newindex = {
     {"x", [](lua_State* L, SDL_Rect& self) {
         int v = luaL_checkinteger(L, 3);
         self.x = v;
@@ -39,7 +40,7 @@ static const tutils::map newindex = {
 
 };
 int rect_ctor_new(lua_State* L) {
-    tutils::create(L, SDL_Rect{
+    lb::new_udata(L, SDL_Rect{
         .x = luaL_optinteger(L, 1, 0),
         .y = luaL_optinteger(L, 2, 0),
         .w = luaL_optinteger(L, 3, 0),
@@ -48,12 +49,12 @@ int rect_ctor_new(lua_State* L) {
     return 1;
 }
 void register_rect(lua_State* L) {
-    tutils::init(L, "rect", index, newindex, {});
+    lb::init(L, {.index = index, .newindex = newindex});
     lua_newtable(L);
     lua_pushcfunction(L, rect_ctor_new, "rect.create");
     lua_setfield(L, -2, "create");
     lua_setfield(L,-2, "rect");
 }
 SDL_Rect* torect(lua_State* L, int idx) {
-    return &tutils::check(L, idx);
+    return &lb::check_udata(L, idx);
 }

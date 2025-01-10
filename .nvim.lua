@@ -1,7 +1,7 @@
 require"lspconfig".luau_lsp.setup {
     cmd = {"luau-lsp",
         "lsp",
-        "--definitions=minluau.definitions.luau",
+        "--definitions=luminglobals.d.luau",
     },
     settings = {
         ["luau-lsp"] = {
@@ -11,7 +11,7 @@ require"lspconfig".luau_lsp.setup {
             require = {
                 mode = "relativeToFile",
                 directoryAliases = {
-                    ["@stdminlu"] = "./standard/require/",
+                    ["@stdlib"] = "./stdlib-require/",
                 },
             },
         }

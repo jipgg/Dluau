@@ -1,6 +1,6 @@
 {
     "languageMode": "strict",
     "aliases": {
-        "stdminlu": "./standard/require/"
+        "stdlib": "./stdlib-require/"
     }
 }

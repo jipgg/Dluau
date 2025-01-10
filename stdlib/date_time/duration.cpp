@@ -12,6 +12,24 @@ constexpr const char* tname = "duration";
 duration* toduration(lua_State* L, int idx) {
     return static_cast<duration*>(lua_touserdatatagged(L, idx, tag));
 }
+static std::string default_format(duration amount) {
+    using ch::duration_cast;
+    auto hours = duration_cast<ch::hours>(amount);
+    amount -= hours;
+    auto minutes = std::chrono::duration_cast<std::chrono::minutes>(amount);
+    amount -= minutes;
+    auto seconds = std::chrono::duration_cast<std::chrono::seconds>(amount);
+    amount -= seconds;
+    auto nanoseconds = amount;
+
+    // Format the result
+    std::string result = std::format("{:02}:{:02}:{:02}.{:09}",
+                                     hours.count(),
+                                     minutes.count(),
+                                     seconds.count(),
+                                     nanoseconds.count());
+    return result;
+}
 
 static std::unordered_map<std::string_view, index_function> indices {
     {"seconds", [](lua_State* L, duration& self, std::string_view key) -> int {
@@ -72,7 +90,7 @@ static int namecall(lua_State* L) {
 }
 static int tostring(lua_State* L) {
     duration* p = toduration(L, 1);
-    lua_pushstring(L, std::format("{}", *p).c_str());
+    lua_pushstring(L, default_format(*p).c_str());
     return 1;
 }
 static int add_namecall(lua_State* L, std::string_view key, namecall_function call) {
@@ -97,6 +115,13 @@ duration& newduration(lua_State* L, const duration& v) {
         luaL_register(L, nullptr, meta);
         lua_pushstring(L, tname);
         lua_setfield(L, -2, "__type");
+        /*
+        add_namecall(L, "format", [](lua_State* L, duration& d) -> int {
+            std::string_view fmt = luaL_checkstring(L, 2);
+            std::string formatted;
+            return 1;
+        });
+        */
         lua_setuserdatadtor(L, tag, [](lua_State* L, void* data) -> void {
             static_cast<datetime*>(data)->~datetime();
         });

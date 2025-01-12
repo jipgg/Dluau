@@ -1,3 +1,5 @@
+local my_module = dll.loadmodule("Module.dll") :: {print_hello_world: () -> ()}
+my_module.print_hello_world()
 local dt = require("@modules/date_time")
 local v = dt.now()
 print(`time is {v:format'%X'} {v} {typeof(v)}`)

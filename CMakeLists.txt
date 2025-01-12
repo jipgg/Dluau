@@ -4,6 +4,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(Lumin LANGUAGES CXX C)
 
+set(LUAU_DIR luau)
 set(LUA_EXPORT "LUA_API=extern \"C\" __declspec(dllexport)")
 set(LUACODE_EXPORT "LUACODE_API=extern \"C\" __declspec(dllexport)")
 set(LUACODEGEN_EXPORT "LUACODEGEN_API=extern \"C\" __declspec(dllexport)")
@@ -20,10 +21,11 @@ file(GLOB LUMIN_MODULE_DATE_TIME_SRC ${LUMIN_MODULES_DIR}/Date_Time/*.cpp)
 file(GLOB LUMIN_MODULE_FILESYSTEM_SRC ${LUMIN_MODULES_DIR}/Filesystem/*.cpp)
 file(GLOB LUMIN_MODULE_CONSOLE_SRC ${LUMIN_MODULES_DIR}/Console/*.cpp)
 
-add_subdirectory(luau)
+add_subdirectory(${LUAU_DIR})
 add_library(Lumin.Common INTERFACE)
 add_library(Lumin.Library SHARED ${LUMIN_LIBRARY_SRC})
 add_executable(Lumin.SDK WIN32 ${LUMIN_SDK_SRC})
+
 
 add_library(Lumin.Module.Date_Time SHARED ${LUMIN_MODULE_DATE_TIME_SRC})
 add_library(Lumin.Module.Filesystem SHARED ${LUMIN_MODULE_FILESYSTEM_SRC})
@@ -43,6 +45,18 @@ target_include_directories(Lumin.Library PUBLIC ${LUMIN_LIBRARY_DIR}/include)
 target_link_libraries(Lumin.Library PUBLIC Luau.VM Luau.Compiler Luau.CodeGen Lumin.Common)
 target_link_libraries(Lumin.Library PRIVATE Luau.Config)
 set_target_properties(Lumin.Library PROPERTIES OUTPUT_NAME lumin)
+
+add_library(Lumin.Library-stub SHARED Library-stub.cpp)
+target_compile_definitions(Lumin.Library-stub PUBLIC ${LUA_IMPORT} ${LUACODE_IMPORT} ${LUACODEGEN_IMPORT})
+target_compile_definitions(Lumin.Library-stub PRIVATE ${LUA_EXPORT} ${LUACODE_EXPORT} ${LUACODEGEN_EXPORT} LUMIN_EXPORT_API)
+target_include_directories(Lumin.Library-stub PUBLIC
+    ${LUAU_DIR}/Compiler/include
+    ${LUAU_DIR}/CodeGen/include
+    ${LUAU_DIR}/VM/include
+    ${LUMIN_LIBRARY_DIR}/include
+    Common
+)
+set_target_properties(Lumin.Library-stub PROPERTIES OUTPUT_NAME lumin-stub)
 
 target_link_libraries(Lumin.SDK PRIVATE Lumin.Common)
 set_target_properties(Lumin.SDK PROPERTIES OUTPUT_NAME lumin)

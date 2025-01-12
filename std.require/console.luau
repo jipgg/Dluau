@@ -32,4 +32,4 @@ export type Console_Standard_Module = {
     codes: ansi_codes,
 }
 
-return dllimport("luminstd", "module_console")() :: Console_Standard_Module 
+return dll.loadfunction("luminstd.dll", "module_console")() :: Console_Standard_Module 

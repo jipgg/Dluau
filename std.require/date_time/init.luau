@@ -251,4 +251,4 @@ type Date_Time_Standard_Module = {
     --- Useful for measuring elapsed time.
     precise_clock: {now: () -> precise_time},
 }
-return dllimport("luminstd.dll", "module_date_time")() :: Date_Time_Standard_Module
+return dll.loadfunction("luminstd", "module_date_time")() :: Date_Time_Standard_Module

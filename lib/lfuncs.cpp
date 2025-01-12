@@ -10,28 +10,13 @@
 #include <filesystem>
 #include "luacode.h"
 #include "Require.h"
-#include "error_info.hpp"
-#include <variant>
-#include <format>
 #include <cassert>
 namespace fs = std::filesystem;
-#ifdef _WIN32
-#include <Windows.h>
-struct cmodule {
-    HMODULE module; //is void so cant use custom unique_ptr destructor
-    explicit cmodule(HMODULE module): module(module) {}
-    cmodule(const cmodule&) = delete;
-    cmodule& operator=(const cmodule&) = delete;
-    cmodule(cmodule&&) noexcept = delete;
-    cmodule& operator=(cmodule&&) noexcept = delete;
-    ~cmodule() {if (module) FreeLibrary(module);}
-};
-#endif
-static std::unordered_map<fs::path, std::unique_ptr<cmodule>> loaded_modules{};
 struct global_options {
     int optimization_level = 2;
     int debug_level = 1;
 } global_opts;
+
 static bool codegen = true;
 lua_CompileOptions* compile_options() {
     static lua_CompileOptions result = {};
@@ -224,48 +209,4 @@ int luminF_collectgarbage(lua_State* L) {
         return 1;
     }
     luaL_error(L, "collectgarbage must be called with 'count' or 'collect'");
-}
-// TODO: should search for these dll paths and store them as absolute paths
-static std::variant<lua_CFunction, error_info> load_cmodule(std::string_view path, const std::string& symbol) {
-#ifdef _WIN32
-    bool imported_here = false;
-    fs::path dllpath = path;
-    if (not dllpath.has_extension()) dllpath += ".dll";
-    if (auto it = loaded_modules.find(dllpath); it == loaded_modules.end()) {
-        const std::string dllpath_str = dllpath.string();
-        HMODULE hmodule = LoadLibrary(dllpath_str.c_str());
-        if (hmodule == nullptr) {
-            return error_info{std::format("Could not find DLL with name '{}'.", dllpath_str)};
-        }
-        loaded_modules.emplace(dllpath, std::make_unique<cmodule>(hmodule));
-    }
-    HMODULE hmodule = loaded_modules[dllpath]->module;
-    FARPROC proc = GetProcAddress(hmodule, symbol.c_str());
-    if (proc == NULL) {
-        return error_info{std::format("Could not find exported function symbol '{}' in DLL '{}'.", symbol, dllpath.string())};
-    }
-    return (lua_CFunction)proc;
-#endif
-    return error_info{"Patform is currently unsupported."};
-}
-int luminF_dllimport(lua_State* L) {
-    const char* path = luaL_checkstring(L, 1);
-    const char* function = luaL_checkstring(L, 2);
-    auto result = load_cmodule(path, function);
-    if (auto err = std::get_if<error_info>(&result)) {
-        luaL_errorL(L, err->message().c_str());
-        return 0;
-    }
-    lua_pushcfunction(L, std::get<lua_CFunction>(result), std::format("imported lua_CFunction '{}' from '{}'", function, path).c_str());
-    return 1;
-}
-int luminF_cmodule(lua_State* L) {
-    const char* path = luaL_checkstring(L, 1);
-    const char* function = luaL_checkstring(L, 2);
-    auto result = load_cmodule(path, function);
-    if (auto err = std::get_if<error_info>(&result)) {
-        luaL_errorL(L, err->message().c_str());
-        return 0;
-    }
-    return std::get<lua_CFunction>(result)(L);
 }

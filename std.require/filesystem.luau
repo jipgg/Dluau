@@ -40,4 +40,4 @@ export type Filesystem_Standard_Module = {
     -- Path class constructor
     path: (path: string) -> path,
 }
-return dllimport("luminstd", "module_filesystem")() :: Filesystem_Standard_Module
+return dll.loadfunction("luminstd", "module_filesystem")() :: Filesystem_Standard_Module

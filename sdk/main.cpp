@@ -10,6 +10,7 @@ int lumin_main(std::string_view args) {
     lua_State* L = luaL_newstate();
     lua_callbacks(L)->useratom = lumin_useratom;
     luaL_openlibs(L);
+    luminopen_dll(L);
     lumin_loadfuncs(L);
     if (auto err = spawn_script(L, "test.luau")) {
         printerr(err->message());

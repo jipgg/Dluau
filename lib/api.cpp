@@ -11,7 +11,7 @@ void lumin_loadfuncs(lua_State *L) {
         {"loadstring", luminF_loadstring},
         {"require", luminF_require},
         {"collectgarbage", luminF_collectgarbage},
-        {"dllimport", luminF_dllimport},
+        //{"dllimport", luminF_dllimport},
         {nullptr, nullptr}
     };
     lua_pushvalue(L, LUA_GLOBALSINDEX);

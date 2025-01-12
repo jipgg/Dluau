@@ -2,18 +2,18 @@
 #include <lumin.h>
 #include <format>
 #include <chrono>
-#include "userdata_lazybuilder.hpp"
+#include "generic_userdata_template.hpp"
 #include <string>
 using namespace std::string_literals;
-using udata = generic_userdata_template<time_>;
+using gut = generic_userdata_template<time_>;
 static const std::string tname = module_name + "."s + "time";
-template<> const char* udata::type_name(){return tname.c_str();}
+template<> const char* gut::type_name(){return tname.c_str();}
 
 time_* to_time(lua_State* L, int idx) {
-    return &udata::check_udata(L, idx);
+    return &gut::check_udata(L, idx);
 }
 
-static const udata::registry namecall = {
+static const gut::registry namecall = {
     {"format", [](lua_State* L, time_& tp) -> int {
         const std::string fmt = "{:"s + luaL_checkstring(L, 2) + "}"s;
         lua_pushstring(L, std::vformat(fmt, std::make_format_args(tp)).c_str());
@@ -25,7 +25,7 @@ static const udata::registry namecall = {
     }},
 };
 
-static const udata::registry index = {
+static const gut::registry index = {
     {"year", [](lua_State* L, time_& tp) -> int {
         ch::year_month_day ymd{ch::floor<ch::days>(tp)};
         lua_pushinteger(L, static_cast<int>(ymd.year()));
@@ -65,22 +65,22 @@ static const udata::registry index = {
 };
 
 static int tostring(lua_State* L) {
-    time_& tp = udata::check_udata(L, 1);
+    time_& tp = gut::check_udata(L, 1);
     lua_pushstring(L, std::format("{:%x %X}", tp).c_str());
     return 1;
 }
 
 time_& new_time(lua_State* L, const time_& v) {
-    if (not udata::initialized(L)) {
+    if (not gut::initialized(L)) {
         const luaL_Reg meta[] = {
             {"__tostring", tostring},
             {nullptr, nullptr}
         };
-        udata::init(L, {
+        gut::init(L, {
             .index = index,
             .namecall = namecall,
             .meta = meta,
         });
     }
-    return udata::new_udata(L, v);
+    return gut::new_udata(L, v);
 }

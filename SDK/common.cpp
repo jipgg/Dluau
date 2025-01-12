@@ -3,6 +3,7 @@
 #include <optional>
 #include <format>
 #include "luacode.h"
+#include <lua.h>
 #include <filesystem>
 #include <lualib.h>
 namespace fs = std::filesystem;

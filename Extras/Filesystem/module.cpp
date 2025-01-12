@@ -1,4 +1,4 @@
-#include "_lumin_modules_api.h"
+#include ".lumin_extras_api.h"
 #include <lualib.h>
 #include <filesystem>
 #include "lumin.h"
@@ -83,7 +83,7 @@ static const luaL_Reg library[] = {
     {"path", path_ctor},
     {nullptr, nullptr}
 };
-LUMIN_MODULES_API inline int module_filesystem(lua_State* L) {
+LUMIN_EXTRAS_API inline int module_filesystem(lua_State* L) {
     init_path(L);
     lua_newtable(L);
     luaL_register(L, nullptr, library);

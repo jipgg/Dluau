@@ -40,4 +40,4 @@ export type filesystem = {
     -- Path class constructor
     path: (path: string) -> path,
 }
-return dll.loadmodule('module.filesystem.dll') :: filesystem
+return dll.loadmodule('lumin-extras-filesystem.dll') :: filesystem

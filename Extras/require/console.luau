@@ -22,7 +22,6 @@ export type ansi_codes = {
     fg: ansi_color_codes,
     bg: ansi_color_codes,
 }
---- Standard Console Module
 export type console = {
     --- ansi escape sequence ("\033")
     --- "\033[0m" to reset all
@@ -32,4 +31,4 @@ export type console = {
     codes: ansi_codes,
 }
 
-return dll.loadmodule("module.console.dll") :: console 
+return dll.loadmodule("lumin-extras-console.dll") :: console 

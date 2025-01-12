@@ -6,6 +6,12 @@
 #include <lua.h>
 #include <luaconf.h>
 #include <luacodegen.h>
+[[maybe_unused]] void  export_() {
+    volatile auto e= &lua_pushstring;
+    volatile auto ee= &luau_load;
+    volatile auto eee= &lua_setuserdatadtor;
+    volatile auto eeee= &lua_getfield;
+}
 void lumin_loadfuncs(lua_State *L) {
     static const luaL_Reg global_functions[] = {
         {"loadstring", luminF_loadstring},

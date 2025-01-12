@@ -1,4 +1,4 @@
-#include "_lumin_modules_api.h"
+#include ".lumin_extras_api.h"
 #include "module.hpp"
 using ch::time_point_cast;
 static std::optional<int> opt_int_field(lua_State* L, int idx, const std::string& name) {
@@ -88,7 +88,7 @@ static int new_ratio(lua_State* L) {
     return 1;
 }
 
-LUMIN_MODULES_API inline int loadmodule(lua_State* L) {
+LUMIN_EXTRAS_API inline int loadmodule(lua_State* L) {
     const luaL_Reg lib[] = {
         {"now", time_now},
         {"datetime" , from_datetime},

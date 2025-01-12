@@ -236,4 +236,4 @@ type date_time = {
     --- Useful for measuring elapsed time.
     high_precision_clock: {now: () -> high_precision_time},
 }
-return dll.loadmodule("module.date_time.dll") :: date_time
+return dll.loadmodule("lumin-extras-date_time.dll") :: date_time

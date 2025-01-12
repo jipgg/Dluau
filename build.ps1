@@ -1,3 +1,5 @@
-cmake --preset compilation-database .
-cmake --preset default .
-cmake --build --preset build-default
+cmake --preset clangd
+cmake --preset default
+cmake --build --preset sdk
+cmake --build --preset extras
+cmake --build --preset core

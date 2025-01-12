@@ -5,30 +5,40 @@
             "name": "default",
             "hidden": false,
             "generator": "Visual Studio 17",
-            "binaryDir": "${sourceDir}/cmake-out",
+            "binaryDir": "${sourceDir}/-cmake",
             "cacheVariables": {
-                "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/bin",
+                "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/-bin",
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
             }
         },
         {
-            "name": "compilation-database",
+            "name": "clangd",
             "inherits": "default",
             "hidden": false,
             "generator": "Ninja",
-            "binaryDir": "${sourceDir}/compilation-database"
+            "description": "Clangd configuration for exporting compile commands for MSVC",
+            "binaryDir": "${sourceDir}/-clangd"
         }
     ],
     "buildPresets": [
         {
-            "name": "build-default",
+            "name": "core",
+            "configurePreset": "default",
+            "targets": ["Lumin.Core"]
+        },
+        {
+            "name": "sdk",
+            "configurePreset": "default",
+            "targets": ["Lumin.SDK"]
+        },
+        {
+            "name": "extras",
             "configurePreset": "default",
             "targets": [
-                "Lumin.SDK",
-                "Lumin.Module.Filesystem",
-                "Lumin.Module.Date_Time",
-                "Lumin.Module.Console"
+                "Lumin.Extras.Filesystem",
+                "Lumin.Extras.Date_Time",
+                "Lumin.Extras.Console"
             ]
-    }
+        }
   ]
 }

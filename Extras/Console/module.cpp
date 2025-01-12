@@ -1,9 +1,7 @@
-#include "_lumin_modules_api.h"
+#include ".lumin_extras_api.h"
 #include <lumin.h>
 #include <lualib.h>
 #include <iostream>
-#include <optional>
-#include "Windows.h"
 #include <unordered_map>
 static void register_ansi_code(lua_State* L, const char* field, const char* code) {
     lua_pushstring(L, code);
@@ -63,7 +61,7 @@ static void push_ansi_codes(lua_State* L, const ansi_code_map& map) {
         lua_setfield(L, -2, key.c_str());
     }
 }
-LUMIN_MODULES_API inline int loadmodule(lua_State* L) {
+LUMIN_EXTRAS_API inline int loadmodule(lua_State* L) {
     lua_newtable(L);
     luaL_register(L, nullptr, library);
     lua_newtable(L);

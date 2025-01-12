@@ -2,15 +2,15 @@
 #include <lumin.h>
 #include <format>
 #include <chrono>
-#include "userdata_lazybuilder.hpp"
+#include "generic_userdata_template.hpp"
 #include <string>
 using namespace std::string_literals;
-using udata = generic_userdata_template<duration>;
+using gut = generic_userdata_template<duration>;
 static const std::string tname = module_name + "."s + "duration";
-template<> const char* udata::type_name(){return tname.c_str();}
+template<> const char* gut::type_name(){return tname.c_str();}
 
 duration* to_duration(lua_State* L, int idx) {
-    return &udata::check_udata(L, idx);
+    return &gut::check_udata(L, idx);
 }
 static std::string default_format(duration amount) {
     using ch::duration_cast;
@@ -25,7 +25,7 @@ static std::string default_format(duration amount) {
         minutes.count(), seconds.count(), nanoseconds.count());
     return result;
 }
-static const udata::registry namecall = {
+static const gut::registry namecall = {
     {"format", [](lua_State* L, duration& d) -> int {
         const std::string fmt = "{:"s + luaL_checkstring(L, 2) + "}"s;
         lua_pushstring(L, std::vformat(fmt, std::make_format_args(d)).c_str());
@@ -37,7 +37,7 @@ static const udata::registry namecall = {
     }},
 };
 
-static const udata::registry indices = {
+static const gut::registry indices = {
     {"total_seconds", [](lua_State* L, duration& self) -> int {
         lua_pushnumber(L, ch::duration<double>(self).count());
         return 1;
@@ -57,15 +57,15 @@ static const udata::registry indices = {
 };
 
 static int sub(lua_State* L) {
-    if (udata::is_type(L, 1) and udata::is_type(L, 2)) {
-        udata::new_udata(L, *to_duration(L, 1) - *to_duration(L, 2));
+    if (gut::is_type(L, 1) and gut::is_type(L, 2)) {
+        gut::new_udata(L, *to_duration(L, 1) - *to_duration(L, 2));
         return 1;
     }
     luaL_errorL(L, "unknown arithmetic operation");
 }
 static int add(lua_State* L) {
-    if (udata::is_type(L, 1) and udata::is_type(L, 2)) {
-        udata::new_udata(L, *to_duration(L, 1) + *to_duration(L, 2));
+    if (gut::is_type(L, 1) and gut::is_type(L, 2)) {
+        gut::new_udata(L, *to_duration(L, 1) + *to_duration(L, 2));
         return 1;
     }
     luaL_errorL(L, "unknown arithmetic operation");
@@ -77,19 +77,19 @@ static int tostring(lua_State* L) {
     return 1;
 }
 duration& new_duration(lua_State* L, const duration& v) {
-    if (not udata::initialized(L)) {
+    if (not gut::initialized(L)) {
         const luaL_Reg meta[] = {
             {"__tostring", tostring},
             {"__sub", sub},
             {"__add", add},
             {nullptr, nullptr}
         };
-        udata::init(L, {
+        gut::init(L, {
             .index = indices,
             .namecall = namecall,
             .meta = meta,
         });
     }
-    return udata::new_udata(L, v);
+    return gut::new_udata(L, v);
 }
 

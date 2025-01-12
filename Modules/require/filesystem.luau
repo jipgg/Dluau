@@ -27,7 +27,7 @@ type _path = {
     --- returns true if the path actually exists
     exists: (self: path) -> boolean,
 }
-export type Filesystem_Standard_Module = {
+export type filesystem = {
     --- absolute path
     absolute: (path: string) -> string,
     -- current working directory path
@@ -40,4 +40,4 @@ export type Filesystem_Standard_Module = {
     -- Path class constructor
     path: (path: string) -> path,
 }
-return dll.loadfunction("luminstd", "module_filesystem")() :: Filesystem_Standard_Module
+return dll.loadmodule('module.filesystem.dll') :: filesystem

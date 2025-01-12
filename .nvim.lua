@@ -12,7 +12,7 @@ require"lspconfig".luau_lsp.setup {
             require = {
                 mode = "relativeToFile",
                 directoryAliases = {
-                    ["@std"] = "./std.require/",
+                    ["@modules"] = "./Modules/require/",
                 },
             },
         }

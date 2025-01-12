@@ -1,8 +1,8 @@
-#include "_luminstd_api.h"
+#include "_lumin_modules_api.h"
 #include <lualib.h>
 #include <filesystem>
 #include "lumin.h"
-#include "filesystem.hpp"
+#include "module.hpp"
 namespace fs = std::filesystem;
 
 static int absolute(lua_State* L) {
@@ -83,7 +83,7 @@ static const luaL_Reg library[] = {
     {"path", path_ctor},
     {nullptr, nullptr}
 };
-LUMINSTD_API inline int module_filesystem(lua_State* L) {
+LUMIN_MODULES_API inline int module_filesystem(lua_State* L) {
     init_path(L);
     lua_newtable(L);
     luaL_register(L, nullptr, library);

@@ -1,6 +1,6 @@
 {
     "languageMode": "strict",
     "aliases": {
-        "std": "./std.require/"
+        "modules": "./Modules/require/"
     }
 }

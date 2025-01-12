@@ -1,3 +1,4 @@
+type chrono_literals = 'ns'|'us'|'s'|'min'|'h'|'d'|'mo'|'y' 
 --- Represents a span of time, expressed in various units.
 --- A `duration` is a userdata type that supports arithmetic operations and conversions between different time units.
 export type duration = typeof(setmetatable({} :: _duration, {} :: __duration))
@@ -31,11 +32,12 @@ type _duration = {
     --- @return string The formatted string representation of the duration.
     format: ((self: duration, fmt: string ) -> string)
         & ((self: duration, presets:'%H'|'%M'|'%S'|'%T'|'%S'|'%R'|'%p') -> string),
+    type: (self: duration) -> "date_time.duration",
 }
 type __duration = {
     __sub: (self: duration, other: duration) -> duration,
     __add: (self: duration, other: duration) -> duration,
-    __type: "date_time.time_span"
+    __type: "date_time.duration"
 }
 --- Represents a specific point in time, defined in terms of calendar date and time.
 --- A `time_point` is a userdata type that supports formatting and arithmetic with durations.
@@ -92,6 +94,7 @@ type _time = {
         & ((self: time, presets:'%Y'|'%C'|'%y'|'%m'|
             '%B'|'%b'|'%d'|'%e'|'%H'|'%I'|'%M'|'%S'|'%p'|
             '%z'|'%Z'|'%j'|'%U'|'%W'|'%c'|'%x'|'%X'|'%%') -> string),
+    type: (self: time) -> "date_time.time",
 }
 type __time = {
     __sub: ((self: time, other: time) -> duration)
@@ -100,8 +103,8 @@ type __time = {
         & ((self: time, other: duration) -> time),
     __type: "date_time.time"
 }
-export type precise_time = typeof(setmetatable({} :: _precise_time, {} :: __precise_time))
-type _precise_time = {
+export type high_precision_time = typeof(setmetatable({} :: _high_precision_time, {} :: __high_precision_time))
+type _high_precision_time = {
     hour: number,
     --- The minute of the time point (0-59).
     minute: number,
@@ -146,23 +149,24 @@ type _precise_time = {
     --- ```
     --- @param fmt string The format string to use for formatting.
     --- @return string The formatted string representation of the time point.
-    format: ((self: time, fmt: string) -> string)
-        & ((self: time, presets:'%Y'|'%C'|'%y'|'%m'|
+    format: ((self: high_precision_time, fmt: string) -> string)
+        & ((self: high_precision_time, presets:'%Y'|'%C'|'%y'|'%m'|
             '%B'|'%b'|'%d'|'%e'|'%H'|'%I'|'%M'|'%S'|'%p'|
             '%z'|'%Z'|'%j'|'%U'|'%W'|'%c'|'%x'|'%X'|'%%') -> string),
+    type: (self: high_precision_time) -> "date_time.high_precision_time"
 }
-type __precise_time = {
-    __sub: ((self: time, other: time) -> duration)
-        & ((self: time, other: duration) -> time),
-    __add: ((self: time, other: time) -> duration)
-        & ((self: time, other: duration) -> time),
-    __type: "date_time.precise_time"
+type __high_precision_time = {
+    __sub: ((self: high_precision_time, other: high_precision_time) -> duration)
+        & ((self: high_precision_time, other: duration) -> high_precision_time),
+    __add: ((self: high_precision_time, other: high_precision_time) -> duration)
+        & ((self: high_precision_time, other: duration) -> high_precision_time),
+    __type: "date_time.high_precision_time"
 }
 --- Provides a standard set of utilities for working with date and time.
 --- Internally implemented using `std::chrono` from C++, this module 
 --- offers functionality to retrieve the current time, perform arithmetic with durations, and 
 --- work with high-precision clocks. 
-type Date_Time_Standard_Module = {
+type date_time = {
     --- Retrieves the current system time as a `time_point`.
     --- This is typically equivalent to the current wall-clock time.
     now: () -> time,
@@ -174,25 +178,14 @@ type Date_Time_Standard_Module = {
     --- @param minute `number`: The minute (0-59).
     --- @param second `number`: The second (0-59).
     --- @return `time_point`: The constructed time point.
-    from_date_time: ((year: number, month: number, day: number,
-        hour: number, minute: number, second: number) -> time)
-        & ((fields: {
-            year: number?,
-            month: number?,
-            day: number?,
-            hour: number?,
-            minute: number?,
-            second: number?,
-            millisecond: number?,
-            microsecond: number?,
-            nanosecond: number?,
-    }) -> time),
+    date_time: ((year: number, month: number, day: number,
+        hour: number, minute: number, second: number) -> time),
     --- Constructs a `time_point` from the given date.
     --- @param year `number`: The year (e.g., 2025).
     --- @param month `number`: The month (1-12).
     --- @param day `number`: The day (1-31).
     --- @return `time_point`: The constructed time point.
-    from_date: (year: number, month: number, day: number) -> time,
+    date: (year: number, month: number, day: number) -> time,
     --- Constructs a `duration` from the given time.
     --- @param hour `number`: The hour (0-23).
     --- @param minute `number`: The minute (0-59).
@@ -201,16 +194,8 @@ type Date_Time_Standard_Module = {
     --- @param microsecond `number?`: The microsecond.
     --- @param nanosecond `number?`: The nanosecond.
     --- @return `duration`: The constructed duration.
-    from_time: ((hour: number, minute: number, second: number,
-        millisecond: number?, microsecond: number?, nanosecond: number?) -> duration)
-        & ((fields: {
-            hour: number?,
-            minute: number?,
-            second: number?,
-            millisecond: number?,
-            microsecond: number?,
-            nanosecond: number?,
-    }) -> time),
+    duration: ((...string) ->duration)
+        & ((...chrono_literals) -> duration),
     --- Creates a `duration` representing the specified number of seconds.
     --- @param s number The number of seconds to represent.
     --- @return duration A duration object representing the given seconds.
@@ -249,6 +234,6 @@ type Date_Time_Standard_Module = {
     system_clock: {now: () -> time},
     --- A monotonic clock that cannot be adjusted and guarantees steady progression.
     --- Useful for measuring elapsed time.
-    precise_clock: {now: () -> precise_time},
+    high_precision_clock: {now: () -> high_precision_time},
 }
-return dll.loadfunction("luminstd", "module_date_time")() :: Date_Time_Standard_Module
+return dll.loadmodule("module.date_time.dll") :: date_time

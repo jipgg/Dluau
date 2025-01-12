@@ -23,7 +23,7 @@ export type ansi_codes = {
     bg: ansi_color_codes,
 }
 --- Standard Console Module
-export type Console_Standard_Module = {
+export type console = {
     --- ansi escape sequence ("\033")
     --- "\033[0m" to reset all
     ansi_code: (escape_sequence: string) -> (),
@@ -32,4 +32,4 @@ export type Console_Standard_Module = {
     codes: ansi_codes,
 }
 
-return dll.loadfunction("luminstd.dll", "module_console")() :: Console_Standard_Module 
+return dll.loadmodule("module.console.dll") :: console 

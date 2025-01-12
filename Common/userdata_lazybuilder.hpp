@@ -2,12 +2,11 @@
 #include <lumin.h>
 #include <string>
 #include <unordered_map>
-#include <optional>
 #include <lualib.h>
 #include <cassert>
 
 template<class T>
-class userdata_lazybuilder {
+class generic_userdata_template {
 public:
     static const char* type_name();
     using action = int(*)(lua_State*, T&);

@@ -8,8 +8,7 @@
             "binaryDir": "${sourceDir}/cmake-out",
             "cacheVariables": {
                 "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/bin",
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-                "VCPKG_TARGET_TRIPLET": "x64-windows-static"
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
             }
         },
         {
@@ -19,5 +18,17 @@
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/compilation-database"
         }
-    ]
+    ],
+    "buildPresets": [
+        {
+            "name": "build-default",
+            "configurePreset": "default",
+            "targets": [
+                "Lumin.SDK",
+                "Lumin.Module.Filesystem",
+                "Lumin.Module.Date_Time",
+                "Lumin.Module.Console"
+            ]
+    }
+  ]
 }

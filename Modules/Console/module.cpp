@@ -1,4 +1,4 @@
-#include "_luminstd_api.h"
+#include "_lumin_modules_api.h"
 #include <lumin.h>
 #include <lualib.h>
 #include <iostream>
@@ -63,7 +63,7 @@ static void push_ansi_codes(lua_State* L, const ansi_code_map& map) {
         lua_setfield(L, -2, key.c_str());
     }
 }
-LUMINSTD_API inline int module_console(lua_State* L) {
+LUMIN_MODULES_API inline int loadmodule(lua_State* L) {
     lua_newtable(L);
     luaL_register(L, nullptr, library);
     lua_newtable(L);

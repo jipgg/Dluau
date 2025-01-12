@@ -83,7 +83,7 @@ static const luaL_Reg library[] = {
     {"path", path_ctor},
     {nullptr, nullptr}
 };
-LUMINSTD_API inline int luminstd_filesystem(lua_State* L) {
+LUMINSTD_API inline int module_filesystem(lua_State* L) {
     init_path(L);
     lua_newtable(L);
     luaL_register(L, nullptr, library);

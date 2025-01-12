@@ -1,5 +1,5 @@
-export type path = typeof(setmetatable({} :: _path, {} :: path_meta))
-type path_meta = {
+export type path = typeof(setmetatable({} :: _path, {} :: __path))
+type __path = {
     __div: (self: path, self: path | string) -> path,
     __tostring: (self: path) -> string,
 }
@@ -27,7 +27,7 @@ type _path = {
     --- returns true if the path actually exists
     exists: (self: path) -> boolean,
 }
-export type lumin_filesystem_library = {
+export type Filesystem_Standard_Module = {
     --- absolute path
     absolute: (path: string) -> string,
     -- current working directory path
@@ -40,4 +40,4 @@ export type lumin_filesystem_library = {
     -- Path class constructor
     path: (path: string) -> path,
 }
-return dllimport("lumin-stdlib", "luminstd_filesystem")() :: lumin_filesystem_library
+return dllimport("luminstd", "module_filesystem")() :: Filesystem_Standard_Module

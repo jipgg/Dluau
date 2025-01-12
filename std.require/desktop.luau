@@ -93,4 +93,4 @@ export type lumin_desktop_library = {
     WINDOWPOS_UNDEFINED: number,
 }
 
-return dllimport("lumin-stdlib", "luminstd_desktop")() :: lumin_desktop_library
+return dllimport("luminstd", "luminstd_desktop")() :: lumin_desktop_library

@@ -1,24 +1,19 @@
 #include <Windows.h>
-#include <cstdio>
-#include <ios>
 #include <iostream>
+#include <string_view>
+extern int lumin_main(std::string_view args);
 
-namespace winutil {
 void configure_console_input() {
     HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
     if (hStdin == INVALID_HANDLE_VALUE) {
         std::cerr << "Failed to get standard input handle. Error: " << GetLastError() << std::endl;
         return;
     }
-
-    // Set console input mode
     DWORD mode;
     if (!GetConsoleMode(hStdin, &mode)) {
         std::cerr << "Failed to get console mode. Error: " << GetLastError() << std::endl;
         return;
     }
-
-    // Enable input processing (e.g., line input, echo input, etc.)
     mode |= ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT;
     if (!SetConsoleMode(hStdin, mode)) {
         std::cerr << "Failed to set console mode. Error: " << GetLastError() << std::endl;
@@ -70,4 +65,14 @@ void enable_virtual_terminal_processing() {
         SetConsoleMode(hOut, dwMode);
     }
 }
+int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {
+    const bool alloc = redirect_console_output();
+    enable_virtual_terminal_processing();
+    configure_console_input();
+    const int exit_code = lumin_main(std::string_view(lpCmdLine));
+    if (not alloc) simulate_key_press(VK_RETURN);
+    std::cout << std::flush;
+    std::cerr << std::flush;
+    FreeConsole();
+    return exit_code;
 }

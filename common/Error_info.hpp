@@ -7,20 +7,20 @@
 #include <ranges>
 #include <filesystem>
 
-class error_info {
+class Error_info {
     std::vector<std::source_location> traceback_;
     std::string message_;
 public:
-    error_info(const error_info& a) = default; 
-    error_info& operator=(const error_info& a) = default;
-    error_info(error_info&& a) noexcept = default;
-    error_info& operator=(error_info& a) noexcept = default;
-    ~error_info() = default;
-    explicit error_info(std::string message, std::source_location sl = std::source_location::current()):
+    Error_info(const Error_info& a) = default; 
+    Error_info& operator=(const Error_info& a) = default;
+    Error_info(Error_info&& a) noexcept = default;
+    Error_info& operator=(Error_info& a) noexcept = default;
+    ~Error_info() = default;
+    explicit Error_info(std::string message, std::source_location sl = std::source_location::current()):
         message_(std::move(message)) {
         traceback_.emplace_back(std::move(sl));
     }
-    error_info& propagate(std::source_location sl = std::source_location::current()) {
+    Error_info& propagate(std::source_location sl = std::source_location::current()) {
         traceback_.emplace_back(sl);
         return *this;
     }
@@ -50,7 +50,7 @@ public:
         ret.pop_back();
         return ret;
     }
-    friend std::ostream& operator<<(std::ostream& os, const error_info& error) {
+    friend std::ostream& operator<<(std::ostream& os, const Error_info& error) {
         return os << error.formatted();
     }
 };

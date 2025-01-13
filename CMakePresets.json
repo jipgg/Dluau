@@ -8,7 +8,8 @@
             "binaryDir": "${sourceDir}/-cmake",
             "cacheVariables": {
                 "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/-bin",
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+                "VCPKG_TARGET_TRIPLET": "x64-windows-static"
             }
         },
         {
@@ -24,20 +25,20 @@
         {
             "name": "core",
             "configurePreset": "default",
-            "targets": ["Lumin.Core"]
+            "targets": ["lumin-core"]
         },
         {
             "name": "sdk",
             "configurePreset": "default",
-            "targets": ["Lumin.SDK"]
+            "targets": ["lumin-sdk"]
         },
         {
-            "name": "extras",
+            "name": "extra",
             "configurePreset": "default",
             "targets": [
-                "Lumin.Extras.Filesystem",
-                "Lumin.Extras.Date_Time",
-                "Lumin.Extras.Console"
+                "lumin-extra.filesystem",
+                "lumin-extra.time",
+                "lumin-extra.console"
             ]
         }
   ]

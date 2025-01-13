@@ -2,59 +2,59 @@
 #include <lumin.h>
 #include <format>
 #include <chrono>
-#include "generic_userdata_template.hpp"
+#include "Generic_userdata_template.hpp"
 #include <string>
 using namespace std::string_literals;
-using gut = generic_userdata_template<time_>;
-static const std::string tname = module_name + "."s + "time";
+using gut = Generic_userdata_template<Time>;
+static const std::string tname = module_name + "."s + "Time";
 template<> const char* gut::type_name(){return tname.c_str();}
 
-time_* to_time(lua_State* L, int idx) {
+Time* to_time(lua_State* L, int idx) {
     return &gut::check_udata(L, idx);
 }
 
-static const gut::registry namecall = {
-    {"format", [](lua_State* L, time_& tp) -> int {
+static const gut::Registry namecall = {
+    {"format", [](lua_State* L, Time& tp) -> int {
         const std::string fmt = "{:"s + luaL_checkstring(L, 2) + "}"s;
         lua_pushstring(L, std::vformat(fmt, std::make_format_args(tp)).c_str());
         return 1;
     }},
-    {"type", [](lua_State* L, time_& d) -> int {
+    {"type", [](lua_State* L, Time& d) -> int {
         lua_pushstring(L, tname.c_str());
         return 1;
     }},
 };
 
-static const gut::registry index = {
-    {"year", [](lua_State* L, time_& tp) -> int {
+static const gut::Registry index = {
+    {"year", [](lua_State* L, Time& tp) -> int {
         ch::year_month_day ymd{ch::floor<ch::days>(tp)};
         lua_pushinteger(L, static_cast<int>(ymd.year()));
         return 1;
     }},
-    {"month", [](lua_State* L, time_& tp) -> int {
+    {"month", [](lua_State* L, Time& tp) -> int {
         ch::year_month_day ymd{ch::floor<ch::days>(tp)};
         lua_pushinteger(L, static_cast<unsigned int>(ymd.month()));
         return 1;
     }},
-    {"day", [](lua_State* L, time_& tp) -> int {
+    {"day", [](lua_State* L, Time& tp) -> int {
         ch::year_month_day ymd{ch::floor<ch::days>(tp)};
         lua_pushinteger(L, static_cast<unsigned int>(ymd.day()));
         return 1;
     }},
-    {"hour", [](lua_State* L, time_& tp) -> int {
+    {"hour", [](lua_State* L, Time& tp) -> int {
         const auto midnight = tp - ch::floor<ch::days>(tp);
         const auto hours = ch::duration_cast<ch::hours>(midnight);
         lua_pushinteger(L, hours.count());
         return 1;
     }},
-    {"minute", [](lua_State* L, time_& tp) -> int {
+    {"minute", [](lua_State* L, Time& tp) -> int {
         const auto midnight = tp - ch::floor<ch::days>(tp);
         const auto hours = ch::duration_cast<ch::hours>(midnight);
         const auto minutes = ch::duration_cast<ch::minutes>(midnight - hours);
         lua_pushinteger(L, minutes.count());
         return 1;
     }},
-    {"second", [](lua_State* L, time_& tp) -> int {
+    {"second", [](lua_State* L, Time& tp) -> int {
         const auto midnight = tp - ch::floor<ch::days>(tp);
         const auto hours = ch::duration_cast<ch::hours>(midnight);
         const auto minutes = ch::duration_cast<ch::minutes>(midnight - hours);
@@ -65,12 +65,12 @@ static const gut::registry index = {
 };
 
 static int tostring(lua_State* L) {
-    time_& tp = gut::check_udata(L, 1);
+    Time& tp = gut::check_udata(L, 1);
     lua_pushstring(L, std::format("{:%x %X}", tp).c_str());
     return 1;
 }
 
-time_& new_time(lua_State* L, const time_& v) {
+Time& new_time(lua_State* L, const Time& v) {
     if (not gut::initialized(L)) {
         const luaL_Reg meta[] = {
             {"__tostring", tostring},

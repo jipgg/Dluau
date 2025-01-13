@@ -1,8 +1,8 @@
-type chrono_literals = 'ns'|'us'|'s'|'min'|'h'|'d'|'mo'|'y' 
+type Unit_union = 'ns'|'us'|'s'|'min'|'h'|'d'|'mo'|'y' 
 --- Represents a span of time, expressed in various units.
 --- A `duration` is a userdata type that supports arithmetic operations and conversions between different time units.
-export type duration = typeof(setmetatable({} :: _duration, {} :: __duration))
-type _duration = {
+export type Duration = typeof(setmetatable({} :: _Duration, {} :: __Duration))
+type _Duration = {
     --- The duration represented in nanoseconds.
     in_nanoseconds: number,
     --- The duration represented in milliseconds.
@@ -30,19 +30,19 @@ type _duration = {
     --- ```
     --- @param fmt string The format string to use for formatting.
     --- @return string The formatted string representation of the duration.
-    format: ((self: duration, fmt: string ) -> string)
-        & ((self: duration, presets:'%H'|'%M'|'%S'|'%T'|'%S'|'%R'|'%p') -> string),
-    type: (self: duration) -> "date_time.duration",
+    format: ((self: Duration, fmt: string ) -> string)
+        & ((self: Duration, presets:'%H'|'%M'|'%S'|'%T'|'%S'|'%R'|'%p') -> string),
+    type: (self: Duration) -> "date_time.duration",
 }
-type __duration = {
-    __sub: (self: duration, other: duration) -> duration,
-    __add: (self: duration, other: duration) -> duration,
-    __type: "date_time.duration"
+type __Duration = {
+    __sub: (self: Duration, other: Duration) -> Duration,
+    __add: (self: Duration, other: Duration) -> Duration,
+    __type: "time.Duration"
 }
 --- Represents a specific point in time, defined in terms of calendar date and time.
 --- A `time_point` is a userdata type that supports formatting and arithmetic with durations.
-export type time = typeof(setmetatable({} :: _time, {} :: __time))
-type _time = {
+export type Time = typeof(setmetatable({} :: _Time, {} :: __Time))
+type _Time = {
     --- The year of the time point (e.g., 2025).
     year: number,
     --- The month of the time point (1-12).
@@ -90,21 +90,21 @@ type _time = {
     --- ```
     --- @param fmt string The format string to use for formatting.
     --- @return string The formatted string representation of the time point.
-    format: ((self: time, fmt: string) -> string)
-        & ((self: time, presets:'%Y'|'%C'|'%y'|'%m'|
+    format: ((self: Time, fmt: string) -> string)
+        & ((self: Time, presets:'%Y'|'%C'|'%y'|'%m'|
             '%B'|'%b'|'%d'|'%e'|'%H'|'%I'|'%M'|'%S'|'%p'|
             '%z'|'%Z'|'%j'|'%U'|'%W'|'%c'|'%x'|'%X'|'%%') -> string),
-    type: (self: time) -> "date_time.time",
+    type: (self: Time) -> "date_time.time",
 }
-type __time = {
-    __sub: ((self: time, other: time) -> duration)
-        & ((self: time, other: duration) -> time),
-    __add: ((self: time, other: time) -> duration)
-        & ((self: time, other: duration) -> time),
+type __Time = {
+    __sub: ((self: Time, other: Time) -> Duration)
+        & ((self: Time, other: Duration) -> Time),
+    __add: ((self: Time, other: Time) -> Duration)
+        & ((self: Time, other: Duration) -> Time),
     __type: "date_time.time"
 }
-export type high_precision_time = typeof(setmetatable({} :: _high_precision_time, {} :: __high_precision_time))
-type _high_precision_time = {
+export type High_precision_time = typeof(setmetatable({} :: _High_precision_time, {} :: __High_precision_time))
+type _High_precision_time = {
     hour: number,
     --- The minute of the time point (0-59).
     minute: number,
@@ -149,27 +149,27 @@ type _high_precision_time = {
     --- ```
     --- @param fmt string The format string to use for formatting.
     --- @return string The formatted string representation of the time point.
-    format: ((self: high_precision_time, fmt: string) -> string)
-        & ((self: high_precision_time, presets:'%Y'|'%C'|'%y'|'%m'|
+    format: ((self: High_precision_time, fmt: string) -> string)
+        & ((self: High_precision_time, presets:'%Y'|'%C'|'%y'|'%m'|
             '%B'|'%b'|'%d'|'%e'|'%H'|'%I'|'%M'|'%S'|'%p'|
             '%z'|'%Z'|'%j'|'%U'|'%W'|'%c'|'%x'|'%X'|'%%') -> string),
-    type: (self: high_precision_time) -> "date_time.high_precision_time"
+    type: (self: High_precision_time) -> "date_time.high_precision_time"
 }
-type __high_precision_time = {
-    __sub: ((self: high_precision_time, other: high_precision_time) -> duration)
-        & ((self: high_precision_time, other: duration) -> high_precision_time),
-    __add: ((self: high_precision_time, other: high_precision_time) -> duration)
-        & ((self: high_precision_time, other: duration) -> high_precision_time),
+type __High_precision_time = {
+    __sub: ((self: High_precision_time, other: High_precision_time) -> Duration)
+        & ((self: High_precision_time, other: Duration) -> High_precision_time),
+    __add: ((self: High_precision_time, other: High_precision_time) -> Duration)
+        & ((self: High_precision_time, other: Duration) -> High_precision_time),
     __type: "date_time.high_precision_time"
 }
 --- Provides a standard set of utilities for working with date and time.
 --- Internally implemented using `std::chrono` from C++, this module 
 --- offers functionality to retrieve the current time, perform arithmetic with durations, and 
 --- work with high-precision clocks. 
-type date_time = {
+type time = {
     --- Retrieves the current system time as a `time_point`.
     --- This is typically equivalent to the current wall-clock time.
-    now: () -> time,
+    now: () -> Time,
     --- Constructs a `time_point` from the given date and time.
     --- @param year `number`: The year (e.g., 2025).
     --- @param month `number`: The month (1-12).
@@ -179,13 +179,13 @@ type date_time = {
     --- @param second `number`: The second (0-59).
     --- @return `time_point`: The constructed time point.
     date_time: ((year: number, month: number, day: number,
-        hour: number, minute: number, second: number) -> time),
+        hour: number, minute: number, second: number) -> Time),
     --- Constructs a `time_point` from the given date.
     --- @param year `number`: The year (e.g., 2025).
     --- @param month `number`: The month (1-12).
     --- @param day `number`: The day (1-31).
     --- @return `time_point`: The constructed time point.
-    date: (year: number, month: number, day: number) -> time,
+    date: (year: number, month: number, day: number) -> Time,
     --- Constructs a `duration` from the given time.
     --- @param hour `number`: The hour (0-23).
     --- @param minute `number`: The minute (0-59).
@@ -194,46 +194,50 @@ type date_time = {
     --- @param microsecond `number?`: The microsecond.
     --- @param nanosecond `number?`: The nanosecond.
     --- @return `duration`: The constructed duration.
-    duration: ((...string) ->duration)
-        & ((...chrono_literals) -> duration),
+    duration: ((... string) ->Duration)
+        & ((... Unit_union) -> Duration),
     --- Creates a `duration` representing the specified number of seconds.
     --- @param s number The number of seconds to represent.
     --- @return duration A duration object representing the given seconds.
-    seconds: (s: number) -> duration,
+    seconds: (s: number) -> Duration,
     --- Creates a `duration` representing the specified number of nanoseconds.
     --- @param ns number The number of nanoseconds to represent.
     --- @return duration A duration object representing the given nanoseconds.
-    nanoseconds: (ns: number) -> duration,
+    nanoseconds: (ns: number) -> Duration,
     --- Creates a `duration` representing the specified number of milliseconds.
     --- @param ms number The number of milliseconds to represent.
     --- @return duration A duration object representing the given milliseconds.
-    milliseconds: (ms: number) -> duration,
+    milliseconds: (ms: number) -> Duration,
     --- Creates a `duration` representing the specified number of microseconds.
     --- @param us number The number of microseconds to represent.
     --- @return duration A duration object representing the given microseconds.
-    microseconds: (us: number) -> duration,
+    microseconds: (us: number) -> Duration,
     --- Creates a `duration` representing the specified number of minutes.
     --- @param min number The number of minutes to represent.
     --- @return duration A duration object representing the given minutes.
-    minutes: (min: number) -> duration,
+    minutes: (min: number) -> Duration,
     --- Creates a `duration` representing the specified number of days.
     --- @param d number The number of days to represent.
     --- @return duration A duration object representing the given days.
-    days: (d: number) -> duration,
+    days: (d: number) -> Duration,
     --- Creates a `duration` representing the specified number of months.
     --- Note: The exact interpretation of a "month" may depend on your implementation.
     --- @param d number The number of months to represent.
     --- @return duration A duration object representing the given months.
-    months: (d: number) -> duration,
+    months: (d: number) -> Duration,
     --- Creates a `duration` representing the specified number of hours.
     --- @param h number The number of hours to represent.
     --- @return duration A duration object representing the given hours.
-    hours: (h: number) -> duration,
+    hours: (h: number) -> Duration,
     --- Represents the system's wall-clock time (typically tied to the local timezone).
     --- This clock reflects real-world time and may be adjusted by the system.
-    system_clock: {now: () -> time},
+    system_clock: {now: () -> Time},
     --- A monotonic clock that cannot be adjusted and guarantees steady progression.
     --- Useful for measuring elapsed time.
-    high_precision_clock: {now: () -> high_precision_time},
+    high_precision_clock: {now: () -> High_precision_time},
 }
-return dll.loadmodule("lumin-extras-date_time.dll") :: date_time
+local module = dll.getmodule("time.lumin.dll")
+print(module, typeof(module))
+local f = dll.getfunction(module, "loadmodule")
+print(f)
+return f() :: time

@@ -5,6 +5,7 @@
 #include <luacodegen.h>
 #include <lumin.h>
 #include <luminfuncs.h>
+#include <luminutils.h>
 //lua.h
 lua_State* lua_newstate(lua_Alloc f, void* ud) {return 0;}
 void lua_close(lua_State* L) {}
@@ -203,7 +204,7 @@ int luau_codegen_supported(void) {return 0;}
 void luau_codegen_create(lua_State* L) {}
 void luau_codegen_compile(lua_State* L, int idx) {}
 //lumin.h
-int lumin_newtypetag() {return 0;}
+int lumin_newutag() {return 0;}
 bool lumin_samemeta(lua_State* L, int idx, const char* tname) {return 0;}
 int16_t lumin_useratom(const char* key, size_t len) {return 0i16;}
 void lumin_loadfuncs(lua_State* L) {}
@@ -214,3 +215,6 @@ int luminF_dllimport(lua_State* L) {return 0;}
 int luminF_loadstring(lua_State* L) {return 0;}
 int luminF_require(lua_State* L) {return 0;}
 int luminF_collectgarbage(lua_State* L) {return 0;}
+
+lua_State* luminU_loadscript(lua_State* L, const char* script_path) {return 0;}
+void luminU_spawnscript(lua_State* L, const char* script_path) {}

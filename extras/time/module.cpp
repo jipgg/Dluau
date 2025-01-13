@@ -73,7 +73,7 @@ template<class Clock>
 static void register_precise_clock_variant(lua_State* L, const char* as) {
     const luaL_Reg lib[] = {
         {"now", [](lua_State* L) -> int {
-            new_high_precision_time(L, high_precision_time(ch::duration_cast<ch::nanoseconds>(Clock::now().time_since_epoch())));
+            new_high_precision_time(L, High_precision_time(ch::duration_cast<ch::nanoseconds>(Clock::now().time_since_epoch())));
             return 1;
         }},
         {nullptr, nullptr}

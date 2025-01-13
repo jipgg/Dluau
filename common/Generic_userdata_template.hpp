@@ -6,11 +6,11 @@
 #include <cassert>
 
 template<class T>
-class generic_userdata_template {
+class Generic_userdata_template {
 public:
     static const char* type_name();
-    using action = int(*)(lua_State*, T&);
-    using registry = std::unordered_map<std::string, action>;
+    using Action = int(*)(lua_State*, T&);
+    using Registry = std::unordered_map<std::string, Action>;
     static bool is_type(lua_State* L, int idx) {
         luaL_getmetatable(L, type_name());
         lua_getmetatable(L, idx);
@@ -38,9 +38,9 @@ public:
         return initialized_;
     }
     struct init_info {
-        registry index{};
-        registry newindex{};
-        registry namecall{};
+        Registry index{};
+        Registry newindex{};
+        Registry namecall{};
         const luaL_Reg* meta{};
     };
     static void init(lua_State* L, init_info info) {
@@ -85,7 +85,7 @@ private:
         if (found_it == newindex_.end()) luaL_errorL(L, "invalid index");
         return found_it->second(L, self);
     }
-    static void init_namecalls(lua_State* L, const registry& namecalls) {
+    static void init_namecalls(lua_State* L, const Registry& namecalls) {
         for (const auto& [key, call] : namecalls) {
             lua_pushlstring(L, key.data(), key.size());
             int atom;
@@ -95,7 +95,7 @@ private:
         }
     }
     inline static bool initialized_ = false;
-    inline static std::unordered_map<int, action> namecall_;
-    inline static registry index_;
-    inline static registry newindex_;
+    inline static std::unordered_map<int, Action> namecall_;
+    inline static Registry index_;
+    inline static Registry newindex_;
 };

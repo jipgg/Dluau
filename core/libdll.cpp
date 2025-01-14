@@ -12,7 +12,7 @@
 #include <algorithm>
 #include <Windows.h>
 #include <cassert>
-#include <iostream>
+#include <boost/container/flat_map.hpp>
 #include <format>
 static int lutag{};
 static int getfunc_stringatom{};
@@ -23,9 +23,9 @@ struct Module {
     std::string name;
     std::string path;
     ~Module() {if (handle) FreeLibrary(handle);}
-    std::unordered_map<std::string, uintptr_t> cached{};
+    boost::container::flat_map<std::string, uintptr_t> cached{};
 };
-static std::unordered_map<std::string, std::unique_ptr<Module>> loaded_modules{};
+static boost::container::flat_map<std::string, std::unique_ptr<Module>> loaded_modules{};
 std::optional<std::string> find_module_path(const std::string& dllname) {
     char buffer[MAX_PATH];
     DWORD result = SearchPath(

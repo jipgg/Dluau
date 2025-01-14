@@ -64,7 +64,7 @@ set_target_properties(lumin-core.stub PROPERTIES OUTPUT_NAME ${lumin-core.name})
 add_custom_command(TARGET lumin-core.stub POST_BUILD COMMAND ${CMAKE_COMMAND} -E rm -f $<TARGET_FILE:lumin-core.stub>)
 
 
-target_link_libraries(lumin-sdk PRIVATE lumin-core.stub lumin.common)
+target_link_libraries(lumin-sdk PRIVATE lumin-core lumin.common)
 set_target_properties(lumin-sdk PROPERTIES OUTPUT_NAME lumin)
 
 target_compile_definitions(lumin-extra.filesystem PRIVATE ${lumin-extra.export})

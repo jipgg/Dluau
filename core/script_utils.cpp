@@ -54,11 +54,14 @@ lua_State* luminU_loadscript(lua_State* L, const char* path) {
     }
     return nullptr;
 }
-void luminU_spawnscript(lua_State* L, const char* script_path) {
+const char* luminU_spawnscript(lua_State* L, const char* script_path) {
     auto r = luminU_loadscript(L, script_path);
     if (not r) luaL_errorL(L, "failed to load script '%s'", script_path);
     int status = lua_resume(r, L, 0);
     if (status != LUA_OK) {
-        std::cerr << std::format("\033[31m{}\033[0m\n", luaL_checkstring(r, -1));
+        static const std::string errmsg = luaL_checkstring(r, -1);
+        return errmsg.c_str();
+        //std::cerr << std::format("\033[31m{}\033[0m\n", luaL_checkstring(r, -1));
     }
+    return nullptr;
 }

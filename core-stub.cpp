@@ -223,4 +223,4 @@ int luminF_require(lua_State* L) {return 0;}
 int luminF_collectgarbage(lua_State* L) {return 0;}
 
 lua_State* luminU_loadscript(lua_State* L, const char* script_path) {return 0;}
-void luminU_spawnscript(lua_State* L, const char* script_path) {}
+const char* luminU_spawnscript(lua_State* L, const char* script_path) {return 0;}

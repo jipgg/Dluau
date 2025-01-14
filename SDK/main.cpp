@@ -9,8 +9,11 @@
 
 static int run(const std::string& source) {
     lua_State* L = lumin_initstate();
-    luminU_spawnscript(L, source.c_str());
-    return lua_status(L);
+    if (const char* err = luminU_spawnscript(L, source.c_str())) {
+        std::cerr << std::format("\033[31m{}\033[0m\n", err);
+        return -1;
+    }
+    return 0;
 }
 int lumin_main(std::span<std::string_view> args) {
     for (auto e : args) {

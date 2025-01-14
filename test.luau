@@ -1,4 +1,7 @@
 local time = require("@extras/time")
+print(`module is {dll.getmodule("time.lumin.dll")}`)
+print(`path is {dll.getmodule("time.lumin.dll").path}`)
+print(`name is {dll.getmodule("time.lumin.dll").name}`)
 
 local v = time.now()
 print(`time is {v:format'%X'} {v} {typeof(v)}`)

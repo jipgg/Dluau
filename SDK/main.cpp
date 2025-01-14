@@ -2,15 +2,24 @@
 #include <lualib.h>
 #include <luacode.h>
 #include "luminutils.h"
+#include <ranges>
 #include <lumin.h>
+#include <format>
 #include <iostream>
-int lumin_main(std::string_view args) {
+
+static int run(const std::string& source) {
     lua_State* L = luaL_newstate();
     lua_callbacks(L)->useratom = lumin_useratom;
     luaL_openlibs(L);
     luminopen_dll(L);
     lumin_loadfuncs(L);
-    luminU_spawnscript(L, "test.luau");
-    if (lua_status(L) != LUA_OK) std::cerr << "\033[31m" <<lua_tostring(L, -1) << "\033[0m\n"; 
+    luminU_spawnscript(L, source.c_str());
     return lua_status(L);
+}
+int lumin_main(std::span<std::string_view> args) {
+    for (auto e : args) {
+        std::cout << std::format("> {}\n", e);
+    }
+    if (args[0] == "run") return run(std::string(args[1]));
+    return 0;
 }

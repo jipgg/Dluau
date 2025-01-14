@@ -1,7 +1,10 @@
 #include <Windows.h>
 #include <iostream>
 #include <string_view>
-extern int lumin_main(std::string_view args);
+#include <ranges>
+#include <vector>
+#include <span>
+extern int lumin_main(std::span<std::string_view> args);
 
 void configure_console_input() {
     HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
@@ -69,7 +72,12 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int n
     const bool alloc = redirect_console_output();
     enable_virtual_terminal_processing();
     configure_console_input();
-    const int exit_code = lumin_main(std::string_view(lpCmdLine));
+
+    auto range = std::views::split(std::string_view(lpCmdLine), ' ');
+    std::vector<std::string_view> args;
+    for (auto sub : range) args.emplace_back(sub.begin(), sub.end());
+
+    const int exit_code = lumin_main(args);
     if (not alloc) simulate_key_press(VK_RETURN);
     std::cout << std::flush;
     std::cerr << std::flush;

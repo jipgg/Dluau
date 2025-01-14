@@ -166,7 +166,7 @@ type __High_precision_time = {
 --- Internally implemented using `std::chrono` from C++, this module 
 --- offers functionality to retrieve the current time, perform arithmetic with durations, and 
 --- work with high-precision clocks. 
-type time = {
+export type time = {
     --- Retrieves the current system time as a `time_point`.
     --- This is typically equivalent to the current wall-clock time.
     now: () -> Time,
@@ -236,8 +236,4 @@ type time = {
     --- Useful for measuring elapsed time.
     high_precision_clock: {now: () -> High_precision_time},
 }
-local module = dll.getmodule("time.lumin.dll")
-print(module, typeof(module))
-local f = dll.getfunction(module, "loadmodule")
-print(f)
-return f() :: time
+return dll.getmodule("time.lumin"):getfunc("loadmodule")() :: time

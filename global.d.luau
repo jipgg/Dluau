@@ -1,4 +1,5 @@
 declare collectgarbage: (("collect") -> ()) & (("count") -> number)
+declare test: (subject: string, block: ()->()) -> ()
 
 declare class module
     name: string

@@ -78,6 +78,7 @@ static int tostring(lua_State* L) {
 }
 Duration& new_duration(lua_State* L, const Duration& v) {
     if (not gut::initialized(L)) {
+        lumin_adduserdatatype(tname.c_str());
         const luaL_Reg meta[] = {
             {"__tostring", tostring},
             {"__sub", sub},

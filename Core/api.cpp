@@ -28,11 +28,11 @@ int16_t lumin_useratom(const char* key, size_t size) {
     return current_number++;
 }
 
-int lumin_newutag() {
+int lumin_newuserdatatag() {
     static int curr_type_tag = 1;
     return curr_type_tag++; 
 }
-int lumin_newlutag() {
+int lumin_newlightuserdatatag() {
     static int curr_type_tag = 1;
     return curr_type_tag++; 
 }

@@ -204,11 +204,17 @@ int luau_codegen_supported(void) {return 0;}
 void luau_codegen_create(lua_State* L) {}
 void luau_codegen_compile(lua_State* L, int idx) {}
 //lumin.h
-int lumin_newutag() {return 0;}
+int lumin_newuserdatatag() {return 0;}
+int lumin_newlightuserdatatag() {return 0;}
 bool lumin_samemeta(lua_State* L, int idx, const char* tname) {return 0;}
 int16_t lumin_useratom(const char* key, size_t len) {return 0i16;}
 void lumin_loadfuncs(lua_State* L) {}
 void luminopen_dll(lua_State* L) {}
+int lumiload_dll(lua_State* L) {return 0;}
+void lumin_adduserdatatype(const char *tname) {}
+int lumin_stringatom(lua_State *L, const char *key) {return 0;}
+int lumin_lstringatom(lua_State *L, const char *key, size_t len) {return 0;}
+lua_State* lumin_initstate() {return 0;}
 lua_CompileOptions* lumin_compileopts{nullptr};
 //luminfuncs.h
 int luminF_dllimport(lua_State* L) {return 0;}

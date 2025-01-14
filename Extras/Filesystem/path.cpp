@@ -6,7 +6,7 @@
 namespace fs = std::filesystem;
 using namecall_function = int(*)(lua_State*, Path&);
 static std::unordered_map<int, namecall_function> namecalls{};
-static int tag = lumin_newutag();
+static int tag = lumin_newuserdatatag();
 
 static int div(lua_State* L) {
     if (lua_isstring(L, 1)) {

@@ -136,13 +136,11 @@ static int module_namecall(lua_State* L) {
     if (atom == getfunc_stringatom) return getfunc(L);
     luaL_errorL(L, "invalid");
 }
-void luminopen_dll(lua_State* L) {
-    lutag = lumin_newlutag();
-    lua_pushstring(L, "getfunc");
-    lua_tostringatom(L, -1, &getfunc_stringatom);
-    lua_pop(L, 1);
-    lua_setlightuserdataname(L, lutag, tname);
+int luminload_dll(lua_State* L) {
     if (luaL_newmetatable(L, tname)) {
+        lutag = lumin_newlightuserdatatag();
+        getfunc_stringatom = lumin_stringatom(L, "getfunc");
+        lua_setlightuserdataname(L, lutag, tname);
         const luaL_Reg meta[] = {
             {"__index", module_index},
             {"__namecall", module_namecall},
@@ -159,5 +157,11 @@ void luminopen_dll(lua_State* L) {
         {"loaded", loaded},
         {nullptr, nullptr}
     };
-    luaL_register(L, "dll", lib);
+    lua_newtable(L);
+    luaL_register(L, nullptr, lib);
+    return 1;
+}
+void luminopen_dll(lua_State* L) {
+    luminload_dll(L);
+    lua_setglobal(L, "dll");
 }

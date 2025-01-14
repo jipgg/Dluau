@@ -11,8 +11,9 @@
 #include <unordered_map>
 #include <lualib.h>
 namespace fs = std::filesystem;
-static lua_CompileOptions _lumin_compileopts {};
-lua_CompileOptions* lumin_compileopts {&_lumin_compileopts};
+static lua_CompileOptions _lumin_compileoptions{};
+lua_CompileOptions* lumin_globalcompileoptions{&_lumin_compileoptions};
+
 struct Script {
     lua_State* thread;
     std::string path;
@@ -41,7 +42,8 @@ lua_State* luminU_loadscript(lua_State* L, const char* path) {
     auto identifier = script_path.filename().string();
     identifier = "=" + identifier;
     size_t outsize;
-    char* bc = luau_compile(source->data(), source->size(), lumin_compileopts, &outsize);
+    char* bc = luau_compile(source->data(), source->size(),
+                            lumin_globalcompileoptions, &outsize);
     std::string bytecode{bc, outsize};
     std::free(bc);
     lua_State* script_thread = lua_newthread(L);

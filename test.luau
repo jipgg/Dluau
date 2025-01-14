@@ -3,6 +3,8 @@ print(`module is {dll.getmodule("time.lumin.dll")}`)
 print(`path is {dll.getmodule("time.lumin.dll").path}`)
 print(`name is {dll.getmodule("time.lumin.dll").name}`)
 
+test("my test", function() end)
+
 local v = time.now()
 print(`time is {v:format'%X'} {v} {typeof(v)}`)
 local sb = time.high_precision_clock.now()

@@ -8,11 +8,7 @@
 #include <iostream>
 
 static int run(const std::string& source) {
-    lua_State* L = luaL_newstate();
-    lua_callbacks(L)->useratom = lumin_useratom;
-    luaL_openlibs(L);
-    luminopen_dll(L);
-    lumin_loadfuncs(L);
+    lua_State* L = lumin_initstate();
     luminU_spawnscript(L, source.c_str());
     return lua_status(L);
 }

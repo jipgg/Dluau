@@ -18,20 +18,13 @@ struct global_options {
 } global_opts;
 
 static bool codegen = true;
-lua_CompileOptions* compile_options() {
-    static lua_CompileOptions result = {};
-    result.optimizationLevel = global_opts.optimization_level;
-    result.debugLevel = global_opts.debug_level;
-    result.typeInfoLevel = 1;
-    return &result;
-}
 int luminF_loadstring(lua_State* L) {
     size_t l = 0;
     const char* s = luaL_checklstring(L, 1, &l);
     const char* chunkname = luaL_optstring(L, 2, s);
     lua_setsafeenv(L, LUA_ENVIRONINDEX, false);
     size_t outsize;
-    char* bc = luau_compile(s, l, compile_options(), &outsize);
+    char* bc = luau_compile(s, l, lumin_globalcompileoptions, &outsize);
     std::string bytecode(s, outsize);
     std::free(bc);
     if (luau_load(L, chunkname, bytecode.data(), bytecode.size(), 0) == 0)
@@ -166,7 +159,8 @@ int luminF_require(lua_State* L)
     luaL_sandboxthread(ML);
     // now we can compile & run module on the new thread
     size_t outsize;
-    char* bytecode_data = luau_compile(resolvedRequire.sourceCode.data(), resolvedRequire.sourceCode.length(), compile_options(), &outsize);
+    char* bytecode_data = luau_compile(resolvedRequire.sourceCode.data(),
+        resolvedRequire.sourceCode.length(), lumin_globalcompileoptions, &outsize);
     std::string bytecode{bytecode_data, outsize};
     std::free(bytecode_data);
     if (luau_load(ML, resolvedRequire.identifier.c_str(), bytecode.data(), bytecode.size(), 0) == 0)

@@ -3,7 +3,10 @@
 #include <string_view>
 #include <ranges>
 #include <vector>
+#include <thread>
+#include <chrono>
 #include <span>
+using namespace std::chrono_literals;
 extern int lumin_main(std::span<std::string_view> args);
 
 void configure_console_input() {
@@ -72,12 +75,12 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int n
     const bool alloc = redirect_console_output();
     enable_virtual_terminal_processing();
     configure_console_input();
-
     auto range = std::views::split(std::string_view(lpCmdLine), ' ');
     std::vector<std::string_view> args;
     for (auto sub : range) args.emplace_back(sub.begin(), sub.end());
 
     const int exit_code = lumin_main(args);
+    std::this_thread::sleep_for(1ms);
     if (not alloc) simulate_key_press(VK_RETURN);
     std::cout << std::flush;
     std::cerr << std::flush;

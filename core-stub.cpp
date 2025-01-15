@@ -210,6 +210,7 @@ bool lumin_samemeta(lua_State* L, int idx, const char* tname) {return 0;}
 int16_t lumin_useratom(const char* key, size_t len) {return 0i16;}
 void lumin_loadfuncs(lua_State* L) {}
 void luminopen_dll(lua_State* L) {}
+void luminopen_fs(lua_State *L) {}
 int lumiload_dll(lua_State* L) {return 0;}
 void lumin_adduserdatatype(const char *tname) {}
 int lumin_stringatom(lua_State *L, const char *key) {return 0;}

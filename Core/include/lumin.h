@@ -23,5 +23,6 @@ LUMIN_API lua_State* lumin_initstate();
 LUMIN_API void lumin_loadfuncs(lua_State* L);
 LUMIN_API void lumin_openlibs(lua_State* L);
 LUMIN_API void luminopen_dll(lua_State* L);
+LUMIN_API void luminopen_fs(lua_State* L);
 LUMIN_API int luminload_dll(lua_State* L);
 LUMIN_API lua_CompileOptions* lumin_globalcompileoptions;

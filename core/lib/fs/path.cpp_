@@ -1,0 +1,80 @@
+#include <Generic_userdata_template.hpp>
+#include "fs.hpp"
+#include <filesystem>
+#include <ranges>
+namespace fs = std::filesystem;
+using gut = Generic_userdata_template<Path>;
+static const char* tname = "path";
+template<> const char* gut::type_name(){return tname;}
+
+static const gut::Registry namecall = {
+    {"getchildren", [](lua_State* L, Path& s) -> int {
+        int i{1};
+        lua_newtable(L);
+        for (const auto& entry : fs::directory_iterator(s)) {
+            new_path(L, entry.path());
+            lua_rawseti(L, -2,  i++);
+        }
+        return 1;
+    }},
+    {"is_absolute", [](lua_State* L, Path& s) -> int {
+        lua_pushboolean(L, s.is_absolute());
+        return 1;
+    }},
+    {"is_relative", [](lua_State* L, Path& s) -> int {
+        lua_pushboolean(L, s.is_relative());
+        return 1;
+    }},
+};
+static const gut::Registry index = {
+    {"parent", [](lua_State* L, Path& s) -> int {
+        new_path(L, s.parent_path());
+        return 1;
+    }},
+    {"exists", [](lua_State* L, Path& s) -> int {
+        lua_pushboolean(L, fs::exists(s));
+        return 1;
+    }},
+    {"stem", [](lua_State* L, Path& s) -> int {
+        if (not s.has_stem()) return 0;
+        lua_pushstring(L, s.stem().string().c_str());
+        return 1;
+    }},
+    {"extension", [](lua_State* L, Path& s) -> int {
+        if (not s.has_extension()) return 0;
+        lua_pushstring(L, s.extension().string().c_str());
+        return 1;
+    }},
+};
+static int tostring(lua_State* L) {
+    auto& p = check_path(L, 1);
+    lua_pushstring(L, p.string().c_str());
+    return 1;
+}
+static int div(lua_State* L) {
+    Path p1, p2;
+    if (gut::is_type(L, 1)) p1 = check_path(L, 1);
+    else p1 = luaL_checkstring(L, 1);
+    if (gut::is_type(L, 2)) p2 = check_path(L, 1);
+    else p2 = luaL_checkstring(L, 2);
+    Path result = p1 / p2;
+    result = std::ranges::replace(result.string(), '\\', '/');
+}
+Path& new_path(lua_State* L, const Path& v) {
+    if (not gut::initialized(L)) {
+        const luaL_Reg meta[] = {
+            {"__tostring", tostring},
+            {nullptr, nullptr}
+        };
+        lumin_adduserdatatype(tname);
+        gut::init(L, gut::init_info{
+            .index = index,
+            .namecall = namecall,
+            .meta = meta,
+        });
+    }
+    return gut::new_udata(L, v);
+}
+Path& check_path(lua_State* L, int idx) {
+    return gut::check_udata(L, idx);
+}

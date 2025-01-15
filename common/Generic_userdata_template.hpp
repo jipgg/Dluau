@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <lualib.h>
+#include <boost/container/flat_map.hpp>
 #include <cassert>
 
 template<class T>
@@ -10,7 +11,7 @@ class Generic_userdata_template {
 public:
     static const char* type_name();
     using Action = int(*)(lua_State*, T&);
-    using Registry = std::unordered_map<std::string, Action>;
+    using Registry = boost::container::flat_map<std::string, Action>;
     static bool is_type(lua_State* L, int idx) {
         luaL_getmetatable(L, type_name());
         lua_getmetatable(L, idx);
@@ -27,6 +28,13 @@ public:
         luaL_getmetatable(L, type_name());
         lua_setmetatable(L, -2);
         new (p) T{v};
+        return *p;
+    }
+    static T& new_udata(lua_State* L, T&& v) {
+        T* p = static_cast<T*>(lua_newuserdatadtor(L, sizeof(T), [](void* ud) {static_cast<T*>(ud)->~T();}));
+        luaL_getmetatable(L, type_name());
+        lua_setmetatable(L, -2);
+        new (p) T{std::move(v)};
         return *p;
     }
     static bool initialized(lua_State* L) {
@@ -95,7 +103,7 @@ private:
         }
     }
     inline static bool initialized_ = false;
-    inline static std::unordered_map<int, Action> namecall_;
+    inline static boost::container::flat_map<int, Action> namecall_;
     inline static Registry index_;
     inline static Registry newindex_;
 };

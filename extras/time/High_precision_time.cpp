@@ -2,18 +2,18 @@
 #include <lumin.h>
 #include <format>
 #include <chrono>
-#include "Generic_userdata_template.hpp"
+#include "Userdata_template.hpp"
 #include <string>
 using namespace std::string_literals;
-using gut = Generic_userdata_template<High_precision_time>;
+using High_precision_time_ut = Userdata_template<High_precision_time>;
 static const std::string tname = module_name + "."s + "High_precision_time";
-template<> const char* gut::type_name(){return tname.c_str();}
+template<> const char* High_precision_time_ut::type_name(){return tname.c_str();}
 
 High_precision_time& to_high_precision_time(lua_State* L, int idx) {
-    return gut::check_udata(L, idx);
+    return High_precision_time_ut::check_udata(L, idx);
 }
 
-static const gut::Registry namecall = {
+static const High_precision_time_ut::Registry namecall = {
     {"format", [](lua_State* L, High_precision_time& tp) -> int {
         const std::string fmt = "{:"s + luaL_checkstring(L, 2) + "}"s;
         lua_pushstring(L, std::vformat(fmt, std::make_format_args(tp)).c_str());
@@ -25,7 +25,7 @@ static const gut::Registry namecall = {
     }},
 };
 
-static const gut::Registry index = {
+static const High_precision_time_ut::Registry index = {
     {"hour", [](lua_State* L, High_precision_time& tp) -> int {
         const auto midnight = tp - ch::floor<ch::days>(tp);
         const auto hours = ch::duration_cast<ch::hours>(midnight);
@@ -85,22 +85,22 @@ static const gut::Registry index = {
 };
 
 static int tostring(lua_State* L) {
-    High_precision_time& tp = gut::check_udata(L, 1);
+    High_precision_time& tp = High_precision_time_ut::check_udata(L, 1);
     lua_pushstring(L, std::format("{}", tp).c_str());
     return 1;
 }
 
 High_precision_time& new_high_precision_time(lua_State* L, const High_precision_time& v) {
-    if (not gut::initialized(L)) {
+    if (not High_precision_time_ut::initialized(L)) {
         const luaL_Reg meta[] = {
             {"__tostring", tostring},
             {nullptr, nullptr}
         };
-        gut::init(L, {
+        High_precision_time_ut::init(L, {
             .index = index,
             .namecall = namecall,
             .meta = meta,
         });
     }
-    return gut::new_udata(L, v);
+    return High_precision_time_ut::new_udata(L, v);
 }

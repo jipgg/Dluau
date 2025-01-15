@@ -22,7 +22,7 @@ set(lumin.common.dir common)
 file(GLOB_RECURSE lumin-core.src ${lumin-core.dir}/*.cpp)
 file(GLOB lumin-sdk.src ${lumin-sdk.dir}/*.cpp)
 file(GLOB lumin-extra.time.src ${lumin-extra.dir}/time/*.cpp)
-file(GLOB lumin-extra.filesystem.src ${lumin-extra.dir}/filesystem/*.cpp)
+#file(GLOB lumin-extra.filesystem.src ${lumin-extra.dir}/filesystem/*.cpp)
 file(GLOB lumin-extra.console.src ${lumin-extra.dir}/console/*.cpp)
 
 add_subdirectory(${luau.dir})
@@ -37,7 +37,7 @@ else()
 endif()
 
 add_library(lumin-extra.time SHARED ${lumin-extra.time.src})
-add_library(lumin-extra.filesystem SHARED ${lumin-extra.filesystem.src})
+# add_library(lumin-extra.filesystem SHARED ${lumin-extra.filesystem.src})
 add_library(lumin-extra.console SHARED ${lumin-extra.console.src})
 
 add_library(lumin-core.stub SHARED core-stub.cpp)
@@ -70,10 +70,10 @@ add_custom_command(TARGET lumin-core.stub POST_BUILD COMMAND ${CMAKE_COMMAND} -E
 target_link_libraries(lumin-sdk PRIVATE lumin-core lumin.common)
 set_target_properties(lumin-sdk PROPERTIES OUTPUT_NAME lumin)
 
-target_compile_definitions(lumin-extra.filesystem PRIVATE ${lumin-extra.export})
-target_include_directories(lumin-extra.filesystem PRIVATE ${lumin-extra.dir}/include)
-set_target_properties(lumin-extra.filesystem PROPERTIES OUTPUT_NAME filesystem.lumin)
-target_link_libraries(lumin-extra.filesystem PRIVATE lumin-core.stub lumin.common)
+# target_compile_definitions(lumin-extra.filesystem PRIVATE ${lumin-extra.export})
+# target_include_directories(lumin-extra.filesystem PRIVATE ${lumin-extra.dir}/include)
+# set_target_properties(lumin-extra.filesystem PROPERTIES OUTPUT_NAME filesystem.lumin)
+# target_link_libraries(lumin-extra.filesystem PRIVATE lumin-core.stub lumin.common)
 
 target_compile_definitions(lumin-extra.time PRIVATE ${lumin-extra.export})
 target_include_directories(lumin-extra.time PRIVATE ${lumin-extra.dir}/include)

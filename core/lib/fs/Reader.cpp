@@ -1,14 +1,14 @@
-#include <Generic_userdata_template.hpp>
+#include <userdata_template.hpp>
 #include "fs.hpp"
 #include <filesystem>
 #include <algorithm>
 namespace fs = std::filesystem;
-using Reader_meta = Generic_userdata_template<Reader>;
+using Reader_ut = Userdata_template<Reader>;
 static const char* tname = "reader";
-template<> const char* Reader_meta::type_name(){return tname;}
+template<> const char* Reader_ut::type_name(){return tname;}
 
 int reader_line_iterator(lua_State* L) {
-    auto& reader = Reader_meta::check_udata(L, lua_upvalueindex(1));
+    auto& reader = Reader_ut::check_udata(L, lua_upvalueindex(1));
     std::string line;
     if (std::getline(*reader, line)) {
         lua_pushstring(L, line.c_str());
@@ -17,7 +17,7 @@ int reader_line_iterator(lua_State* L) {
     return 0;
 }
 static int ranged_line_iterator(lua_State* L) {
-    auto& reader = Reader_meta::check_udata(L, lua_upvalueindex(1));
+    auto& reader = Reader_ut::check_udata(L, lua_upvalueindex(1));
     int count = lua_tointeger(L, lua_upvalueindex(2));
     lua_pushinteger(L, --count);
     lua_replace(L, lua_upvalueindex(2));
@@ -30,7 +30,7 @@ static int ranged_line_iterator(lua_State* L) {
     return 0;
 }
 
-static const Reader_meta::Registry namecall = {
+static const Reader_ut::Registry namecall = {
     {"getline", [](lua_State* L, Reader& r) -> int {
         std::string line;
         if (not std::getline(*r, line)) return 0;
@@ -59,27 +59,27 @@ static int concat(lua_State* L) {
     luaL_typeerrorL(L, 2, "nil or number");
 }
 
-static const Reader_meta::Registry index = {
+static const Reader_ut::Registry index = {
     {"eof", [](lua_State* L, Reader& r) -> int {
         lua_pushboolean(L, r->eof());
         return 1;
     }},
 };
 Reader& new_reader(lua_State* L, Reader&& v) {
-    if (not Reader_meta::initialized(L)) {
+    if (not Reader_ut::initialized(L)) {
         const luaL_Reg meta[] = {
             {"__concat", concat},
             {nullptr, nullptr}
         };
         lumin_adduserdatatype(tname);
-        Reader_meta::init(L, Reader_meta::init_info{
+        Reader_ut::init(L, Reader_ut::init_info{
             .index = index,
             .namecall = namecall,
             .meta = meta,
         });
     }
-    return Reader_meta::new_udata(L, std::move(v));
+    return Reader_ut::new_udata(L, std::move(v));
 }
 Reader& check_reader(lua_State* L, int idx) {
-    return Reader_meta::check_udata(L, idx);
+    return Reader_ut::check_udata(L, idx);
 }

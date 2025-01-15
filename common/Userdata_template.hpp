@@ -7,7 +7,7 @@
 #include <cassert>
 
 template<class T>
-class Generic_userdata_template {
+class Userdata_template {
 public:
     static const char* type_name();
     using Action = int(*)(lua_State*, T&);

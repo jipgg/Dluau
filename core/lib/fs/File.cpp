@@ -1,16 +1,16 @@
 
-#include <Generic_userdata_template.hpp>
+#include <userdata_template.hpp>
 #include "fs.hpp"
 #include <filesystem>
 #include <algorithm>
 #include <ranges>
 namespace fs = std::filesystem;
-using File_meta = Generic_userdata_template<File>;
-using Directory_meta = Generic_userdata_template<Directory>;
+using File_ut = Userdata_template<File>;
+using Directory_ut = Userdata_template<Directory>;
 static const char* tname = "file";
-template<> const char* File_meta::type_name(){return tname;}
+template<> const char* File_ut::type_name(){return tname;}
 
-static const File_meta::Registry namecall = {
+static const File_ut::Registry namecall = {
     {"reader", [](lua_State* L, File& s) -> int {
         auto f = std::make_unique<std::ifstream>();
         f->open(s.path);
@@ -27,7 +27,7 @@ static const File_meta::Registry namecall = {
         return 1;
     }},
 };
-static const File_meta::Registry index = {
+static const File_ut::Registry index = {
     {"parent", [](lua_State* L, File& s) -> int {
         new_directory(L, {.path = s.path.parent_path()});
         return 1;
@@ -45,7 +45,7 @@ static const File_meta::Registry index = {
         return 1;
     }},
 };
-static const File_meta::Registry newindex = {
+static const File_ut::Registry newindex = {
     {"parent", [](lua_State* L, File& s) -> int {
         newindex_parent(L, s.path);
         return 0;
@@ -57,13 +57,13 @@ static int tostring(lua_State* L) {
     return 1;
 }
 File& new_file(lua_State* L, const File& v) {
-    if (not File_meta::initialized(L)) {
+    if (not File_ut::initialized(L)) {
         const luaL_Reg meta[] = {
             {"__tostring", tostring},
             {nullptr, nullptr}
         };
         lumin_adduserdatatype(tname);
-        File_meta::init(L, {
+        File_ut::init(L, {
             .index = index,
             .newindex = newindex,
             .namecall = namecall,
@@ -73,8 +73,8 @@ File& new_file(lua_State* L, const File& v) {
     fs::path path = v.path;
     validate_path(L, path);
     standardize(path);
-    return File_meta::new_udata(L, {.path = std::move(path)});
+    return File_ut::new_udata(L, {.path = std::move(path)});
 }
 File& check_file(lua_State* L, int idx) {
-    return File_meta::check_udata(L, idx);
+    return File_ut::check_udata(L, idx);
 }

@@ -1,13 +1,12 @@
 #include "fs.hpp"
-#include "Generic_userdata_template.hpp"
-#include <ranges>
+#include "userdata_template.hpp"
 #include <algorithm>
-using File_meta = Generic_userdata_template<File>;
-using Directory_meta = Generic_userdata_template<Directory>;
+using File_ut = Userdata_template<File>;
+using Directory_ut = Userdata_template<Directory>;
 
 void newindex_parent(lua_State* L, fs::path &p) {
     fs::path parent;
-    if (Directory_meta::is_type(L, 3)) {
+    if (Directory_ut::is_type(L, 3)) {
         parent = check_directory(L, 3).path;
     } else {
         parent = luaL_checkstring(L, 3);

@@ -36,7 +36,6 @@
             "name": "extra",
             "configurePreset": "default",
             "targets": [
-                "lumin-extra.filesystem",
                 "lumin-extra.time",
                 "lumin-extra.console"
             ]

@@ -4,7 +4,7 @@
 #include <lualib.h>
 #include <iostream>
 namespace fs = std::filesystem;
-using Path = std::filesystem::path;
+using Filesystem_path = std::filesystem::path;
 struct Directory {
     std::filesystem::path path;
 };
@@ -22,8 +22,8 @@ Directory& new_directory(lua_State* L, const Directory& dir);
 Directory& check_directory(lua_State* L, int idx);
 File& new_file(lua_State* L, const File& file);
 File& check_file(lua_State* L, int idx);
-Path& new_path(lua_State* L, const Path& v);
-Path& check_path(lua_State* L, int idx);
+Filesystem_path& new_path(lua_State* L, const Filesystem_path& v);
+Filesystem_path& check_path(lua_State* L, int idx);
 void newindex_parent(lua_State* L, fs::path& p);
 void validate_path(lua_State* L, const fs::path& p);
 void standardize(fs::path& p);

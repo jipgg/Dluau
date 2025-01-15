@@ -12,7 +12,7 @@
 #include "Require.h"
 #include <cassert>
 namespace fs = std::filesystem;
-struct global_options {
+struct Global_options {
     int optimization_level = 2;
     int debug_level = 1;
 } global_opts;

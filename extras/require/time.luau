@@ -236,4 +236,5 @@ export type time = {
     --- Useful for measuring elapsed time.
     high_precision_clock: {now: () -> High_precision_time},
 }
-return dll.getfunc(dll.getmodule("time.lumin"), "loadmodule") () :: time
+print(`TIME SCRIPT PATH: {script.file}`)
+return dll.get_func(dll.get_module("time.lumin"), "loadmodule") () :: time

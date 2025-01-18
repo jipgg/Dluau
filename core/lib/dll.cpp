@@ -139,7 +139,7 @@ static int module_namecall(lua_State* L) {
 int luminload_dll(lua_State* L) {
     if (luaL_newmetatable(L, tname)) {
         lutag = lumin_newlightuserdatatag();
-        getfunc_stringatom = lumin_stringatom(L, "getfunc");
+        getfunc_stringatom = lumin_stringatom(L, "get_func");
         lua_setlightuserdataname(L, lutag, tname);
         const luaL_Reg meta[] = {
             {"__index", module_index},
@@ -150,10 +150,10 @@ int luminload_dll(lua_State* L) {
     }
     lua_pop(L, 1);
     const luaL_Reg lib[] = {
-        {"getmodule", getmodule},
-        {"findmodule", findmodule},
-        {"getfunc", getfunc},
-        {"findpath", findpath},
+        {"get_module", getmodule},
+        {"find_module", findmodule},
+        {"get_func", getfunc},
+        {"find_path", findpath},
         {"loaded", loaded},
         {nullptr, nullptr}
     };

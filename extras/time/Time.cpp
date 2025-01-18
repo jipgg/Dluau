@@ -66,7 +66,7 @@ static const Time_ut::Registry index = {
 
 static int tostring(lua_State* L) {
     Time& tp = Time_ut::check_udata(L, 1);
-    lua_pushstring(L, std::format("{:%x %X}", tp).c_str());
+    lua_pushstring(L, std::format("{}", tp).c_str());
     return 1;
 }
 

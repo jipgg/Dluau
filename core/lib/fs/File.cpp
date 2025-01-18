@@ -1,35 +1,40 @@
-
+#include "lib.hpp"
 #include <userdata_template.hpp>
 #include "fs.hpp"
 #include <filesystem>
 #include <algorithm>
 #include <ranges>
+#include <lib.hpp>
 namespace fs = std::filesystem;
-using File_ut = Userdata_template<File>;
-using Directory_ut = Userdata_template<Directory>;
-static const char* tname = "file";
+using File_ut = Userdata_template<libfs::File>;
+using Dir_ut = Userdata_template<libfs::Dir>;
+static const char* tname = "fsFile";
 template<> const char* File_ut::type_name(){return tname;}
 
+namespace libfs {
 static const File_ut::Registry namecall = {
     {"reader", [](lua_State* L, File& s) -> int {
         auto f = std::make_unique<std::ifstream>();
         f->open(s.path);
         if (not f->is_open()) luaL_errorL(L, "couldn't open file");
-        new_reader(L, std::move(f));
+        libio::new_reader(L, std::move(f));
         return 1;
     }},
-    {"eachline", [](lua_State* L, File& s) -> int {
-        auto f = std::make_unique<std::ifstream>();
-        f->open(s.path);
+    {"writer", [](lua_State* L, File& s) -> int {
+        auto f = std::make_unique<std::ofstream>();
+        bool appendmode = luaL_optboolean(L, 2, false);
+        std::cout << std::format("appendmode: {}\n", appendmode);
+        if (appendmode) {
+            f->open(s.path, std::ios::app);
+        } else f->open(s.path);
         if (not f->is_open()) luaL_errorL(L, "couldn't open file");
-        new_reader(L, std::move(f));
-        lua_pushcclosure(L, reader_line_iterator, "line_iterator", 1);
+        libio::new_writer(L, std::move(f));
         return 1;
     }},
 };
 static const File_ut::Registry index = {
-    {"parent", [](lua_State* L, File& s) -> int {
-        new_directory(L, {.path = s.path.parent_path()});
+    {"parent_dir", [](lua_State* L, File& s) -> int {
+        new_dir(L, {.path = s.path.parent_path()});
         return 1;
     }},
     {"stem", [](lua_State* L, File& s) -> int {
@@ -40,14 +45,23 @@ static const File_ut::Registry index = {
         lua_pushstring(L, s.path.extension().string().c_str());
         return 1;
     }},
-    {"filename", [](lua_State* L, File& s) -> int {
+    {"name", [](lua_State* L, File& s) -> int {
         lua_pushstring(L, s.path.filename().string().c_str());
         return 1;
     }},
 };
 static const File_ut::Registry newindex = {
-    {"parent", [](lua_State* L, File& s) -> int {
+    {"parent_dir", [](lua_State* L, File& s) -> int {
         newindex_parent(L, s.path);
+        return 0;
+    }},
+    {"name", [](lua_State* L, File& s) -> int {
+        auto parent_dir = s.path.parent_path();
+        try {
+            fs::rename(s.path, parent_dir / luaL_checkstring(L, 3));
+        } catch (const fs::filesystem_error& e) {
+            luaL_errorL(L, e.what());
+        }
         return 0;
     }},
 };
@@ -77,4 +91,5 @@ File& new_file(lua_State* L, const File& v) {
 }
 File& check_file(lua_State* L, int idx) {
     return File_ut::check_udata(L, idx);
+}
 }

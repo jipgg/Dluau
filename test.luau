@@ -1,20 +1,15 @@
 local time = require("@extras/time")
-print(`module is {dll.getmodule("time.lumin.dll")}`)
-print(`path is {dll.getmodule("time.lumin.dll").path}`)
-print(`name is {dll.getmodule("time.lumin.dll").name}`)
+print(`module is {dll.get_module("time.lumin.dll")}`)
+print(`path is {dll.get_module("time.lumin.dll").path}`)
+print(`name is {dll.get_module("time.lumin.dll").name}`)
 
 local cwd = fs.getcwd()
-local temp = fs.makedir("temp")
-local temp2 = fs.makedir("temp2")
 local file = fs.file('./test.luau')
 
-for ln in file:eachline() do
+for ln in file:reader():line_iterator() do
     print(`line: {ln}`)
 end
 
-temp2.parent = temp
-print(`parent: {temp2.parent}`)
-print(temp)
 print(cwd)
 
 local v = time.now()

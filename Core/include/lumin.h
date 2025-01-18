@@ -20,9 +20,16 @@ LUMIN_API int16_t lumin_useratom(const char* key, size_t len);
 LUMIN_API int lumin_stringatom(lua_State* L, const char* key);
 LUMIN_API int lumin_lstringatom(lua_State* L, const char* key, size_t len);
 LUMIN_API lua_State* lumin_initstate();
+LUMIN_API void lumin_init(lua_State* L);
+struct lumin_Run_options {
+    const char* scripts;
+    const char* args;
+};
+LUMIN_API const char* lumin_run(lumin_Run_options opts);
 LUMIN_API void lumin_loadfuncs(lua_State* L);
 LUMIN_API void lumin_openlibs(lua_State* L);
 LUMIN_API void luminopen_dll(lua_State* L);
+LUMIN_API void luminopen_process(lua_State* L);
 LUMIN_API void luminopen_fs(lua_State* L);
 LUMIN_API int luminload_dll(lua_State* L);
 LUMIN_API lua_CompileOptions* lumin_globalcompileoptions;

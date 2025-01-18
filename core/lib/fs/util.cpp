@@ -1,13 +1,15 @@
 #include "fs.hpp"
 #include "userdata_template.hpp"
 #include <algorithm>
-using File_ut = Userdata_template<File>;
-using Directory_ut = Userdata_template<Directory>;
+#include <lib.hpp>
+namespace fs = std::filesystem;
+using File_ut = Userdata_template<libfs::File>;
+using Dir_ut = Userdata_template<libfs::Dir>;
 
 void newindex_parent(lua_State* L, fs::path &p) {
     fs::path parent;
-    if (Directory_ut::is_type(L, 3)) {
-        parent = check_directory(L, 3).path;
+    if (Dir_ut::is_type(L, 3)) {
+        parent = libfs::check_dir(L, 3).path;
     } else {
         parent = luaL_checkstring(L, 3);
         validate_path(L, parent);

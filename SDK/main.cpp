@@ -6,19 +6,27 @@
 #include <lumin.h>
 #include <format>
 #include <iostream>
+#include <vector>
 
-static int run(const std::string& source) {
-    lua_State* L = lumin_initstate();
-    if (const char* err = luminU_spawnscript(L, source.c_str())) {
+static int run(const std::string& source, std::span<std::string_view> args) {
+    const char* data = source.c_str();
+    std::string argdata;
+    for (auto arg : args) {
+        argdata += arg;
+        argdata += ' ';
+    }
+    argdata.pop_back();
+    auto err = lumin_run({
+        .scripts = source.c_str(),
+        .args = argdata.c_str(),
+    });
+    if (err) {
         std::cerr << std::format("\033[31m{}\033[0m\n", err);
         return -1;
     }
     return 0;
 }
 int lumin_main(std::span<std::string_view> args) {
-    for (auto e : args) {
-        std::cout << std::format("> {}\n", e);
-    }
-    if (args[0] == "run") return run(std::string(args[1]));
+    if (args[0] == "run") return run(std::string(args[1]), args.subspan(2));
     return 0;
 }

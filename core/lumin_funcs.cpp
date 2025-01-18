@@ -11,6 +11,7 @@
 #include "luacode.h"
 #include "Require.h"
 #include <cassert>
+#include <core.hpp>
 namespace fs = std::filesystem;
 struct Global_options {
     int optimization_level = 2;
@@ -154,8 +155,8 @@ int luminF_require(lua_State* L)
     lua_State* GL = lua_mainthread(L);
     lua_State* ML = lua_newthread(GL);
     lua_xmove(GL, L, 1);
-
     // new thread needs to have the globals sandboxed
+    script_path_registry.emplace(ML, resolvedRequire.absolutePath);
     luaL_sandboxthread(ML);
     // now we can compile & run module on the new thread
     size_t outsize;

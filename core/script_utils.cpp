@@ -10,8 +10,10 @@
 #include <format>
 #include <unordered_map>
 #include <lualib.h>
+#include <boost/container/flat_map.hpp>
+#include <core.hpp>
 namespace fs = std::filesystem;
-static lua_CompileOptions _lumin_compileoptions{};
+static lua_CompileOptions _lumin_compileoptions{.debugLevel = 1};
 lua_CompileOptions* lumin_globalcompileoptions{&_lumin_compileoptions};
 
 struct Script {
@@ -34,8 +36,8 @@ static std::optional<std::string> read_file(const fs::path &path) {
     }
     return file_stream.str();
 }
-lua_State* luminU_loadscript(lua_State* L, const char* path) {
-    const fs::path script_path{path};
+lua_State* luminU_loadscript(lua_State* L, const char* path, size_t len) {
+    const fs::path script_path{std::string_view(path, len)};
     std::optional<std::string> source = read_file(script_path);
     using namespace std::string_literals;
     if (not source) return nullptr;
@@ -47,6 +49,7 @@ lua_State* luminU_loadscript(lua_State* L, const char* path) {
     std::string bytecode{bc, outsize};
     std::free(bc);
     lua_State* script_thread = lua_newthread(L);
+    script_path_registry.emplace(script_thread, fs::absolute(path).string());
     const int load_status = luau_load(script_thread, identifier.c_str(), bytecode.data(), bytecode.size(), 0);
     if (load_status == LUA_OK) {
         luaL_sandboxthread(script_thread);
@@ -54,14 +57,13 @@ lua_State* luminU_loadscript(lua_State* L, const char* path) {
     }
     return nullptr;
 }
-const char* luminU_spawnscript(lua_State* L, const char* script_path) {
-    auto r = luminU_loadscript(L, script_path);
+const char* luminU_spawnscript(lua_State* L, const char* script_path, size_t len) {
+    auto r = luminU_loadscript(L, script_path, len);
     if (not r) luaL_errorL(L, "failed to load script '%s'", script_path);
     int status = lua_resume(r, L, 0);
-    if (status != LUA_OK) {
+    if (status != LUA_OK and status != LUA_YIELD) {
         static const std::string errmsg = luaL_checkstring(r, -1);
         return errmsg.c_str();
-        //std::cerr << std::format("\033[31m{}\033[0m\n", luaL_checkstring(r, -1));
     }
     return nullptr;
 }

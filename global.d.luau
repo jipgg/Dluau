@@ -44,7 +44,7 @@ end
 declare class fsSymlink end
 
 declare class fsFile
-    parent_dir: fsDir
+    parent_directory: fsDir
     name: string
     extension: string
     stem: string
@@ -53,7 +53,7 @@ declare class fsFile
 end
 
 declare class fsDir
-    parent_dir: fsDir
+    parent_directory: fsDir
     name: string
     function is_empty(self): boolean
     function contains(self, child_name: string): boolean
@@ -62,7 +62,10 @@ declare class fsDir
     function __div(self, other: fsFile | fsDir | string): string
 end
 declare fs: {
-    current_working_directory: () -> fsDir,  
+    current_directory: () -> fsDir,  
+    temp_directory: () -> fsDir,  
+    find_environment_variable: () -> string?,  
+    path_exists: (path: string) -> boolean,
     Dir: {
         open: (path: string) -> fsDir,
         create: ((path: string) -> fsDir),

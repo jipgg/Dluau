@@ -76,7 +76,7 @@ static const Dir_ut::Registry namecall = {
     }},
 };
 static const Dir_ut::Registry index = {
-    {"parent_dir", [](lua_State* L, Dir& s) -> int {
+    {"parent_directory", [](lua_State* L, Dir& s) -> int {
         new_dir(L, {.path = s.path.parent_path()});
         return 1;
     }},
@@ -86,7 +86,7 @@ static const Dir_ut::Registry index = {
     }},
 };
 static const Dir_ut::Registry newindex = {
-    {"parent_dir", [](lua_State* L, Dir& s) -> int {
+    {"parent_directory", [](lua_State* L, Dir& s) -> int {
         newindex_parent(L, s.path);
         return 0;
     }},

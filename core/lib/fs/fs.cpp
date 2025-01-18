@@ -3,15 +3,27 @@
 #include <lualib.h>
 #include <lib.hpp>
 #include <filesystem>
+#include <cstdlib>
 namespace fs = std::filesystem;
 
 static int current_path(lua_State* L) {
     new_path(L, fs::current_path());
     return 1;
 }
-static int getcwd(lua_State* L) {
+static int current_directory(lua_State* L) {
     libfs::new_dir(L, {.path = fs::current_path()});
     return 1;
+}
+static int temp_directory(lua_State* L) {
+    libfs::new_dir(L, {.path = fs::temp_directory_path()});
+    return 1;
+}
+static int find_environment_variable(lua_State* L) {
+    if (const char* var = std::getenv(luaL_checkstring(L, 1))) {
+        lua_pushstring(L, var);
+        return 1;
+    }
+    return 0;
 }
 static int file_open(lua_State* L) {
     libfs::new_file(L, {.path = luaL_checkstring(L, 1)});
@@ -29,6 +41,10 @@ static int directory_create(lua_State* L) {
         luaL_errorL(L, e.what());
     }
     libfs::new_dir(L, {.path = luaL_checkstring(L, 1)});
+    return 1;
+}
+static int path_exists(lua_State* L) {
+    lua_pushboolean(L, fs::exists(luaL_checkstring(L, 1)));
     return 1;
 }
 static int directory_remove(lua_State* L) {
@@ -64,7 +80,10 @@ static int file_remove(lua_State* L) {
 
 void luminopen_fs(lua_State* L) {
     const luaL_Reg lib[] = {
-        {"getcwd", getcwd},
+        {"current_directory", current_directory},
+        {"temp_directory", temp_directory},
+        {"find_environment_variable", find_environment_variable},
+        {"path_exists", path_exists},
         {nullptr, nullptr}
     };
     const luaL_Reg dirlib[] = {

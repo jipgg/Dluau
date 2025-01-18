@@ -89,3 +89,8 @@ declare io: {
 declare process: {
     args: {string},
 }
+export type Project_configuration = {
+    sources: {string} | string,
+    optimization_level: number?,
+    debug_level: number?,
+}

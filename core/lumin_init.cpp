@@ -57,7 +57,7 @@ void lumin_init(lua_State* L) {
     luminopen_process(L);
 }
 const char* lumin_run(lumin_Run_options opts) {
-    process_args = opts.args;
+    if (opts.args) process_args = opts.args;
     lua_State* L = lumin_initstate();
     const char* errmsg{};
     for (auto sr : std::views::split(std::string_view(opts.scripts), ' ')) {

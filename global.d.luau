@@ -1,19 +1,37 @@
 declare collectgarbage: (("collect") -> ()) & (("count") -> number)
 -- declare wait: (length: number) -> ()
+declare function scan(): string
 declare script: {
     file: fsFile,
     path: string,
 }
+declare meta: {
+    script: string,
+    argv: {string},
+    dll: {
+        Module: {
+            load: (dllname: string) -> dllModule,
+            find: (dllname: string) -> dllModule?,
+        },
+        get_module: (name: string) -> dllModule,
+        find_module: (name: string) -> dllModule?,
+        cfunction: <As..., Rs...>(module: dllModule, symbol: string) -> ((As...)->(Rs...)),
+    },
+}
 declare class dllModule
     name: string
     path: string
-    get_func: <As..., Rs...>(self: dllModule, symbol: string) -> ((As...)->(Rs...))
+    cfunction: <As..., Rs...>(self: dllModule, symbol: string) -> ((As...)->(Rs...))
 end
 
 declare dll: {
+    Module: {
+        load: (dllname: string) -> dllModule,
+        find: (dllname: string) -> dllModule?,
+    },
     get_module: (name: string) -> dllModule,
     find_module: (name: string) -> dllModule?,
-    get_func: <As..., Rs...>(module: dllModule, symbol: string) -> ((As...)->(Rs...)),
+    cfunction: <As..., Rs...>(module: dllModule, symbol: string) -> ((As...)->(Rs...)),
 }
 
 declare class ioReader
@@ -86,11 +104,13 @@ declare io: {
         Reader: ((open: fsFile) -> ioReader)
             & ((open: buffer) -> ioReader),
 }
-declare process: {
+declare proc: {
     args: {string},
+    system: (command: string) -> number,
 }
 export type Project_configuration = {
     sources: {string} | string,
     optimization_level: number?,
     debug_level: number?,
+    console: ("popup"|"attach"|"none"|"popup-pause")?,
 }

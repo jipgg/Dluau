@@ -23,21 +23,27 @@
     ],
     "buildPresets": [
         {
-            "name": "core",
-            "configurePreset": "default",
-            "targets": ["lumin-core"]
-        },
-        {
-            "name": "sdk",
-            "configurePreset": "default",
-            "targets": ["lumin-sdk"]
-        },
-        {
-            "name": "extra",
+            "name": "lib",
             "configurePreset": "default",
             "targets": [
-                "lumin-extra.time",
-                "lumin-extra.console"
+                "goluau_lib"
+            ]
+        },
+        {
+            "name": "cli",
+            "configurePreset": "default",
+            "targets": [
+                "goluau_cli",
+                "goluau_host"
+            ]
+        },
+        {
+            "name": "modules",
+            "configurePreset": "default",
+            "targets": [
+                "goluau_time_module",
+                "goluau_fs_module",
+                "goluau_console_module"
             ]
         }
   ]

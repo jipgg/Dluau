@@ -1,6 +1,6 @@
 {
     "languageMode": "strict",
     "aliases": {
-        "extras": "./Extras/require/"
+        "modules": "./modules/require/"
     }
 }

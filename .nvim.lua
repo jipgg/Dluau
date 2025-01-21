@@ -1,8 +1,8 @@
 require"lspconfig".luau_lsp.setup {
     cmd = {"luau-lsp",
         "lsp",
-        "--definitions=global.d.luau",
-        --"--definitions=date_time.d.luau",
+        "--definitions=lumin-core.d.luau",
+        "--definitions=modules/require/fs/defs.luau",
     },
     settings = {
         ["luau-lsp"] = {
@@ -12,7 +12,7 @@ require"lspconfig".luau_lsp.setup {
             require = {
                 mode = "relativeToFile",
                 directoryAliases = {
-                    ["@extras"] = "./Extras/require/",
+                    ["@modules"] = "./modules/require/",
                 },
             },
         }

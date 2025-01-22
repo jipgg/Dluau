@@ -26,24 +26,24 @@
             "name": "lib",
             "configurePreset": "default",
             "targets": [
-                "goluau_lib"
+                "lib"
             ]
         },
         {
             "name": "cli",
             "configurePreset": "default",
             "targets": [
-                "goluau_cli",
-                "goluau_host"
+                "cli",
+                "host"
             ]
         },
         {
             "name": "modules",
             "configurePreset": "default",
             "targets": [
-                "goluau_time_module",
-                "goluau_fs_module",
-                "goluau_console_module"
+                "time_module",
+                "filesystem_module",
+                "console_module"
             ]
         }
   ]

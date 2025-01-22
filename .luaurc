@@ -1,6 +1,6 @@
 {
     "languageMode": "strict",
     "aliases": {
-        "modules": "./modules/require/"
+        "xtm": "./modules/require/"
     }
 }

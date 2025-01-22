@@ -1,6 +1,5 @@
-local fs = require('@modules/fs')
-local cio = require('@modules/console')
-local time = require('@modules/time')
+local cio = require('@xtm/console')
+local time = require('@xtm/time')
 local cc = cio.codes
 local ansi = cio.ansi
 cio.write("input? ")

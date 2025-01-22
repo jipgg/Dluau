@@ -57,7 +57,7 @@ static int run(std::span<char> zarg) {
 }
 static int do_run_command(const Project_configuration& config, const std::string* const args) {
     using namespace std::string_literals;
-    std::string exe {std::format("./-bin/debug/goluau-host.exe")};
+    std::string exe {std::format("./-bin/debug/LuauXT_host.exe")};
     std::string cmd = std::format("{} --sources={}", exe, config.sources);
     if (args) cmd += std::format(" --args={}", *args);
     cmd += std::format(" -O{}", config.optimization_level);

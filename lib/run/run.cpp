@@ -5,7 +5,7 @@
 #include <luminutils.h>
 #include <iostream>
 #include <format>
-constexpr const char* errfmt = "\033[31m{}\033[0m\n";
+constexpr const char* errfmt = "\033[31mLuau: {}\033[0m\n";
 
 int goluau_go(const goluau_GoOptions* opts) {
     goluau_compileoptions->debugLevel = opts->debug_level;

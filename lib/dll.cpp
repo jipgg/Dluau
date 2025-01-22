@@ -16,20 +16,49 @@
 #include <core.hpp>
 #include <format>
 #include <filesystem>
+#include <dyncall.h>
+#include <iostream>
+#include <format>
 namespace fs = std::filesystem;
+namespace rn = std::ranges;
+using String = std::string;
+template <class T, class D = std::default_delete<T>>
+using Unique_ptr = std::unique_ptr<T, D>;
+using std::make_unique;
+template<class K, class V>
+using Flat_map = boost::container::flat_map<K, V>;
+using Pointer = std::uintptr_t;
+template <class T>
+using Vector = std::vector<T>;
+using String_view = std::string_view;
+template<class T>
+using Optional = std::optional<T>;
+using std::make_optional;
+using std::nullopt;
+
 static int lutag{};
+static std::unique_ptr<DCCallVM, decltype(&dcFree)> call_vm{dcNewCallVM(1024), dcFree};
 static int getfunc_stringatom{};
-static constexpr const char* tname{"dllmodule"};
+static int dyncall_void_stringatom{};
+static int dyncall_int_stringatom{};
+static int create_binding_stringatom{};
+constexpr const char* tname{"dllmodule"};
 struct Module {
     using Handle = HMODULE;
+    Unique_ptr<DCCallVM, decltype(&dcFree)> vm;
     Handle handle;
-    std::string name;
-    std::string path;
+    String name;
+    String path;
+    Module(Handle handle, String name, String path):
+        handle(handle),
+        name(name),
+        path(path),
+        vm(nullptr, dcFree) {}
     ~Module() {if (handle) FreeLibrary(handle);}
-    boost::container::flat_map<std::string, uintptr_t> cached{};
+    Flat_map<String, Pointer> cached{};
 };
-static boost::container::flat_map<std::string, std::unique_ptr<Module>> loaded_modules{};
-std::optional<std::string> find_module_path(const std::string& dllname) {
+static Flat_map<String, Unique_ptr<Module>> loaded_modules{};
+Optional<String> find_module_path(const String& dllname) {
     char buffer[MAX_PATH];
     DWORD result = SearchPath(
         nullptr,       // Search in standard locations
@@ -49,11 +78,11 @@ std::optional<std::string> find_module_path(const std::string& dllname) {
         }
         return find_module_path(dllname + ".dll");
     }
-    std::string path{buffer};
-    std::ranges::replace(path, '\\', '/');
+    String path{buffer};
+    rn::replace(path, '\\', '/');
     return path;
 }
-static Module* init_or_find_module(const std::string& name) {
+static Module* init_or_find_module(const String& name) {
     auto found_path = find_module_path(name);
     if (not found_path) return nullptr;
     if (auto it = loaded_modules.find(*found_path); it == loaded_modules.end()) {
@@ -63,12 +92,12 @@ static Module* init_or_find_module(const std::string& name) {
     }
     return loaded_modules[*found_path].get();
 }
-static std::optional<uintptr_t> find_proc_address(Module& module, const std::string& symbol) {
+static Optional<Pointer> find_proc_address(Module& module, const String& symbol) {
     auto& cached = module.cached;
     if (auto found = cached.find(symbol); found != cached.end()) return cached.at(symbol);
     FARPROC proc = GetProcAddress(module.handle, symbol.c_str());
-    if (proc) cached.emplace(symbol, reinterpret_cast<uintptr_t>(proc));
-    return proc ? std::make_optional(reinterpret_cast<uintptr_t>(proc)) : std::nullopt;
+    if (proc) cached.emplace(symbol, reinterpret_cast<Pointer>(proc));
+    return proc ? make_optional(reinterpret_cast<Pointer>(proc)) : nullopt;
 }
 static Module* lua_tomodule(lua_State* L, int idx) {
     if (lua_lightuserdatatag(L, idx) != lutag) luaL_typeerrorL(L, idx, tname);
@@ -92,6 +121,139 @@ static int load(lua_State* L) {
     Module* module = init_or_find_module(luaL_checkstring(L, 1));
     if (not module) luaL_argerrorL(L, 1, "couldn't find dll");
     lua_pushmodule(L, module);
+    return 1;
+}
+static int dyncall_void(lua_State* L) {
+    auto* module = lua_tomodule(L, 1);
+    auto proc = find_proc_address(*module, luaL_checkstring(L, 2));
+    if (not proc) luaL_argerrorL(L, 2, "couldnt find address");
+    if (not module->vm) {
+        constexpr DCsize default_size{1024};
+        module->vm.reset(dcNewCallVM(default_size));
+    }
+    DCCallVM* vm = module->vm.get();
+    dcReset(vm);
+    dcCallVoid(vm, reinterpret_cast<DCpointer>(*proc));
+    return 0;
+}
+enum class Parameter_type {
+    Int, Void, Float, String, Double
+};
+struct Binding {
+    Vector<Parameter_type> types;
+    Parameter_type get_return_type() const {return types[0];}
+    Pointer function_pointer;
+};
+static int call_binding(lua_State* L) {
+    const Binding& binding = *static_cast<Binding*>(lua_touserdata(L, lua_upvalueindex(1)));
+    std::cout << std::format("CALLING s{} fn{}\n", binding.types.size(), binding.function_pointer);
+    DCCallVM* vm = call_vm.get();
+    dcReset(vm);
+    using Pt = Parameter_type;
+    for (int i{1}; i < binding.types.size(); ++i) {
+        std::cout << std::format("Arg {} {}\n", i, int(binding.types.at(i)));
+        switch(binding.types.at(i)) {
+            case Pt::Int:
+                dcArgInt(vm, luaL_checkinteger(L, i));
+                break;
+            case Pt::Double:
+                dcArgDouble(vm, luaL_checknumber(L, i));
+                break;
+            case Pt::Float:
+                dcArgFloat(vm, static_cast<float>(luaL_checknumber(L, i)));
+                break;
+            case Pt::String:
+                dcArgPointer(vm, (DCpointer)luaL_checkstring(L, i));
+                break;
+            case Pt::Void:
+                break;
+        }
+    }
+    DCpointer fnptr = reinterpret_cast<DCpointer>(binding.function_pointer);
+    std::cout << std::format("Return {}\n", int(binding.types.at(0)));
+    switch(binding.types.at(0)) {
+        case Pt::Int:
+            lua_pushinteger(L, dcCallInt(vm, fnptr));
+            return 1;
+        case Pt::Double:
+            lua_pushnumber(L, dcCallDouble(vm, fnptr));
+            return 1;
+        case Pt::Float:
+            lua_pushnumber(L, dcCallFloat(vm, fnptr));
+            return 1;
+        case Pt::String:
+            lua_pushstring(L, static_cast<const char*>(dcCallPointer(vm, fnptr)));
+            return 1;
+        case Pt::Void:
+            dcCallVoid(vm, fnptr);
+            return 0;
+    }
+    luaL_errorL(L, "call error");
+}
+static Optional<Parameter_type> string_to_param_type(String_view str) {
+    using Pt = Parameter_type;
+    if (str == "int") {
+        return Pt::Int;
+    } else if (str == "double") {
+        return Pt::Double;
+    } else if (str == "void") {
+        return Pt::Void;
+    } else if (str == "string") {
+        return Pt::String;
+    } else if (str == "float") {
+        return Pt::Float;
+    }
+    return nullopt;
+}
+static int create_binding(lua_State* L) {
+    Module* module = lua_tomodule(L, 1);
+    Binding binding{};
+    const int top = lua_gettop(L);
+    String_view return_type = luaL_checkstring(L, 2);
+    using Pt = Parameter_type;
+    auto res = string_to_param_type(return_type);
+    if (not res) luaL_argerrorL(L, 2, "not a c type");
+    binding.types.push_back(std::move(*res));
+
+    auto proc = find_proc_address(*module, luaL_checkstring(L, 3));
+    if (not proc) luaL_argerrorL(L, 3, "couldn't find address");
+    binding.function_pointer = *proc;
+
+    if (top > 3) {
+        for (int i{4}; i <= top; ++i) {
+            auto res = string_to_param_type(luaL_checkstring(L, i));
+            if (not res) luaL_argerrorL(L, i, "not a c type");
+            binding.types.push_back(std::move(*res));
+        }
+    }
+    Binding* up = static_cast<Binding*>(lua_newuserdatadtor(L, sizeof(Binding), [](void* ud) {
+        std::cout << "DESTROYING\n";
+        static_cast<Binding*>(ud)->~Binding();
+    }));
+    new (up) Binding{std::move(binding)};
+    std::cout << std::format("s{} fn{}\n", up->types.size(), up->function_pointer);
+    lua_pushcclosure(L, call_binding, "call_binding", 1);
+    return 1;
+}
+static int dyncall_int(lua_State* L) {
+    auto* module = lua_tomodule(L, 1);
+    auto proc = find_proc_address(*module, luaL_checkstring(L, 2));
+    if (not proc) luaL_argerrorL(L, 2, "couldnt find address");
+    if (not module->vm) {
+        constexpr DCsize default_size{1024};
+        module->vm.reset(dcNewCallVM(default_size));
+    }
+    DCCallVM* vm = module->vm.get();
+    const int argn = lua_gettop(L);
+    dcReset(vm);
+    if (argn > 2) {
+        for (int i{3}; i <= argn; ++i) {
+            if (lua_isnumber(L, i)) dcArgDouble(vm, lua_tonumber(L, i));
+            else if (lua_isstring(L, i)) dcArgPointer(vm, (void*)lua_tostring(L, i));
+            else luaL_argerrorL(L, i, "invalid type");
+        }
+    }
+    lua_pushinteger(L, dcCallInt(vm, reinterpret_cast<DCpointer>(*proc)));
     return 1;
 }
 static int cfunction(lua_State* L) {
@@ -143,12 +305,18 @@ static int module_namecall(lua_State* L) {
     int atom;
     lua_namecallatom(L, &atom);
     if (atom == getfunc_stringatom) return cfunction(L);
+    else if(atom == dyncall_void_stringatom) return dyncall_void(L);
+    else if(atom == dyncall_int_stringatom) return dyncall_int(L);
+    else if(atom == create_binding_stringatom) return create_binding(L);
     luaL_errorL(L, "invalid");
 }
 int goluauload_dll(lua_State* L) {
     if (luaL_newmetatable(L, tname)) {
         lutag = goluau_newludtag();
         getfunc_stringatom = goluau_stringatom(L, "cfunction");
+        dyncall_void_stringatom = goluau_stringatom(L, "dyncall_void");
+        dyncall_int_stringatom = goluau_stringatom(L, "dyncall_int");
+        create_binding_stringatom = goluau_stringatom(L, "create_binding");
         lua_setlightuserdataname(L, lutag, tname);
         const luaL_Reg meta[] = {
             {"__index", module_index},

@@ -2,8 +2,12 @@ cmake_minimum_required(VERSION 3.22.2)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-project(goluau LANGUAGES CXX C)
+project(LuauXT LANGUAGES CXX C)
 find_package(Boost REQUIRED COMPONENTS container)
+add_subdirectory(extern/dyncall-1.4)
+set(DynLoad_DIR ${DynCall_SOURCE_DIR}/dynload)
+set(DynCall_DIR ${DynCall_SOURCE_DIR}/dyncall)
+set(DynCallback_DIR ${DynCall_SOURCE_DIR}/dyncallback)
 
 set(luau_DIR luau)
 set(luau_vm_EXPORT "LUA_API=extern \"C\" __declspec(dllexport)")
@@ -12,107 +16,109 @@ set(luau_codegen_EXPORT "LUACODEGEN_API=extern \"C\" __declspec(dllexport)")
 set(luau_vm_IMPORT "LUA_API=extern \"C\" __declspec(dllimport)")
 set(luau_compiler_IMPORT "LUACODE_API=extern \"C\" __declspec(dllimport)")
 set(luau_codegen_IMPORT "LUACODEGEN_API=extern \"C\" __declspec(dllimport)")
-set(goluau_lib_EXPORT "GOLUAU_API_EXPORT")
-set(goluau_modules_EXPORT "GOLUAU_MODULES_API_EXPORT")
+set(lib_EXPORT "GOLUAU_API_EXPORT")
+set(modules_EXPORT "GOLUAU_MODULES_API_EXPORT")
 
-set(goluau_lib_DIR lib)
-set(goluau_cli_DIR cli)
-set(goluau_modules_DIR modules)
-set(goluau_common_DIR common)
-set(goluau_host_DIR host)
-file(GLOB_RECURSE goluau_lib_SRC ${goluau_lib_DIR}/*.cpp)
-file(GLOB goluau_cli_SRC ${goluau_cli_DIR}/*.cpp)
-file(GLOB goluau_time_module_SRC ${goluau_modules_DIR}/time/*.cpp)
-file(GLOB goluau_fs_module_SRC ${goluau_modules_DIR}/fs/*.cpp)
-file(GLOB goluau_console_module_SRC ${goluau_modules_DIR}/console/*.cpp)
-file(GLOB goluau_host_SRC ${goluau_host_DIR}/*.cpp)
+set(lib_DIR lib)
+set(cli_DIR cli)
+set(modules_DIR modules)
+set(common_DIR common)
+set(host_DIR host)
+file(GLOB_RECURSE lib_SRC ${lib_DIR}/*.cpp)
+file(GLOB cli_SRC ${cli_DIR}/*.cpp)
+file(GLOB time_module_SRC ${modules_DIR}/time/*.cpp)
+file(GLOB filesystem_module_SRC ${modules_DIR}/filesystem/*.cpp)
+file(GLOB console_module_SRC ${modules_DIR}/console/*.cpp)
+file(GLOB host_SRC ${host_DIR}/*.cpp)
 
 add_subdirectory(${luau_DIR})
-add_library(goluau_lib SHARED ${goluau_lib_SRC})
-add_library(goluau_common INTERFACE)
-target_include_directories(goluau_common INTERFACE ${goluau_common_DIR})
-target_link_libraries(goluau_common INTERFACE Boost::container)
-add_executable(goluau_cli ${goluau_cli_SRC})
+add_library(lib SHARED ${lib_SRC})
+add_library(common INTERFACE)
+target_include_directories(common INTERFACE ${common_DIR})
+target_link_libraries(common INTERFACE Boost::container)
+add_executable(cli ${cli_SRC})
 if(WIN32)
-    file (GLOB goluau_host_WINDOWS ${goluau_host_DIR}/windows/*.cpp)
-    add_executable(goluau_host WIN32 ${goluau_host_SRC} ${goluau_host_WINDOWS})
+    file (GLOB host_WINDOWS ${host_DIR}/windows/*.cpp)
+    add_executable(host WIN32 ${host_SRC} ${host_WINDOWS})
 else()
-    file (GLOB goluau_host_LINUX ${goluau_host_DIR}/linux/*.cpp)
-    add_executable(goluau_host ${goluau_host_SRC} ${goluau_host_LINUX})
+    file (GLOB host_LINUX ${host_DIR}/linux/*.cpp)
+    add_executable(host ${host_SRC} ${host_LINUX})
 endif()
 
-add_library(goluau_time_module SHARED ${goluau_time_module_SRC})
-add_library(goluau_fs_module SHARED ${goluau_fs_module_SRC})
-add_library(goluau_console_module SHARED ${goluau_console_module_SRC})
+add_library(time_module SHARED ${time_module_SRC})
+add_library(filesystem_module SHARED ${filesystem_module_SRC})
+add_library(console_module SHARED ${console_module_SRC})
 
-add_library(goluau_lib_stub SHARED libstub.cpp)
-target_compile_definitions(goluau_lib_stub PUBLIC
+add_library(lib_stub SHARED libstub.cpp)
+target_compile_definitions(lib_stub PUBLIC
     ${luau_vm_IMPORT}
     ${luau_compiler_IMPORT}
     ${luau_codegen_IMPORT}
 )
-target_compile_definitions(goluau_lib_stub PRIVATE
+target_compile_definitions(lib_stub PRIVATE
     ${luau_vm_EXPORT}
     ${luau_compiler_EXPORT}
     ${luau_codegen_EXPORT}
-    ${goluau_lib_EXPORT}
+    ${lib_EXPORT}
 )
-target_include_directories(goluau_lib_stub PUBLIC
+target_include_directories(lib_stub PUBLIC
     ${luau_DIR}/Compiler/include
     ${luau_DIR}/CodeGen/include
     ${luau_DIR}/VM/include
-    ${goluau_lib_DIR}/include)
-target_link_libraries(goluau_lib_stub PUBLIC goluau_common)
+    ${lib_DIR}/include)
+target_link_libraries(lib_stub PUBLIC common)
 
-target_link_libraries(goluau_host PRIVATE goluau_lib_stub)
-set_target_properties(goluau_host PROPERTIES OUTPUT_NAME goluau-host)
+target_link_libraries(host PRIVATE lib_stub)
+set_target_properties(host PROPERTIES OUTPUT_NAME LuauXT_host)
 
 #target_compile_definitions(Luau.VM PUBLIC LUA_USE_LONGJMP=1)
 target_compile_definitions(Luau.VM PRIVATE ${luau_vm_EXPORT})
 target_compile_definitions(Luau.Compiler PRIVATE ${luau_compiler_EXPORT})
 target_compile_definitions(Luau.CodeGen PRIVATE ${luau_codegen_EXPORT})
-target_compile_definitions(goluau_lib PUBLIC
+target_compile_definitions(lib PUBLIC
     ${luau_vm_IMPORT}
     ${luau_compiler_IMPORT}
     ${luau_codegen_IMPORT}
 )
-target_compile_definitions(goluau_lib PRIVATE
+target_compile_definitions(lib PRIVATE
     ${luau_vm_EXPORT}
     ${luau_compiler_EXPORT}
     ${luau_codegen_EXPORT}
-    ${goluau_lib_EXPORT}
+    ${lib_EXPORT}
 )
-target_include_directories(goluau_lib PRIVATE ${goluau_lib_DIR})
-target_include_directories(goluau_lib PUBLIC ${goluau_lib_DIR}/include)
-target_link_libraries(goluau_lib PUBLIC
+target_include_directories(lib PRIVATE ${lib_DIR} ${DynCall_DIR})
+target_include_directories(lib PUBLIC ${lib_DIR}/include)
+target_link_libraries(lib PUBLIC
     Luau.VM
     Luau.Compiler
     Luau.CodeGen
-    goluau_common
+    common
     Boost::container
+    dyncall_s
 )
-target_link_libraries(goluau_lib PRIVATE Luau.Config)
-set(goluau_lib_NAME goluau)
-set_target_properties(goluau_lib PROPERTIES OUTPUT_NAME ${goluau_lib_NAME})
+target_link_libraries(lib PRIVATE Luau.Config)
+set(lib_NAME LuauXT)
+set_target_properties(lib PROPERTIES OUTPUT_NAME ${lib_NAME})
 
-set_target_properties(goluau_lib_stub PROPERTIES OUTPUT_NAME ${goluau_lib_NAME})
-add_custom_command(TARGET goluau_lib_stub POST_BUILD COMMAND
-    ${CMAKE_COMMAND} -E rm -f $<TARGET_FILE:goluau_lib_stub>
+set_target_properties(lib_stub PROPERTIES OUTPUT_NAME ${lib_NAME})
+add_custom_command(TARGET lib_stub POST_BUILD COMMAND
+    ${CMAKE_COMMAND} -E rm -f $<TARGET_FILE:lib_stub>
 )
-target_link_libraries(goluau_cli PRIVATE goluau_lib)
+target_link_libraries(cli PRIVATE lib)
+set_target_properties(cli PROPERTIES OUTPUT_NAME ${lib_NAME})
 
-target_compile_definitions(goluau_fs_module PRIVATE ${goluau_modules_EXPORT})
-target_include_directories(goluau_fs_module PRIVATE ${goluau_modules_DIR}/include)
-set_target_properties(goluau_fs_module PROPERTIES OUTPUT_NAME module_fs)
-target_link_libraries(goluau_fs_module PRIVATE goluau_lib)
+target_compile_definitions(filesystem_module PRIVATE ${modules_EXPORT})
+target_include_directories(filesystem_module PRIVATE ${modules_DIR}/include)
+set_target_properties(filesystem_module PROPERTIES OUTPUT_NAME xtm_filesystem)
+target_link_libraries(filesystem_module PRIVATE lib)
 
-target_compile_definitions(goluau_time_module PRIVATE ${goluau_modules_EXPORT})
-target_include_directories(goluau_time_module PRIVATE ${goluau_modules_DIR}/include)
-set_target_properties(goluau_time_module PROPERTIES OUTPUT_NAME module_time)
-target_link_libraries(goluau_time_module PRIVATE goluau_lib)
+target_compile_definitions(time_module PRIVATE ${modules_EXPORT})
+target_include_directories(time_module PRIVATE ${modules_DIR}/include)
+set_target_properties(time_module PROPERTIES OUTPUT_NAME xtm_time)
+target_link_libraries(time_module PRIVATE lib)
 
-target_compile_definitions(goluau_console_module PRIVATE ${goluau_modules_EXPORT})
-target_include_directories(goluau_console_module PRIVATE ${goluau_modules_DIR}/include)
-set_target_properties(goluau_console_module PROPERTIES OUTPUT_NAME module_console)
-target_link_libraries(goluau_console_module PRIVATE goluau_lib)
+target_compile_definitions(console_module PRIVATE ${modules_EXPORT})
+target_include_directories(console_module PRIVATE ${modules_DIR}/include)
+set_target_properties(console_module PROPERTIES OUTPUT_NAME xtm_console)
+target_link_libraries(console_module PRIVATE lib)
 

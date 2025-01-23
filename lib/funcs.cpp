@@ -1,5 +1,4 @@
-#include "goluau.h"
-#include "luminfuncs.h"
+#include "luauxt.h"
 #include <lualib.h>
 #include <unordered_map>
 #include <string>
@@ -9,6 +8,7 @@
 #include <Luau/Common.h>
 #include <filesystem>
 #include "luacode.h"
+#include <iostream>
 #include "Require.h"
 #include <cassert>
 #include <core.hpp>
@@ -19,13 +19,13 @@ struct Global_options {
 } global_opts;
 
 static bool codegen = true;
-int luminF_loadstring(lua_State* L) {
+static int lua_loadstring(lua_State* L) {
     size_t l = 0;
     const char* s = luaL_checklstring(L, 1, &l);
     const char* chunkname = luaL_optstring(L, 2, s);
     lua_setsafeenv(L, LUA_ENVIRONINDEX, false);
     size_t outsize;
-    char* bc = luau_compile(s, l, goluau_compileoptions, &outsize);
+    char* bc = luau_compile(s, l, luauxt_compileoptions, &outsize);
     std::string bytecode(s, outsize);
     std::free(bc);
     if (luau_load(L, chunkname, bytecode.data(), bytecode.size(), 0) == 0)
@@ -122,7 +122,7 @@ private:
     lua_State* L;
 };
 
-int luminF_require(lua_State* L)
+int lua_require(lua_State* L)
 {
     std::string name = luaL_checkstring(L, 1);
 
@@ -161,7 +161,7 @@ int luminF_require(lua_State* L)
     // now we can compile & run module on the new thread
     size_t outsize;
     char* bytecode_data = luau_compile(resolvedRequire.sourceCode.data(),
-        resolvedRequire.sourceCode.length(), goluau_compileoptions, &outsize);
+        resolvedRequire.sourceCode.length(), luauxt_compileoptions, &outsize);
     std::string bytecode{bytecode_data, outsize};
     std::free(bytecode_data);
     if (luau_load(ML, resolvedRequire.identifier.c_str(), bytecode.data(), bytecode.size(), 0) == 0)
@@ -192,7 +192,7 @@ int luminF_require(lua_State* L)
     // L stack: _MODULES ML result
     return finishrequire(L);
 }
-int luminF_collectgarbage(lua_State* L) {
+int lua_collectgarbage(lua_State* L) {
     const char* option = luaL_optstring(L, 1, "collect");
     if (strcmp(option, "collect") == 0) {
         lua_gc(L, LUA_GCCOLLECT, 0);
@@ -204,4 +204,24 @@ int luminF_collectgarbage(lua_State* L) {
         return 1;
     }
     luaL_error(L, "collectgarbage must be called with 'count' or 'collect'");
+}
+
+static int lua_scan(lua_State* L) {
+    std::string in;
+    std::cin >> in;
+    lua_pushstring(L, in.c_str());
+    return 1;
+}
+
+void luauxt_loadfuncs(lua_State *L) {
+    const luaL_Reg global_functions[] = {
+        {"loadstring", lua_loadstring},
+        {"require", lua_require},
+        {"collectgarbage", lua_collectgarbage},
+        {"scan", lua_scan},
+        {nullptr, nullptr}
+    };
+    lua_pushvalue(L, LUA_GLOBALSINDEX);
+    luaL_register(L, NULL, global_functions);
+    lua_pop(L, 1);
 }

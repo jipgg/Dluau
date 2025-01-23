@@ -1,7 +1,6 @@
 #pragma once
 #include <chrono>
-#include <goluau.h>
-#include <lualib.h>
+#include <luauxt.h>
 namespace ch = std::chrono;
 using Duration = ch::nanoseconds;
 using Time = ch::time_point<ch::system_clock, ch::milliseconds>;

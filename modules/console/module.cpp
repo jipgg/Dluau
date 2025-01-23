@@ -1,5 +1,5 @@
-#include ".goluau_modules_api.h"
-#include <goluau.h>
+#include ".luauxtm_api.h"
+#include <luauxt.h>
 #include <lualib.h>
 #include <iostream>
 #include <format>
@@ -102,20 +102,20 @@ static void push_ansi_codes(lua_State* L, const ansi_code_map& map) {
         lua_setfield(L, -2, key.c_str());
     }
 }
-GOLUAU_MODULES_API inline void print_version() {
+LUAUXTM_API inline void print_version() {
     std::cout << std::format("VERSION: {}\n", 123);
 }
-GOLUAU_MODULES_API inline int get_version() {
+LUAUXTM_API inline int get_version() {
     return 1234;
 }
-GOLUAU_MODULES_API inline int add_numbers(double a, double b) {
+LUAUXTM_API inline int add_numbers(double a, double b) {
     return static_cast<int>(a + b);
 }
-GOLUAU_MODULES_API inline int print_string(const char* string) {
+LUAUXTM_API inline int print_string(const char* string) {
     std::cout << std::format("STRING IS: {}\n", string);
     return 0;
 }
-GOLUAU_MODULES_API inline int module_console(lua_State* L) {
+LUAUXTM_API inline int luauxtm_load(lua_State* L) {
     lua_newtable(L);
     luaL_register(L, nullptr, library);
     lua_newtable(L);

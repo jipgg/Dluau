@@ -8,8 +8,7 @@
 #include <string>
 #include <string_view>
 #include <optional>
-#include <lualib.h>
-#include <goluau.h>
+#include <luauxt.h>
 using String = std::string;
 using StrView = std::string_view;
 template <class Ty>
@@ -27,7 +26,7 @@ struct Dlmodule {
         path(path) {}
     ~Dlmodule() {if (handle) FreeLibrary(handle);}
     bc::flat_map<String, uintptr_t> cached{};
-    inline static const int tag{goluau_newludtag()};
+    inline static const int tag{luauxt_newlightuserdatatag()};
     constexpr static const char* tname{"dlmodule"};
     static int create_binding(lua_State* L);
     static void init(lua_State* L);

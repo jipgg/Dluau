@@ -1,5 +1,5 @@
-#include "goluau.h"
-#include ".goluau_modules_api.h"
+#include "luauxt.h"
+#include ".luauxtm_api.h"
 #include "fs.hpp"
 #include <lualib.h>
 #include <filesystem>
@@ -78,7 +78,7 @@ static int file_remove(lua_State* L) {
     return 0;
 }
 
-GOLUAU_MODULES_API inline int luminload_fs(lua_State* L) {
+LUAUXTM_API inline int luauxtm_load(lua_State* L) {
     const luaL_Reg lib[] = {
         {"current_directory", current_directory},
         {"temp_directory", temp_directory},

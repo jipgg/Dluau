@@ -1,5 +1,4 @@
 #include "module.hpp"
-#include <goluau.h>
 #include <format>
 #include <chrono>
 #include "Type.hpp"

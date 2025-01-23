@@ -37,8 +37,8 @@ static int namecall(lua_State* L) {
 
 void Dlmodule::init(lua_State* L) {
     if (luaL_newmetatable(L, Dlmodule::tname)) {
-        getfunc_stringatom = goluau_stringatom(L, "lua_cfunction");
-        create_binding_stringatom = goluau_stringatom(L, "create_binding");
+        getfunc_stringatom = luauxt_stringatom(L, "lua_cfunction");
+        create_binding_stringatom = luauxt_stringatom(L, "create_binding");
         lua_setlightuserdataname(L, Dlmodule::tag, Dlmodule::tname);
         const luaL_Reg meta[] = {
             {"__index", index},

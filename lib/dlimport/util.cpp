@@ -1,6 +1,5 @@
 #include "lib.hpp"
 #include <core.hpp>
-#include <goluau.h>
 #include <filesystem>
 #include <ranges>
 namespace fs = std::filesystem;

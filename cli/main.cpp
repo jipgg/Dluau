@@ -1,11 +1,10 @@
 #include <Windows.h>
 #include <lualib.h>
 #include <luacode.h>
-#include "luminutils.h"
 #include <Error_info.hpp>
 #include <ranges>
 #include <filesystem>
-#include <goluau.h>
+#include <luauxt.h>
 #include <optional>
 #include <format>
 #include <iostream>

@@ -3,9 +3,7 @@
 #include <luaconf.h>
 #include <luacode.h>
 #include <luacodegen.h>
-#include <goluau.h>
-#include <luminfuncs.h>
-#include <luminutils.h>
+#include <luauxt.h>
 //lua.h
 lua_State* lua_newstate(lua_Alloc f, void* ud) {return 0;}
 void lua_close(lua_State* L) {}
@@ -204,28 +202,21 @@ int luau_codegen_supported(void) {return 0;}
 void luau_codegen_create(lua_State* L) {}
 void luau_codegen_compile(lua_State* L, int idx) {}
 //lumin.h
-int goluau_newudtag() {return 0;}
-int goluau_newludtag() {return 0;}
-bool goluau_samemeta(lua_State* L, int idx, const char* tname) {return 0;}
-int16_t goluau_useratom(const char* key, size_t len) {return 0i16;}
-void goluau_loadfuncs(lua_State* L) {}
-void goluauopen_dll(lua_State* L) {}
-int goluauload_dll(lua_State* L) {return 0;}
-int goluau_registertaggedtype(const char *tname) {return 0;}
-void goluau_registertype(const char *tname) {}
-int goluau_gettnametag(const char *tname) {return 0;}
-bool goluau_istyperegistered(const char *tname) {return 0;}
-int goluau_stringatom(lua_State *L, const char *key) {return 0;}
-int goluau_lstringatom(lua_State *L, const char *key, size_t len) {return 0;}
-lua_State* goluau_initstate() {return 0;}
-void goluau_init(lua_State* L) {}
+int luauxt_newuserdatatag() {return 0;}
+int luauxt_newlightuserdatatag() {return 0;}
+bool luauxt_samemeta(lua_State* L, int idx, const char* tname) {return 0;}
+int16_t luauxt_defaultuseratom(const char* key, size_t len) {return 0i16;}
+void luauxt_loadfuncs(lua_State* L) {}
+int luauxt_registertypetagged(const char *tname) {return 0;}
+void luauxt_registertype(const char *tname) {}
+int luauxt_gettagfromtname(const char *tname) {return 0;}
+bool luauxt_istyperegistered(const char *tname) {return 0;}
+int luauxt_stringatom(lua_State *L, const char *key) {return 0;}
+int luauxt_lstringatom(lua_State *L, const char *key, size_t len) {return 0;}
+lua_State* luauxt_newstate() {return 0;}
+void luauxt_init(lua_State* L) {}
 lua_CompileOptions* lumin_compileopts{nullptr};
-int goluau_go(const goluau_GoOptions* opts) {return 0;}
-//luminfuncs.h
-int luminF_dllimport(lua_State* L) {return 0;}
-int luminF_loadstring(lua_State* L) {return 0;}
-int luminF_require(lua_State* L) {return 0;}
-int luminF_collectgarbage(lua_State* L) {return 0;}
+int luauxt_run(const goluau_GoOptions* opts) {return 0;}
 
 lua_State* luminU_loadscript(lua_State* L, const char* script_path, size_t len) {return 0;}
 const char* luminU_spawnscript(lua_State* L, const char* script_path, size_t len) {return 0;}

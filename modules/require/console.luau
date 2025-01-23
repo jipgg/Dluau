@@ -45,4 +45,4 @@ print(`{binding_test}`)
 print(binding_test(100, 100))
 print(`result is {binding_test(120, 130)}`)
 
-return dyn:lua_cfunction("module_console") () :: console 
+return dyn:lua_cfunction("luauxtm_load") () :: console 

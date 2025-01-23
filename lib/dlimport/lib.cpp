@@ -1,8 +1,6 @@
-#include "goluau.h"
-#include <lualib.h>
+#include "luauxt.h"
 #include <unordered_map>
 #include <string>
-#include <lualib.h>
 #include <luacode.h>
 #include <Luau/Common.h>
 #include <memory>

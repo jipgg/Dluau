@@ -3,7 +3,7 @@
 #include <optional>
 #include <span>
 #include <string_view>
-#include <goluau.h>
+#include <luauxt.h>
 #include <filesystem>
 #include <functional>
 #include <lualib.h>

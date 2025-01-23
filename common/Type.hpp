@@ -1,5 +1,5 @@
 #pragma once
-#include <goluau.h>
+#include <luauxt.h>
 #include <string>
 #include <unordered_map>
 #include <lualib.h>
@@ -41,7 +41,7 @@ public:
         if (not initialized_) {
             luaL_getmetatable(L, type_name());
             if (not lua_isnil(L, -1)
-                and goluau_istyperegistered(type_name())) initialized_ = true;
+                and luauxt_istyperegistered(type_name())) initialized_ = true;
             lua_pop(L, 1);
         }
         return initialized_;
@@ -71,8 +71,8 @@ public:
             newindex_ = std::move(info.newindex);
         }
         lua_pop(L, 1);
-        if (not goluau_istyperegistered(type_name())) {
-            goluau_registertype(type_name());
+        if (not luauxt_istyperegistered(type_name())) {
+            luauxt_registertype(type_name());
         }
     }
 private:

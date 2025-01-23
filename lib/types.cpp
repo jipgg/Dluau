@@ -1,4 +1,4 @@
-#include <goluau.h>
+#include <luauxt.h>
 #include <lualib.h>
 #include <vector>
 #include <string>
@@ -28,7 +28,7 @@ public:
     }
     bool add_tagged(std::string v) {
         if (registry_.contains(v)) return false;
-        tags_.emplace(v, goluau_newudtag());
+        tags_.emplace(v, luauxt_newuserdatatag());
         registry_.emplace(std::move(v));
         sync_containers();
         return true;
@@ -56,19 +56,19 @@ private:
 
 static Userdata_type_registry userdata_types;
 
-int goluau_gettnametag(const char *tname) {
+int luauxt_gettagfromtname(const char *tname) {
     return userdata_types.get_tag(tname);
 }
-bool goluau_istyperegistered(const char *tname) {
+bool luauxt_istyperegistered(const char *tname) {
     return userdata_types.exists(tname);
 }
 
-int goluau_registertaggedtype(const char *tname) {
+int luauxt_registertypetagged(const char *tname) {
     userdata_types.add_tagged(tname);
-    goluau_compileoptions->userdataTypes = userdata_types.zarray();
+    luauxt_compileoptions->userdataTypes = userdata_types.zarray();
     return userdata_types.get_tag(tname);
 }
-void goluau_registertype(const char* tname) {
+void luauxt_registertype(const char* tname) {
     userdata_types.add(tname);
-    goluau_compileoptions->userdataTypes = userdata_types.zarray();
+    luauxt_compileoptions->userdataTypes = userdata_types.zarray();
 }

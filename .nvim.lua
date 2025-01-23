@@ -1,7 +1,7 @@
 require"lspconfig".luau_lsp.setup {
     cmd = {"luau-lsp",
         "lsp",
-        "--definitions=lumin-core.d.luau",
+        "--definitions=LuauXT.d.luau",
         "--definitions=modules/require/filesystem/defs.luau",
     },
     settings = {

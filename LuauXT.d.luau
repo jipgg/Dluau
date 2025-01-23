@@ -19,9 +19,9 @@ declare class dlmodule
     lua_cfunction: <As..., Rs...>(module: dlmodule, symbol: string) -> ((As...)->(Rs...))
 end
 declare dlimport: {
-    load: (dllname: string) -> dlmodule,
-    find: (dllname: string) -> dlmodule?,
-    cfunction: <As..., Rs...>(module: dlmodule, symbol: string) -> ((As...)->(Rs...)),
+    load: (dlname: string) -> dlmodule,
+    try_load: (dlname: string) -> dlmodule?,
+    search_for: (dlname: string) -> string?,
 }
 
 export type Project_configuration = {

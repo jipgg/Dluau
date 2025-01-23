@@ -44,5 +44,6 @@ local binding_test: (a: number, b: number) -> number
 print(`{binding_test}`)
 print(binding_test(100, 100))
 print(`result is {binding_test(120, 130)}`)
+print(`path: {dlimport.search_for("xtm_console")}`)
 
 return dyn:lua_cfunction("luauxtm_load") () :: console 

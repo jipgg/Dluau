@@ -15,4 +15,4 @@ export type fs = {
         remove: (path: string) -> (),
     },
 }
-return dll.cfunction(dll.load("xtm_filesystem"), "luminload_fs") () :: fs
+return dynlib.load("xtm_filesystem"):lua_cfunction("luminload_fs") () :: fs

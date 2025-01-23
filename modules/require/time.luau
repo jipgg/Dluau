@@ -236,4 +236,4 @@ export type time = {
     --- Useful for measuring elapsed time.
     high_precision_clock: {now: () -> High_precision_time},
 }
-return dll.cfunction(dll.load("xtm_time"), "loadmodule") () :: time
+return dynlib.load("xtm_time"):lua_cfunction("loadmodule") () :: time 

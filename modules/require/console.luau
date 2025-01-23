@@ -38,13 +38,11 @@ export type console = {
         move_left: () -> (),
     }
 }
-local module = dll.load("xtm_console")
-module:dyncall_void("print_version")
-local binding_test: (a: number, b: number) -> number = module:create_binding('int', 'add_numbers', 'double', 'double')
+local dyn = dynlib.load("xtm_console")
+local binding_test: (a: number, b: number) -> number
+    = dyn:create_binding('int', 'add_numbers', 'double', 'double')
 print(`{binding_test}`)
 print(binding_test(100, 100))
-print(`NUMBERS: {module:dyncall_int("add_numbers", 100, 150)}`)
-module:dyncall_int("print_string", "YOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO DLL")
-print(`VERSION IN LUAU: {module:dyncall_int("get_version")}`)
+print(`result is {binding_test(120, 130)}`)
 
-return dll.cfunction(dll.load("xtm_console"), "module_console") () :: console 
+return dyn:lua_cfunction("module_console") () :: console 

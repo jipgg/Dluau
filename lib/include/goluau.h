@@ -32,4 +32,6 @@ GOLUAU_API void goluau_loadfuncs(lua_State* L);
 GOLUAU_API void goluau_openlibs(lua_State* L);
 GOLUAU_API void goluauopen_dll(lua_State* L);
 GOLUAU_API int goluauload_dll(lua_State* L);
+GOLUAU_API void goluauopen_dynlib(lua_State* L);
+GOLUAU_API int goluauload_dynlib(lua_State* L);
 GOLUAU_API lua_CompileOptions* goluau_compileoptions;

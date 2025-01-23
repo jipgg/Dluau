@@ -136,12 +136,12 @@ static int dyncall_void(lua_State* L) {
     dcCallVoid(vm, reinterpret_cast<DCpointer>(*proc));
     return 0;
 }
-enum class Parameter_type {
+enum class ParamType {
     Int, Void, Float, String, Double
 };
 struct Binding {
-    Vector<Parameter_type> types;
-    Parameter_type get_return_type() const {return types[0];}
+    Vector<ParamType> types;
+    ParamType get_return_type() const {return types[0];}
     Pointer function_pointer;
 };
 static int call_binding(lua_State* L) {
@@ -149,7 +149,7 @@ static int call_binding(lua_State* L) {
     std::cout << std::format("CALLING s{} fn{}\n", binding.types.size(), binding.function_pointer);
     DCCallVM* vm = call_vm.get();
     dcReset(vm);
-    using Pt = Parameter_type;
+    using Pt = ParamType;
     for (int i{1}; i < binding.types.size(); ++i) {
         std::cout << std::format("Arg {} {}\n", i, int(binding.types.at(i)));
         switch(binding.types.at(i)) {
@@ -190,8 +190,8 @@ static int call_binding(lua_State* L) {
     }
     luaL_errorL(L, "call error");
 }
-static Optional<Parameter_type> string_to_param_type(String_view str) {
-    using Pt = Parameter_type;
+static Optional<ParamType> string_to_param_type(String_view str) {
+    using Pt = ParamType;
     if (str == "int") {
         return Pt::Int;
     } else if (str == "double") {
@@ -210,7 +210,7 @@ static int create_binding(lua_State* L) {
     Binding binding{};
     const int top = lua_gettop(L);
     String_view return_type = luaL_checkstring(L, 2);
-    using Pt = Parameter_type;
+    using Pt = ParamType;
     auto res = string_to_param_type(return_type);
     if (not res) luaL_argerrorL(L, 2, "not a c type");
     binding.types.push_back(std::move(*res));

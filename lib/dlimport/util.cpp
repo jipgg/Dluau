@@ -1,4 +1,4 @@
-#include "dynlib.hpp"
+#include "lib.hpp"
 #include <core.hpp>
 #include <goluau.h>
 #include <filesystem>
@@ -31,33 +31,33 @@ Opt<String> find_module_path(const String& dllname) {
     rn::replace(path, '\\', '/');
     return path;
 }
-Dllmodule* init_or_find_module(const String& name) {
+Dlmodule* init_or_find_module(const String& name) {
     auto found_path = find_module_path(name);
     if (not found_path) return nullptr;
     if (auto it = glob::loaded.find(*found_path); it == glob::loaded.end()) {
         HMODULE hm = LoadLibrary(found_path->c_str());
         if (not hm) [[unlikely]] return nullptr;
-        glob::loaded.emplace(*found_path, make_unique<Dllmodule>(hm, name, *found_path));
+        glob::loaded.emplace(*found_path, make_unique<Dlmodule>(hm, name, *found_path));
     }
     return glob::loaded[*found_path].get();
 }
-Opt<uintptr_t> find_proc_address(Dllmodule& module, const String& symbol) {
+Opt<uintptr_t> find_proc_address(Dlmodule& module, const String& symbol) {
     auto& cached = module.cached;
     if (auto found = cached.find(symbol); found != cached.end()) return cached.at(symbol);
     FARPROC proc = GetProcAddress(module.handle, symbol.c_str());
     if (proc) cached.emplace(symbol, reinterpret_cast<uintptr_t>(proc));
     return proc ? std::make_optional(reinterpret_cast<uintptr_t>(proc)) : std::nullopt;
 }
-Dllmodule* lua_tomodule(lua_State* L, int idx) {
-    if (lua_lightuserdatatag(L, idx) != Dllmodule::tag) {
-        luaL_typeerrorL(L, idx, Dllmodule::tname);
+Dlmodule* lua_tomodule(lua_State* L, int idx) {
+    if (lua_lightuserdatatag(L, idx) != Dlmodule::tag) {
+        luaL_typeerrorL(L, idx, Dlmodule::tname);
     }
-    auto mod = static_cast<Dllmodule*>(lua_tolightuserdatatagged(L, idx, Dllmodule::tag));
+    auto mod = static_cast<Dlmodule*>(lua_tolightuserdatatagged(L, idx, Dlmodule::tag));
     return mod;
 }
-Dllmodule* lua_pushmodule(lua_State* L, Dllmodule* module) {
-    lua_pushlightuserdatatagged(L, module, Dllmodule::tag);
-    luaL_getmetatable(L, Dllmodule::tname);
+Dlmodule* lua_pushmodule(lua_State* L, Dlmodule* module) {
+    lua_pushlightuserdatatagged(L, module, Dlmodule::tag);
+    luaL_getmetatable(L, Dlmodule::tname);
     lua_setmetatable(L, -2);
     return module;
 }

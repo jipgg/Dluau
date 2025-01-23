@@ -27,7 +27,7 @@ lua_State* goluau_initstate() {
     luaL_openlibs(L);
     goluau_loadfuncs(L);
     goluauopen_dll(L);
-    goluauopen_dynlib(L);
+    luauxtopen_dlimport(L);
     const luaL_Reg funcs[] = {
         {"command_line_arguments", [](lua_State* L) -> int {
             if (launch_args.empty()) return 0;
@@ -66,7 +66,7 @@ void goluau_init(lua_State* L) {
     luaL_openlibs(L);
     goluau_loadfuncs(L);
     goluauopen_dll(L);
-    goluauopen_dynlib(L);
+    luauxtopen_dlimport(L);
 }
 const char* lumin_runin(goluau_GoOptions opts) {
     if (opts.args) launch_args = opts.args;

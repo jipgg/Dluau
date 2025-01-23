@@ -15,4 +15,4 @@ export type fs = {
         remove: (path: string) -> (),
     },
 }
-return dynlib.load("xtm_filesystem"):lua_cfunction("luminload_fs") () :: fs
+return dlimport.load("xtm_filesystem"):lua_cfunction("luminload_fs") () :: fs

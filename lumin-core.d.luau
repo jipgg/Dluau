@@ -18,7 +18,7 @@ declare class dlmodule
     ) -> ((Args...)->Return)
     lua_cfunction: <As..., Rs...>(module: dlmodule, symbol: string) -> ((As...)->(Rs...))
 end
-declare dynlib: {
+declare dlimport: {
     load: (dllname: string) -> dlmodule,
     find: (dllname: string) -> dlmodule?,
     cfunction: <As..., Rs...>(module: dlmodule, symbol: string) -> ((As...)->(Rs...)),

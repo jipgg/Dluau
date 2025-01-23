@@ -5,13 +5,15 @@
 #include <luminutils.h>
 #include <iostream>
 #include <format>
+#include <memory>
 constexpr const char* errfmt = "\033[31mLuau: {}\033[0m\n";
 
 int goluau_go(const goluau_GoOptions* opts) {
     goluau_compileoptions->debugLevel = opts->debug_level;
     goluau_compileoptions->optimizationLevel = opts->optimization_level;
     if (opts->args) launch_args = opts->args;
-    lua_State* L = goluau_initstate();
+    std::unique_ptr<lua_State, decltype(&lua_close)> state{goluau_initstate(), lua_close}; 
+    lua_State* L = state.get();
     main_state = L;
     if (opts->global_functions) {
         lua_pushvalue(L, LUA_GLOBALSINDEX);

@@ -18,7 +18,7 @@
 #include <filesystem>
 #include <dyncall.h>
 #include <iostream>
-#include "dynlib.hpp"
+#include "lib.hpp"
 #include <format>
 namespace fs = std::filesystem;
 namespace rn = std::ranges;
@@ -31,7 +31,7 @@ static int findpath(lua_State* L) {
     return 0;
 }
 static int load(lua_State* L) {
-    Dllmodule* module = util::init_or_find_module(luaL_checkstring(L, 1));
+    Dlmodule* module = util::init_or_find_module(luaL_checkstring(L, 1));
     if (not module) luaL_argerrorL(L, 1, "couldn't find dll");
     util::lua_pushmodule(L, module);
     return 1;
@@ -50,8 +50,8 @@ static int find(lua_State* L) {
     util::lua_pushmodule(L, module);
     return 1;
 }
-int goluauload_dynlib(lua_State* L) {
-    Dllmodule::init(L);
+int luauxtload_dlimport(lua_State* L) {
+    Dlmodule::init(L);
     const luaL_Reg lib[] = {
         {"load", load},
         {"find", find},
@@ -62,7 +62,7 @@ int goluauload_dynlib(lua_State* L) {
     luaL_register(L, nullptr, lib);
     return 1;
 }
-void goluauopen_dynlib(lua_State* L) {
-    goluauload_dynlib(L);
-    lua_setglobal(L, "dynlib");
+void luauxtopen_dlimport(lua_State* L) {
+    luauxtload_dlimport(L);
+    lua_setglobal(L, "dlimport");
 }

@@ -38,7 +38,7 @@ export type console = {
         move_left: () -> (),
     }
 }
-local dyn = dynlib.load("xtm_console")
+local dyn = dlimport.load("xtm_console")
 local binding_test: (a: number, b: number) -> number
     = dyn:create_binding('int', 'add_numbers', 'double', 'double')
 print(`{binding_test}`)

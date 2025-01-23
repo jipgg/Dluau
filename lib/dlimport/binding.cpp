@@ -1,4 +1,4 @@
-#include "dynlib.hpp"
+#include "lib.hpp"
 #include <format>
 #include <iostream>
 
@@ -12,12 +12,10 @@ struct Binding {
 };
 static int call_binding(lua_State* L) {
     const Binding& binding = *static_cast<Binding*>(lua_touserdata(L, lua_upvalueindex(1)));
-    std::cout << std::format("CALLING s{} fn{}\n", binding.types.size(), binding.function_pointer);
     DCCallVM* vm = glob::call_vm.get();
     dcReset(vm);
     using Pt = ParamType;
     for (int i{1}; i < binding.types.size(); ++i) {
-        std::cout << std::format("Arg {} {}\n", i, int(binding.types.at(i)));
         switch(binding.types.at(i)) {
             case Pt::Int:
                 dcArgInt(vm, luaL_checkinteger(L, i));
@@ -36,7 +34,6 @@ static int call_binding(lua_State* L) {
         }
     }
     DCpointer fnptr = reinterpret_cast<DCpointer>(binding.function_pointer);
-    std::cout << std::format("Return {}\n", int(binding.types.at(0)));
     switch(binding.types.at(0)) {
         case Pt::Int:
             lua_pushinteger(L, dcCallInt(vm, fnptr));
@@ -71,8 +68,8 @@ static Opt<ParamType> string_to_param_type(StrView str) {
     }
     return std::nullopt;
 }
-int Dllmodule::create_binding(lua_State* L) {
-    Dllmodule* module = util::lua_tomodule(L, 1);
+int Dlmodule::create_binding(lua_State* L) {
+    Dlmodule* module = util::lua_tomodule(L, 1);
     Binding binding{};
     const int top = lua_gettop(L);
     StrView return_type = luaL_checkstring(L, 2);
@@ -93,7 +90,6 @@ int Dllmodule::create_binding(lua_State* L) {
         }
     }
     Binding* up = static_cast<Binding*>(lua_newuserdatadtor(L, sizeof(Binding), [](void* ud) {
-        std::cout << "DESTROYING\n";
         static_cast<Binding*>(ud)->~Binding();
     }));
     new (up) Binding{std::move(binding)};

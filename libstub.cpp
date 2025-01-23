@@ -216,7 +216,7 @@ int luauxt_lstringatom(lua_State *L, const char *key, size_t len) {return 0;}
 lua_State* luauxt_newstate() {return 0;}
 void luauxt_init(lua_State* L) {}
 lua_CompileOptions* lumin_compileopts{nullptr};
-int luauxt_run(const goluau_GoOptions* opts) {return 0;}
+int luauxt_run(const luauxt_RunOptions* opts) {return 0;}
 
 lua_State* luminU_loadscript(lua_State* L, const char* script_path, size_t len) {return 0;}
 const char* luminU_spawnscript(lua_State* L, const char* script_path, size_t len) {return 0;}

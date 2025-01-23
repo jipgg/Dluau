@@ -17,10 +17,11 @@ static int index(lua_State* L) {
 }
 
 static int lua_cfunction(lua_State* L) {
-    const char* proc_key = luaL_checkstring(L, 2);
+    using namespace std::string_literals;
+    const std::string proc_key = "lua_"s + luaL_checkstring(L, 2);
     auto opt = util::find_proc_address(*util::lua_tomodule(L, 1), proc_key);
-    if (not opt) luaL_errorL(L, "function was not found ");
-    const auto fmt = std::format("{}", proc_key);
+    if (not opt) luaL_errorL(L, "lua_CFunction was not found ");
+    const auto fmt = std::format("CFunction: {}", proc_key);
     lua_pushcfunction(L, reinterpret_cast<lua_CFunction>(*opt), fmt.c_str());
     return 1;
 }

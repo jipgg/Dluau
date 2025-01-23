@@ -20,14 +20,14 @@ LUAUXT_API int luauxt_stringatom(lua_State* L, const char* key);
 LUAUXT_API int luauxt_lstringatom(lua_State* L, const char* key, size_t len);
 LUAUXT_API lua_State* luauxt_newstate();
 LUAUXT_API void luauxt_init(lua_State* L);
-struct goluau_GoOptions {
+struct luauxt_RunOptions {
     const char* scripts;
     const char* args;
     const luaL_Reg* global_functions;
     int debug_level;
     int optimization_level;
 };
-LUAUXT_API int luauxt_run(const goluau_GoOptions* opts);
+LUAUXT_API int luauxt_run(const luauxt_RunOptions* opts);
 LUAUXT_API void luauxt_loadfuncs(lua_State* L);
 LUAUXT_API void luauxt_openlibs(lua_State* L);
 LUAUXT_API void luauxtopen_dlimport(lua_State* L);

@@ -88,7 +88,7 @@ static int new_ratio(lua_State* L) {
     return 1;
 }
 
-LUAUXTM_API inline int luauxtm_load(lua_State* L) {
+LUAUXTM_API inline int lua_loadtime(lua_State* L) {
     const luaL_Reg lib[] = {
         {"now", time_now},
         {"datetime" , from_datetime},

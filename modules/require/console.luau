@@ -38,4 +38,4 @@ export type console = {
         move_left: () -> (),
     }
 }
-return  dlimport.load("xtm_console"):lua_cfunction("luauxtm_load")() :: console 
+return  dlimport.load("xtm_console"):lua_cfunction("loadconsole")() :: console 

@@ -236,4 +236,4 @@ export type time = {
     --- Useful for measuring elapsed time.
     high_precision_clock: {now: () -> High_precision_time},
 }
-return dlimport.load("xtm_time"):lua_cfunction("luauxtm_load") () :: time 
+return dlimport.load("xtm_time"):lua_cfunction("loadtime") () :: time 

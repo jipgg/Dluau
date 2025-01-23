@@ -15,4 +15,4 @@ export type fs = {
         remove: (path: string) -> (),
     },
 }
-return dlimport.load("xtm_filesystem"):lua_cfunction("luauxtm_load") () :: fs
+return dlimport.load("xtm_filesystem"):lua_cfunction("loadfilesystem") () :: fs

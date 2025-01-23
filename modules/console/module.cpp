@@ -113,14 +113,14 @@ LUAUXTM_API inline void print_version() {
 LUAUXTM_API inline int get_version() {
     return 1234;
 }
-LUAUXTM_API inline int add_numbers(double a, double b) {
-    return static_cast<int>(a + b);
+LUAUXTM_API inline double add_numbers(double a, double b) {
+    return a + b;
 }
 LUAUXTM_API inline int print_string(const char* string) {
     std::cout << std::format("STRING IS: {}\n", string);
     return 0;
 }
-LUAUXTM_API inline int luauxtm_load(lua_State* L) {
+LUAUXTM_API inline int lua_loadconsole(lua_State* L) {
     lua_newtable(L);
     luaL_register(L, nullptr, library);
     lua_newtable(L);

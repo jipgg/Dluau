@@ -78,7 +78,7 @@ static int file_remove(lua_State* L) {
     return 0;
 }
 
-LUAUXTM_API inline int luauxtm_load(lua_State* L) {
+LUAUXTM_API inline int lua_loadfilesystem(lua_State* L) {
     const luaL_Reg lib[] = {
         {"current_directory", current_directory},
         {"temp_directory", temp_directory},

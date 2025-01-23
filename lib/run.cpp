@@ -7,7 +7,7 @@
 #include <memory>
 constexpr const char* errfmt = "\033[31mLuau: {}\033[0m\n";
 
-int luauxt_run(const goluau_GoOptions* opts) {
+int luauxt_run(const luauxt_RunOptions* opts) {
     luauxt_compileoptions->debugLevel = opts->debug_level;
     luauxt_compileoptions->optimizationLevel = opts->optimization_level;
     if (opts->args) launch_args = opts->args;

@@ -1,6 +1,6 @@
 #include <luauxt.h>
 #include <lualib.h>
-#include <Error_info.hpp>
+#include <ErrorInfo.hpp>
 #include <core.hpp>
 #include <filesystem>
 #include <ranges>

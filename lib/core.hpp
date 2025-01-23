@@ -5,7 +5,7 @@
 #include <vector>
 #include <string_view>
 #include <optional>
-#include <Error_info.hpp>
+#include <ErrorInfo.hpp>
 
 inline boost::container::flat_map<lua_State*, std::string> script_path_registry;
 inline std::string_view launch_args;

@@ -1,9 +1,7 @@
 #include "lib.hpp"
 #include <format>
-static int getfunc_stringatom{};
-static int dyncall_void_stringatom{};
-static int dyncall_int_stringatom{};
-static int create_binding_stringatom{};
+static int lua_cfunction_stringatom{};
+static int bind_function_stringatom{};
 
 static int index(lua_State* L) {
     Dlmodule* module = util::lua_tomodule(L, 1);
@@ -30,15 +28,15 @@ static int namecall(lua_State* L) {
     Dlmodule& module = *util::lua_tomodule(L, 1);
     int atom;
     lua_namecallatom(L, &atom);
-    if (atom == getfunc_stringatom) return lua_cfunction(L);
-    else if(atom == create_binding_stringatom) return Dlmodule::create_binding(L);
+    if (atom == lua_cfunction_stringatom) return lua_cfunction(L);
+    else if(atom == bind_function_stringatom) return Dlmodule::create_binding(L);
     luaL_errorL(L, "invalid");
 }
 
 void Dlmodule::init(lua_State* L) {
     if (luaL_newmetatable(L, Dlmodule::tname)) {
-        getfunc_stringatom = luauxt_stringatom(L, "lua_cfunction");
-        create_binding_stringatom = luauxt_stringatom(L, "create_binding");
+        lua_cfunction_stringatom = luauxt_stringatom(L, "lua_cfunction");
+        bind_function_stringatom = luauxt_stringatom(L, "bind");
         lua_setlightuserdataname(L, Dlmodule::tag, Dlmodule::tname);
         const luaL_Reg meta[] = {
             {"__index", index},

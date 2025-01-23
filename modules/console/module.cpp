@@ -8,52 +8,57 @@ static void register_ansi_code(lua_State* L, const char* field, const char* code
     lua_pushstring(L, code);
     lua_setfield(L, -2, field);
 }
-static int ansi(lua_State* L) {
+static int lua_ansi(lua_State* L) {
     std::cout << std::string("\033") + luaL_checkstring(L, 1);
     return 0;
 }
-static int read(lua_State* L) {
+static int lua_clear(lua_State* L) {
+    std::cout << "\033[2J\033[H\033[0m";
+    return 0;
+}
+static int lua_read(lua_State* L) {
     std::string input;
     std::cin >> input;
     lua_pushstring(L, input.c_str());
     return 1;
 }
-static int write(lua_State* L) {
+static int lua_write(lua_State* L) {
     std::cout << lua_tostring(L, 1);
     return 0;
 }
-static int errwrite(lua_State* L) {
+static int lua_errwrite(lua_State* L) {
     std::cerr << lua_tostring(L, 1);
     return 0;
 }
-static int cursor_move_up(lua_State* L) {
+static int lua_cursor_moveup(lua_State* L) {
     std::cout << std::format("\033[{}A", luaL_optinteger(L, 1, 1));
     return 0;
 }
-static int cursor_move_down(lua_State* L) {
+static int lua_cursor_move_down(lua_State* L) {
     std::cout << std::format("\033[{}B", luaL_optinteger(L, 1, 1));
     return 0;
 }
-static int cursor_move_right(lua_State* L) {
+static int lua_cursor_moveright(lua_State* L) {
     std::cout << std::format("\033[{}C", luaL_optinteger(L, 1, 1));
     return 0;
 }
-static int cursor_move_left(lua_State* L) {
+static int lua_cursor_moveleft(lua_State* L) {
     std::cout << std::format("\033[{}D", luaL_optinteger(L, 1, 1));
     return 0;
 }
 static const luaL_Reg cursor[] = {
-    {"move_up", cursor_move_up},
-    {"move_down", cursor_move_down},
-    {"move_right", cursor_move_right},
-    {"move_left", cursor_move_left},
+    {"move_up", lua_cursor_moveup},
+    {"move_down", lua_cursor_move_down},
+    {"move_right", lua_cursor_moveright},
+    {"move_left", lua_cursor_moveleft},
     {nullptr, nullptr}
 };
 static const luaL_Reg library[] = {
-    {"ansi", ansi},
-    {"read", read},
-    {"write", write},
-    {"errwrite", errwrite},
+    {"ansi", lua_ansi},
+    {"read", lua_read},
+    {"write", lua_write},
+    {"errwrite", lua_errwrite},
+    {"clear", lua_clear},
     {nullptr, nullptr}
 };
 

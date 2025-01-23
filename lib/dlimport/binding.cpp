@@ -86,6 +86,7 @@ int Dlmodule::create_binding(lua_State* L) {
         for (int i{4}; i <= top; ++i) {
             auto res = string_to_param_type(luaL_checkstring(L, i));
             if (not res) luaL_argerrorL(L, i, "not a c type");
+            else if (*res == ParamType::Void) luaL_argerrorL(L, i, "an argument type cannot be void.");
             binding.types.push_back(std::move(*res));
         }
     }

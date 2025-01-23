@@ -1,0 +1,12 @@
+local console = require('@xtm/console')
+console.write(console.codes.fg.blue)
+local module = dlimport.load("xtm_console")
+local add_numbers: (a: number, b: number) -> number
+add_numbers = module:bind('int', 'add_numbers', 'double', 'double')
+local get_version: () -> number = module:bind('int', 'get_version')
+local print_version: () -> () = module:bind('void', 'print_version')
+print_version()
+print(`version is {get_version()}`)
+print(`{add_numbers}`)
+print(add_numbers(100, 100))
+print(`result is {add_numbers(120, 130)}`)

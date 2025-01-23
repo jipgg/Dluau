@@ -26,10 +26,10 @@ export type console = {
     read: () -> string,
     write: (msg: string) -> (),
     errwrite: (msg: string) -> (),
+    clear: () -> (),
     --- ansi escape sequence ("\033")
     --- "\033[0m" to reset all
     ansi: (escape_sequence: string) -> (),
-    clear: () -> (),
     codes: ansi_codes,
     cursor: {
         move_up: () -> (),
@@ -38,12 +38,4 @@ export type console = {
         move_left: () -> (),
     }
 }
-local dyn = dlimport.load("xtm_console")
-local binding_test: (a: number, b: number) -> number
-    = dyn:create_binding('int', 'add_numbers', 'double', 'double')
-print(`{binding_test}`)
-print(binding_test(100, 100))
-print(`result is {binding_test(120, 130)}`)
-print(`path: {dlimport.search_for("xtm_console")}`)
-
-return dyn:lua_cfunction("luauxtm_load") () :: console 
+return  dlimport.load("xtm_console"):lua_cfunction("luauxtm_load")() :: console 

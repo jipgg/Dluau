@@ -7,7 +7,7 @@
 #include <filesystem>
 #include <functional>
 #include <lualib.h>
-#include <Error_info.hpp>
+#include <ErrorInfo.hpp>
 #include <variant>
 #include <misc.hpp>
 namespace fs = std::filesystem;

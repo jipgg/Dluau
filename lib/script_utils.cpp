@@ -5,7 +5,7 @@
 #include "luacode.h"
 #include <lua.h>
 #include <filesystem>
-#include <Error_info.hpp>
+#include <ErrorInfo.hpp>
 #include <iostream>
 #include <format>
 #include <unordered_map>

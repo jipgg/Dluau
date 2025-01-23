@@ -1,7 +1,7 @@
 #include <Windows.h>
 #include <lualib.h>
 #include <luacode.h>
-#include <Error_info.hpp>
+#include <ErrorInfo.hpp>
 #include <ranges>
 #include <filesystem>
 #include <luauxt.h>

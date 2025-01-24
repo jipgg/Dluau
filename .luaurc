@@ -1,6 +1,7 @@
 {
     "languageMode": "strict",
     "aliases": {
-        "xtm": "./modules/require/"
+        "root": "/Users/jip/.dluau/require/",
+        "dlm": "./modules/require/"
     }
 }

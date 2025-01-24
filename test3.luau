@@ -1,5 +1,0 @@
-local args = meta.command_line_arguments()
-print(`ARGS: {if args then table.concat(args, ", ") else nil}`)
-local script_dir = meta.script_directory()
-local script_name = meta.script_name()
-print(`dir: {script_dir}, name: {script_name}`)

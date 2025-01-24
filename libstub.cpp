@@ -3,7 +3,7 @@
 #include <luaconf.h>
 #include <luacode.h>
 #include <luacodegen.h>
-#include <luauxt.h>
+#include <dluau.h>
 //lua.h
 lua_State* lua_newstate(lua_Alloc f, void* ud) {return 0;}
 void lua_close(lua_State* L) {}
@@ -202,21 +202,21 @@ int luau_codegen_supported(void) {return 0;}
 void luau_codegen_create(lua_State* L) {}
 void luau_codegen_compile(lua_State* L, int idx) {}
 //lumin.h
-int luauxt_newuserdatatag() {return 0;}
-int luauxt_newlightuserdatatag() {return 0;}
-bool luauxt_samemeta(lua_State* L, int idx, const char* tname) {return 0;}
-int16_t luauxt_defaultuseratom(const char* key, size_t len) {return 0i16;}
-void luauxt_loadfuncs(lua_State* L) {}
-int luauxt_registertypetagged(const char *tname) {return 0;}
-void luauxt_registertype(const char *tname) {}
-int luauxt_gettagfromtname(const char *tname) {return 0;}
-bool luauxt_istyperegistered(const char *tname) {return 0;}
-int luauxt_stringatom(lua_State *L, const char *key) {return 0;}
-int luauxt_lstringatom(lua_State *L, const char *key, size_t len) {return 0;}
-lua_State* luauxt_newstate() {return 0;}
-void luauxt_init(lua_State* L) {}
+int dluau_newuserdatatag() {return 0;}
+int dluau_newlightuserdatatag() {return 0;}
+bool dluau_samemeta(lua_State* L, int idx, const char* tname) {return 0;}
+int16_t dluau_defaultuseratom(const char* key, size_t len) {return 0i16;}
+void dluau_loadfuncs(lua_State* L) {}
+int dluau_registertypetagged(const char *tname) {return 0;}
+void dluau_registertype(const char *tname) {}
+int dluau_gettagfromtname(const char *tname) {return 0;}
+bool dluau_istyperegistered(const char *tname) {return 0;}
+int dluau_stringatom(lua_State *L, const char *key) {return 0;}
+int dluau_lstringatom(lua_State *L, const char *key, size_t len) {return 0;}
+lua_State* dluau_newstate() {return 0;}
+void dluau_init(lua_State* L) {}
 lua_CompileOptions* lumin_compileopts{nullptr};
-int luauxt_run(const luauxt_RunOptions* opts) {return 0;}
+int dluau_run(const dluau_RunOptions* opts) {return 0;}
 
 lua_State* luminU_loadscript(lua_State* L, const char* script_path, size_t len) {return 0;}
 const char* luminU_spawnscript(lua_State* L, const char* script_path, size_t len) {return 0;}

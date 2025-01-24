@@ -3,7 +3,7 @@
 #include <iostream>
 
 enum class ParamType {
-    Int, Void, Float, String, Double
+    Int, Void, Float, String, Double, Long, Short, Longlong, Pointer
 };
 struct Binding {
     std::vector<ParamType> types;
@@ -29,6 +29,18 @@ static int call_binding(lua_State* L) {
             case Pt::String:
                 dcArgPointer(vm, (DCpointer)luaL_checkstring(L, i));
                 break;
+            case Pt::Short:
+                dcArgShort(vm, luaL_checkinteger(L, i));
+                break;
+            case Pt::Long:
+                dcArgLong(vm, luaL_checkinteger(L, i));
+                break;
+            case Pt::Longlong:
+                dcArgLongLong(vm, luaL_checkinteger(L, i));
+                break;
+            case Pt::Pointer:
+                if (not lua_islightuserdata(L, i)) luaL_typeerrorL(L, i, "not light userdata.");
+                dcArgPointer(vm, lua_tolightuserdata(L, i));
             case Pt::Void:
                 break;
         }
@@ -46,6 +58,18 @@ static int call_binding(lua_State* L) {
             return 1;
         case Pt::String:
             lua_pushstring(L, static_cast<const char*>(dcCallPointer(vm, fnptr)));
+            return 1;
+        case Pt::Short:
+            lua_pushinteger(L, dcCallShort(vm, fnptr));
+            return 1;
+        case Pt::Long:
+            lua_pushinteger(L, dcCallLong(vm, fnptr));
+            return 1;
+        case Pt::Longlong:
+            lua_pushinteger(L, dcCallLongLong(vm, fnptr));
+            return 1;
+        case Pt::Pointer:
+            lua_pushlightuserdata(L, dcCallPointer(vm, fnptr));
             return 1;
         case Pt::Void:
             dcCallVoid(vm, fnptr);
@@ -65,6 +89,14 @@ static Opt<ParamType> string_to_param_type(StrView str) {
         return Pt::String;
     } else if (str == "float") {
         return Pt::Float;
+    } else if (str == "short") {
+        return Pt::Short;
+    } else if (str == "long") {
+        return Pt::Long;
+    } else if (str == "long long") {
+        return Pt::Longlong;
+    } else if (str == "pointer") {
+        return Pt::Pointer;
     }
     return std::nullopt;
 }
@@ -94,7 +126,6 @@ int Dlmodule::create_binding(lua_State* L) {
         static_cast<Binding*>(ud)->~Binding();
     }));
     new (up) Binding{std::move(binding)};
-    std::cout << std::format("s{} fn{}\n", up->types.size(), up->function_pointer);
     lua_pushcclosure(L, call_binding, "call_binding", 1);
     return 1;
 }

@@ -1,12 +1,14 @@
 #include "lib.hpp"
 #include <format>
-static int lua_cfunction_stringatom{};
-static int bind_function_stringatom{};
+#include <ErrorInfo.hpp>
+constexpr int unintialized{-1};
+static int lua_cfunction_stringatom{unintialized};
+static int create_binding_stringatom{unintialized};
 
 static int index(lua_State* L) {
     Dlmodule* module = util::lua_tomodule(L, 1);
     const std::string_view key = luaL_checkstring(L, 2);
-    if (key == "path") {
+    if (key == "absolute_path") {
         lua_pushstring(L, module->path.c_str());
         return 1;
     } else if (key == "name") {
@@ -30,14 +32,14 @@ static int namecall(lua_State* L) {
     int atom;
     lua_namecallatom(L, &atom);
     if (atom == lua_cfunction_stringatom) return lua_cfunction(L);
-    else if(atom == bind_function_stringatom) return Dlmodule::create_binding(L);
-    luaL_errorL(L, "invalid");
+    else if(atom == create_binding_stringatom) return Dlmodule::create_binding(L);
+    luaL_errorL(L, ErrorInfo{std::format("invalid namecall '{}'", atom) }.formatted().c_str());
 }
 
 void Dlmodule::init(lua_State* L) {
     if (luaL_newmetatable(L, Dlmodule::tname)) {
-        lua_cfunction_stringatom = luauxt_stringatom(L, "lua_cfunction");
-        bind_function_stringatom = luauxt_stringatom(L, "bind");
+        lua_cfunction_stringatom = dluau_stringatom(L, "lua_pushcfunction");
+        create_binding_stringatom = dluau_stringatom(L, "create_c_binding");
         lua_setlightuserdataname(L, Dlmodule::tag, Dlmodule::tname);
         const luaL_Reg meta[] = {
             {"__index", index},

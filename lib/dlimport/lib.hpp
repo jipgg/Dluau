@@ -8,7 +8,7 @@
 #include <string>
 #include <string_view>
 #include <optional>
-#include <luauxt.h>
+#include <dluau.h>
 using String = std::string;
 using StrView = std::string_view;
 template <class Ty>
@@ -26,7 +26,7 @@ struct Dlmodule {
         path(path) {}
     ~Dlmodule() {if (handle) FreeLibrary(handle);}
     bc::flat_map<String, uintptr_t> cached{};
-    inline static const int tag{luauxt_newlightuserdatatag()};
+    inline static const int tag{dluau_newlightuserdatatag()};
     constexpr static const char* tname{"dlmodule"};
     static int create_binding(lua_State* L);
     static void init(lua_State* L);
@@ -36,8 +36,8 @@ inline bc::flat_map<String, std::unique_ptr<Dlmodule>> loaded;
 inline std::unique_ptr<DCCallVM, decltype(&dcFree)> call_vm{dcNewCallVM(1024), dcFree};
 }
 namespace util {
-Opt<String> find_module_path(const String& dllname);
-Dlmodule* init_or_find_module(const String& name);
+Opt<String> find_module_path(const String& dllname, StrView priority_dir = "");
+Dlmodule* init_or_find_module(const String& name, StrView priority_dir = "");
 Opt<uintptr_t> find_proc_address(Dlmodule& module, const String& symbol);
 Dlmodule* lua_tomodule(lua_State* L, int idx);
 Dlmodule* lua_pushmodule(lua_State* L, Dlmodule* module);

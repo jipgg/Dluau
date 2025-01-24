@@ -1,24 +1,32 @@
 #include "lib.hpp"
-#include <core.hpp>
+#include <shared.hpp>
 #include <filesystem>
 #include <ranges>
 namespace fs = std::filesystem;
 namespace rn = std::ranges;
 
 namespace util {
-Opt<String> find_module_path(const String& dllname) {
+Opt<String> find_module_path(const String& dllname,  std::string_view priority_dir) {
+    if (not priority_dir.empty()) {
+        fs::path potential_path = fs::path(priority_dir) / dllname;
+        if (not potential_path.has_extension()) {
+            potential_path.replace_extension(".dll");
+        }
+        auto standardize = [&potential_path]() -> std::string {
+            std::string standardized = fs::absolute(potential_path).string();
+            rn::replace(standardized, '\\', '/');
+            return standardized;
+        };
+        if (not fs::exists(potential_path)) return std::nullopt;
+        std::string path = fs::absolute(potential_path).string();
+        rn::replace(path, '\\', '/');
+        return path;
+    }
     char buffer[MAX_PATH];
-    DWORD result = SearchPath(
-        nullptr,       // Search in standard locations
-        dllname.c_str(), // Name of the DLL
-        nullptr,       // File extension (optional)
-        MAX_PATH,      // Buffer size
-        buffer,        // Buffer to store the result
-        nullptr        // Ignored (no filename extension needed)
-    );
+    DWORD result = SearchPath(nullptr, dllname.c_str(), nullptr, MAX_PATH, buffer, nullptr);
     if (result == 0 or result > MAX_PATH) {
         if (dllname.ends_with(".dll")) {
-            for (const auto& [state, path] : script_path_registry) {
+            for (const auto& [state, path] : shared::script_paths) {
                 fs::path dllpath = fs::path(path).parent_path() / dllname;
                 if (fs::exists(dllpath)) return fs::absolute(dllpath).string();
             }
@@ -30,8 +38,8 @@ Opt<String> find_module_path(const String& dllname) {
     rn::replace(path, '\\', '/');
     return path;
 }
-Dlmodule* init_or_find_module(const String& name) {
-    auto found_path = find_module_path(name);
+Dlmodule* init_or_find_module(const String& name, std::string_view priority_dir) {
+    auto found_path = find_module_path(name, priority_dir);
     if (not found_path) return nullptr;
     if (auto it = glob::loaded.find(*found_path); it == glob::loaded.end()) {
         HMODULE hm = LoadLibrary(found_path->c_str());

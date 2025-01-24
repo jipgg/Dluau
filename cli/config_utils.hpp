@@ -3,7 +3,7 @@
 #include <optional>
 #include <span>
 #include <string_view>
-#include <luauxt.h>
+#include <dluau.h>
 #include <filesystem>
 #include <functional>
 #include <lualib.h>
@@ -13,7 +13,7 @@
 namespace fs = std::filesystem;
 
 
-struct Project_configuration {
+struct Config {
     enum class Host_type {
         Console, General
     };
@@ -35,7 +35,7 @@ struct Defer {
     Defer(std::function<void()> f): f(f) {}
     ~Defer() {f();}
 };
-static std::variant<Project_configuration, ErrorInfo> read_config(const std::string& path) {
+static std::variant<Config, ErrorInfo> read_config(const std::string& path) {
     std::unique_ptr<lua_State, decltype(&lua_close)> state{luaL_newstate(), lua_close};
     lua_State* L = state.get();
     auto source = misc::read_file(path);
@@ -49,7 +49,7 @@ static std::variant<Project_configuration, ErrorInfo> read_config(const std::str
     if (lua_pcall(L, 0, 1, 0) != LUA_OK) {
         return ErrorInfo{lua_tostring(L, -1)};
     }
-    Project_configuration config{};
+    Config config{};
     lua_getfield(L, -1, "sources");
     if (lua_isnil(L, -1)) return ErrorInfo{"no sources given."};
     if (lua_isstring(L, -1)) {

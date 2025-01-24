@@ -1,5 +1,5 @@
 #pragma once
-#include <luauxt.h>
+#include <dluau.h>
 #include <string>
 #include <unordered_map>
 #include <lualib.h>
@@ -38,9 +38,9 @@ public:
         if (not initialized_) {
             luaL_getmetatable(L, type_name());
             if (not lua_isnil(L, -1)
-                and luauxt_istyperegistered(type_name())) {
+                and dluau_istyperegistered(type_name())) {
                 initialized_ = true;
-                tag = luauxt_gettagfromtname(type_name());
+                tag = dluau_gettagfromtname(type_name());
             }
             lua_pop(L, 1);
         }
@@ -71,8 +71,8 @@ public:
             newindex_ = std::move(info.newindex);
         }
         lua_pop(L, 1);
-        if (not luauxt_istyperegistered(type_name())) {
-            tag = luauxt_registertypetagged(type_name());
+        if (not dluau_istyperegistered(type_name())) {
+            tag = dluau_registertypetagged(type_name());
             lua_setuserdatadtor(L, tag, [](lua_State* L, void* data) {
                 static_cast<T*>(data)->~T();
             });

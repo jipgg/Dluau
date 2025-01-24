@@ -1,4 +1,4 @@
-#include "luauxt.h"
+#include "dluau.h"
 #include <lualib.h>
 #include <unordered_map>
 #include <string>
@@ -11,12 +11,8 @@
 #include <iostream>
 #include "Require.h"
 #include <cassert>
-#include <core.hpp>
+#include <shared.hpp>
 namespace fs = std::filesystem;
-struct Global_options {
-    int optimization_level = 2;
-    int debug_level = 1;
-} global_opts;
 
 static bool codegen = true;
 static int lua_loadstring(lua_State* L) {
@@ -25,7 +21,7 @@ static int lua_loadstring(lua_State* L) {
     const char* chunkname = luaL_optstring(L, 2, s);
     lua_setsafeenv(L, LUA_ENVIRONINDEX, false);
     size_t outsize;
-    char* bc = luau_compile(s, l, luauxt_compileoptions, &outsize);
+    char* bc = luau_compile(s, l, shared::compile_options, &outsize);
     std::string bytecode(s, outsize);
     std::free(bc);
     if (luau_load(L, chunkname, bytecode.data(), bytecode.size(), 0) == 0)
@@ -156,12 +152,12 @@ int lua_require(lua_State* L)
     lua_State* ML = lua_newthread(GL);
     lua_xmove(GL, L, 1);
     // new thread needs to have the globals sandboxed
-    script_path_registry.emplace(ML, resolvedRequire.absolutePath);
+    shared::script_paths.emplace(ML, resolvedRequire.absolutePath);
     luaL_sandboxthread(ML);
     // now we can compile & run module on the new thread
     size_t outsize;
     char* bytecode_data = luau_compile(resolvedRequire.sourceCode.data(),
-        resolvedRequire.sourceCode.length(), luauxt_compileoptions, &outsize);
+        resolvedRequire.sourceCode.length(), shared::compile_options, &outsize);
     std::string bytecode{bytecode_data, outsize};
     std::free(bytecode_data);
     if (luau_load(ML, resolvedRequire.identifier.c_str(), bytecode.data(), bytecode.size(), 0) == 0)
@@ -213,7 +209,7 @@ static int lua_scan(lua_State* L) {
     return 1;
 }
 
-void luauxt_loadfuncs(lua_State *L) {
+void dluau_loadfuncs(lua_State *L) {
     const luaL_Reg global_functions[] = {
         {"loadstring", lua_loadstring},
         {"require", lua_require},

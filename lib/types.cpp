@@ -1,9 +1,10 @@
-#include <luauxt.h>
+#include <dluau.h>
 #include <lualib.h>
 #include <vector>
 #include <string>
 #include <memory>
 #include <array>
+#include <shared.hpp>
 #include <boost/container/flat_set.hpp>
 #include <boost/container/flat_map.hpp>
 namespace bc = boost::container;
@@ -28,7 +29,7 @@ public:
     }
     bool add_tagged(std::string v) {
         if (registry_.contains(v)) return false;
-        tags_.emplace(v, luauxt_newuserdatatag());
+        tags_.emplace(v, dluau_newuserdatatag());
         registry_.emplace(std::move(v));
         sync_containers();
         return true;
@@ -56,19 +57,19 @@ private:
 
 static Userdata_type_registry userdata_types;
 
-int luauxt_gettagfromtname(const char *tname) {
+int dluau_gettagfromtname(const char *tname) {
     return userdata_types.get_tag(tname);
 }
-bool luauxt_istyperegistered(const char *tname) {
+bool dluau_istyperegistered(const char *tname) {
     return userdata_types.exists(tname);
 }
 
-int luauxt_registertypetagged(const char *tname) {
+int dluau_registertypetagged(const char *tname) {
     userdata_types.add_tagged(tname);
-    luauxt_compileoptions->userdataTypes = userdata_types.zarray();
+    shared::compile_options->userdataTypes = userdata_types.zarray();
     return userdata_types.get_tag(tname);
 }
-void luauxt_registertype(const char* tname) {
+void dluau_registertype(const char* tname) {
     userdata_types.add(tname);
-    luauxt_compileoptions->userdataTypes = userdata_types.zarray();
+    shared::compile_options->userdataTypes = userdata_types.zarray();
 }

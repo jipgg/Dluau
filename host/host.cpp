@@ -3,7 +3,7 @@
 #include <luacode.h>
 #include <ErrorInfo.hpp>
 #include <ranges>
-#include <luauxt.h>
+#include <dluau.h>
 #include <optional>
 #include <format>
 #include <iostream>
@@ -30,12 +30,12 @@ int host_main(const std::vector<std::string_view>& args) {
     try {
         auto src = get_if_param(args, "--sources=");
         auto ar = get_if_param(args, "--args=");
-        luauxt_RunOptions opts{};
+        dluau_RunOptions opts{};
         opts.scripts = src ? src->c_str() : nullptr;
         opts.args = ar ? ar->c_str() : nullptr;
         opts.optimization_level = contains(args, "-O2") ? 2 : contains(args, "-O1") ? 1 : 0;
         opts.debug_level = contains(args, "-D0") ? 0 : 1;
-        return luauxt_run(&opts);
+        return dluau_run(&opts);
     } catch (std::exception& e) {
         std::cerr << std::format("Unexpected error: {}.\n", e.what());
         return -1;

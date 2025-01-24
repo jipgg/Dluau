@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string_view>
 #include <ranges>
-#include <luauxt.h>
+#include <dluau.h>
 #include <vector>
 #include "../host_main.hpp"
 

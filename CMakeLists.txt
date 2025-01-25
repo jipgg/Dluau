@@ -9,6 +9,9 @@ set(DynLoad_DIR ${DynCall_SOURCE_DIR}/dynload)
 set(DynCall_DIR ${DynCall_SOURCE_DIR}/dyncall)
 set(DynCallback_DIR ${DynCall_SOURCE_DIR}/dyncallback)
 
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+add_subdirectory(extern/nlohmann_json)
+
 set(luau_DIR luau)
 set(luau_vm_EXPORT "LUA_API=extern \"C\" __declspec(dllexport)")
 set(luau_compiler_EXPORT "LUACODE_API=extern \"C\" __declspec(dllexport)")
@@ -85,6 +88,7 @@ target_link_libraries(lib PUBLIC
     common
     Boost::container
     dyncall_s
+    nlohmann_json::nlohmann_json
 )
 target_link_libraries(lib PRIVATE Luau.Config)
 set(lib_NAME dluaulib)

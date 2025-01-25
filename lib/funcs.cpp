@@ -12,6 +12,7 @@
 #include "Require.h"
 #include <cassert>
 #include <shared.hpp>
+#include <nlohmann/json.hpp>
 namespace fs = std::filesystem;
 
 static bool codegen = true;

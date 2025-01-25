@@ -1,3 +1,6 @@
 [submodule "luau"]
 	path = luau
 	url = https://github.com/luau-lang/luau
+[submodule "extern/nlohmann_json"]
+	path = extern/nlohmann_json
+	url = https://github.com/nlohmann/json

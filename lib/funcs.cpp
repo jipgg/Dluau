@@ -1,19 +1,14 @@
 #include "dluau.h"
 #include <lualib.h>
-#include <unordered_map>
 #include <string>
-#include <filesystem>
 #include <lualib.h>
 #include <luacode.h>
 #include <Luau/Common.h>
-#include <filesystem>
 #include "luacode.h"
 #include <iostream>
 #include "Require.h"
 #include <cassert>
 #include <shared.hpp>
-#include <nlohmann/json.hpp>
-namespace fs = std::filesystem;
 
 static bool codegen = true;
 static int lua_loadstring(lua_State* L) {
@@ -157,6 +152,7 @@ int lua_require(lua_State* L)
     luaL_sandboxthread(ML);
     // now we can compile & run module on the new thread
     size_t outsize;
+    shared::process_precompiled_features(resolvedRequire.sourceCode);
     char* bytecode_data = luau_compile(resolvedRequire.sourceCode.data(),
         resolvedRequire.sourceCode.length(), shared::compile_options, &outsize);
     std::string bytecode{bytecode_data, outsize};

@@ -1,3 +1,5 @@
+local mod = require('./mod')
+print(`{meta.current_script}: {nameof(mod)}`)
 local my_variable = 1
 
 local function abc()

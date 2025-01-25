@@ -60,7 +60,7 @@ target_include_directories(lib_stub PUBLIC
 target_link_libraries(lib_stub PUBLIC common)
 
 target_link_libraries(host PRIVATE lib)
-set_target_properties(host PROPERTIES OUTPUT_NAME dluau-runtime)
+set_target_properties(host PROPERTIES OUTPUT_NAME dluau-runtime-host)
 
 target_compile_definitions(Luau.VM PRIVATE ${luau_vm_EXPORT})
 target_compile_definitions(Luau.Compiler PRIVATE ${luau_compiler_EXPORT})

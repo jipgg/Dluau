@@ -41,6 +41,7 @@ std::optional<lua_State*> load(lua_State* L, std::string_view path) {
     auto identifier = script_path.filename().string();
     identifier = "=" + identifier;
     size_t outsize;
+    shared::process_precompiled_features(*source);
     char* bc = luau_compile(
         source->data(), source->size(),
         shared::compile_options, &outsize

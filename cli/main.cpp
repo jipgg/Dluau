@@ -86,7 +86,7 @@ static int run_config(const Config& config, const std::string* const args) {
         std::cerr << "\033[31mFailed to get executable path.\033[0m\n";
         return -2;
     }
-    constexpr std::string_view runtime_host_name{"dluau-runtime.exe"};
+    constexpr std::string_view runtime_host_name{"dluau-runtime-host.exe"};
     std::string exe = (path->parent_path() / runtime_host_name).string();
     std::string cmd = std::format("{} --sources={}", exe, config.sources);
     if (args) cmd += std::format(" --args={}", *args);

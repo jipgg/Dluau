@@ -17,14 +17,14 @@ DLUAU_API void dluau_registertype(const char* tname);
 DLUAU_API int dluau_stringatom(lua_State* L, const char* key);
 DLUAU_API int dluau_lstringatom(lua_State* L, const char* key, size_t len);
 DLUAU_API lua_State* dluau_newstate();
-struct dluau_RunOptions {
+struct dluau_Run_options {
     const char* scripts;
     const char* args;
     const luaL_Reg* global_functions;
     int debug_level;
     int optimization_level;
 };
-DLUAU_API int dluau_run(const dluau_RunOptions* opts);
+DLUAU_API int dluau_run(const dluau_Run_options* opts);
 DLUAU_API void dluau_loadfuncs(lua_State* L);
 DLUAU_API void dluau_openlibs(lua_State* L);
 DLUAU_API void dluauopen_dlimport(lua_State* L);

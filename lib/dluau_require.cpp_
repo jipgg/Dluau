@@ -1,0 +1,27 @@
+#include "shared.hpp"
+#include <dluau.h>
+#include <boost/container/flat_map.hpp>
+#include <nlohmann/json.hpp>
+#include <ErrorInfo.hpp>
+#include <filesystem>
+namespace fs = std::filesystem;
+using json = nlohmann::json;
+namespace bc = boost::container;
+static bc::flat_map<std::string, std::string> aliases;
+
+static std::optional<std::string_view> parse_rc_file() {
+    const auto cwd = fs::current_path();
+    auto file = shared::script_utils::read_file(cwd / ".luaurc");
+    if (not file) return "couldn't read file";
+    try {
+        json parsed = json::parse(*file);
+        for (const auto& e : parsed["aliases"].items()) {
+            std::cout << std::format("KEY[{}]: VAL[{}]\n",)
+        }
+        return std::nullopt;
+    } catch(std::exception& e) {return e.what();} 
+}
+
+int dluau_require(lua_State* L) {
+    std::string name = luaL_checkstring(L, 1);
+}

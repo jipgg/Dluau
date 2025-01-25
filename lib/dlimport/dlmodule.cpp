@@ -1,13 +1,15 @@
 #include "lib.hpp"
 #include <format>
-#include <ErrorInfo.hpp>
+#include <common/error_trail.hpp>
 constexpr int unintialized{-1};
 static int lua_cfunction_stringatom{unintialized};
 static int create_binding_stringatom{unintialized};
+using std::string_view, std::string;
+using common::error_trail;
 
 static int index(lua_State* L) {
-    Dlmodule* module = util::lua_tomodule(L, 1);
-    const std::string_view key = luaL_checkstring(L, 2);
+    dlmodule* module = util::lua_tomodule(L, 1);
+    const string_view key = luaL_checkstring(L, 2);
     if (key == "absolute_path") {
         lua_pushstring(L, module->path.c_str());
         return 1;
@@ -20,7 +22,7 @@ static int index(lua_State* L) {
 
 static int lua_cfunction(lua_State* L) {
     using namespace std::string_literals;
-    const std::string proc_key = "lua_"s + luaL_checkstring(L, 2);
+    const string proc_key = "lua_"s + luaL_checkstring(L, 2);
     auto opt = util::find_proc_address(*util::lua_tomodule(L, 1), proc_key);
     if (not opt) luaL_errorL(L, "lua_CFunction was not found ");
     const auto fmt = std::format("CFunction: {}", proc_key);
@@ -28,19 +30,19 @@ static int lua_cfunction(lua_State* L) {
     return 1;
 }
 static int namecall(lua_State* L) {
-    Dlmodule& module = *util::lua_tomodule(L, 1);
+    dlmodule& module = *util::lua_tomodule(L, 1);
     int atom;
     lua_namecallatom(L, &atom);
     if (atom == lua_cfunction_stringatom) return lua_cfunction(L);
-    else if(atom == create_binding_stringatom) return Dlmodule::create_binding(L);
-    luaL_errorL(L, ErrorInfo{std::format("invalid namecall '{}'", atom) }.formatted().c_str());
+    else if(atom == create_binding_stringatom) return dlmodule::create_binding(L);
+    luaL_errorL(L, error_trail{std::format("invalid namecall '{}'", atom) }.formatted().c_str());
 }
 
-void Dlmodule::init(lua_State* L) {
-    if (luaL_newmetatable(L, Dlmodule::tname)) {
+void dlmodule::init(lua_State* L) {
+    if (luaL_newmetatable(L, dlmodule::tname)) {
         lua_cfunction_stringatom = dluau_stringatom(L, "lua_pushcfunction");
         create_binding_stringatom = dluau_stringatom(L, "create_c_binding");
-        lua_setlightuserdataname(L, Dlmodule::tag, Dlmodule::tname);
+        lua_setlightuserdataname(L, dlmodule::tag, dlmodule::tname);
         const luaL_Reg meta[] = {
             {"__index", index},
             {"__namecall", namecall},

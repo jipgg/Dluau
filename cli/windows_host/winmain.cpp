@@ -4,7 +4,9 @@
 #include <ranges>
 #include <dluau.h>
 #include <vector>
-#include "../host_main.hpp"
+#include "host_main.hpp"
+namespace vw = std::views;
+using std::vector, std::string_view;
 
 static bool simulate_key_press(int key) {
     HANDLE hin = GetStdHandle(STD_INPUT_HANDLE);
@@ -64,8 +66,8 @@ void enable_virtual_terminal_processing() {
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {
     const bool alloc = redirect_console_output();
     enable_virtual_terminal_processing();
-    auto range = std::views::split(std::string_view(lpCmdLine), ' ');
-    std::vector<std::string_view> args;
+    auto range = vw::split(string_view(lpCmdLine), ' ');
+    vector<string_view> args;
     for (auto sub : range) args.emplace_back(sub.begin(), sub.end());
     const int exit_code = host_main(args);
     FreeConsole();

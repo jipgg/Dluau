@@ -34,7 +34,7 @@
             "configurePreset": "default",
             "targets": [
                 "cli",
-                "host"
+                "windows_host"
             ]
         }
   ]

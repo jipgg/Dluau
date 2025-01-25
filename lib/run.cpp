@@ -4,7 +4,6 @@
 #include <ranges>
 #include <iostream>
 #include <format>
-#include <filesystem>
 #include <memory>
 constexpr const char* errfmt = "\033[31mLuau: {}\033[0m\n";
 constexpr const char* errfmt_exception = "\033[31mCaught exception: {}\033[0m\n";
@@ -32,7 +31,7 @@ lua_State* dluau_newstate() {
     return L;
 }
 
-int dluau_run(const dluau_RunOptions* opts) {
+int dluau_run(const dluau_Run_options* opts) {
     shared::compile_options->debugLevel = opts->debug_level;
     shared::compile_options->optimizationLevel = opts->optimization_level;
     if (opts->args) shared::args = opts->args;

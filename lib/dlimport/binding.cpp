@@ -1,111 +1,111 @@
 #include "lib.hpp"
 #include <format>
 #include <iostream>
+using std::optional, std::string_view;
 
-enum class ParamType {
-    Int, Void, Float, String, Double, Long, Short, Longlong, Pointer
+enum class param_type {
+    int_v, void_v, float_v, string_v, double_v, long_v, short_v, longlong_v, pointer_v
 };
-struct Binding {
-    std::vector<ParamType> types;
-    ParamType get_return_type() const {return types[0];}
+struct param_binding {
+    std::vector<param_type> types;
+    param_type get_return_type() const {return types[0];}
     uintptr_t function_pointer;
 };
 static int call_binding(lua_State* L) {
-    const Binding& binding = *static_cast<Binding*>(lua_touserdata(L, lua_upvalueindex(1)));
+    const param_binding& binding = *static_cast<param_binding*>(lua_touserdata(L, lua_upvalueindex(1)));
     DCCallVM* vm = glob::call_vm.get();
     dcReset(vm);
-    using Pt = ParamType;
+    using pt = param_type;
     for (int i{1}; i < binding.types.size(); ++i) {
         switch(binding.types.at(i)) {
-            case Pt::Int:
+            case pt::int_v:
                 dcArgInt(vm, luaL_checkinteger(L, i));
                 break;
-            case Pt::Double:
+            case pt::double_v:
                 dcArgDouble(vm, luaL_checknumber(L, i));
                 break;
-            case Pt::Float:
+            case pt::float_v:
                 dcArgFloat(vm, static_cast<float>(luaL_checknumber(L, i)));
                 break;
-            case Pt::String:
+            case pt::string_v:
                 dcArgPointer(vm, (DCpointer)luaL_checkstring(L, i));
                 break;
-            case Pt::Short:
+            case pt::short_v:
                 dcArgShort(vm, luaL_checkinteger(L, i));
                 break;
-            case Pt::Long:
+            case pt::long_v:
                 dcArgLong(vm, luaL_checkinteger(L, i));
                 break;
-            case Pt::Longlong:
+            case pt::longlong_v:
                 dcArgLongLong(vm, luaL_checkinteger(L, i));
                 break;
-            case Pt::Pointer:
+            case pt::pointer_v:
                 if (not lua_islightuserdata(L, i)) luaL_typeerrorL(L, i, "not light userdata.");
                 dcArgPointer(vm, lua_tolightuserdata(L, i));
-            case Pt::Void:
+            case pt::void_v:
                 break;
         }
     }
     DCpointer fnptr = reinterpret_cast<DCpointer>(binding.function_pointer);
     switch(binding.types.at(0)) {
-        case Pt::Int:
+        case pt::int_v:
             lua_pushinteger(L, dcCallInt(vm, fnptr));
             return 1;
-        case Pt::Double:
+        case pt::double_v:
             lua_pushnumber(L, dcCallDouble(vm, fnptr));
             return 1;
-        case Pt::Float:
+        case pt::float_v:
             lua_pushnumber(L, dcCallFloat(vm, fnptr));
             return 1;
-        case Pt::String:
+        case pt::string_v:
             lua_pushstring(L, static_cast<const char*>(dcCallPointer(vm, fnptr)));
             return 1;
-        case Pt::Short:
+        case pt::short_v:
             lua_pushinteger(L, dcCallShort(vm, fnptr));
             return 1;
-        case Pt::Long:
+        case pt::long_v:
             lua_pushinteger(L, dcCallLong(vm, fnptr));
             return 1;
-        case Pt::Longlong:
+        case pt::longlong_v:
             lua_pushinteger(L, dcCallLongLong(vm, fnptr));
             return 1;
-        case Pt::Pointer:
+        case pt::pointer_v:
             lua_pushlightuserdata(L, dcCallPointer(vm, fnptr));
             return 1;
-        case Pt::Void:
+        case pt::void_v:
             dcCallVoid(vm, fnptr);
             return 0;
     }
     luaL_errorL(L, "call error");
 }
-static Opt<ParamType> string_to_param_type(StrView str) {
-    using Pt = ParamType;
+static optional<param_type> string_to_param_type(string_view str) {
+    using pt = param_type;
     if (str == "int") {
-        return Pt::Int;
+        return pt::int_v;
     } else if (str == "double") {
-        return Pt::Double;
+        return pt::double_v;
     } else if (str == "void") {
-        return Pt::Void;
+        return pt::void_v;
     } else if (str == "string") {
-        return Pt::String;
+        return pt::string_v;
     } else if (str == "float") {
-        return Pt::Float;
+        return pt::float_v;
     } else if (str == "short") {
-        return Pt::Short;
+        return pt::short_v;
     } else if (str == "long") {
-        return Pt::Long;
+        return pt::long_v;
     } else if (str == "long long") {
-        return Pt::Longlong;
+        return pt::longlong_v;
     } else if (str == "pointer") {
-        return Pt::Pointer;
+        return pt::pointer_v;
     }
     return std::nullopt;
 }
-int Dlmodule::create_binding(lua_State* L) {
-    Dlmodule* module = util::lua_tomodule(L, 1);
-    Binding binding{};
+int dlmodule::create_binding(lua_State* L) {
+    dlmodule* module = util::lua_tomodule(L, 1);
+    param_binding binding{};
     const int top = lua_gettop(L);
-    StrView return_type = luaL_checkstring(L, 2);
-    using Pt = ParamType;
+    string_view return_type = luaL_checkstring(L, 2);
     auto res = string_to_param_type(return_type);
     if (not res) luaL_argerrorL(L, 2, "not a c type");
     binding.types.push_back(std::move(*res));
@@ -118,14 +118,14 @@ int Dlmodule::create_binding(lua_State* L) {
         for (int i{4}; i <= top; ++i) {
             auto res = string_to_param_type(luaL_checkstring(L, i));
             if (not res) luaL_argerrorL(L, i, "not a c type");
-            else if (*res == ParamType::Void) luaL_argerrorL(L, i, "an argument type cannot be void.");
+            else if (*res == param_type::void_v) luaL_argerrorL(L, i, "an argument type cannot be void.");
             binding.types.push_back(std::move(*res));
         }
     }
-    Binding* up = static_cast<Binding*>(lua_newuserdatadtor(L, sizeof(Binding), [](void* ud) {
-        static_cast<Binding*>(ud)->~Binding();
+    param_binding* up = static_cast<param_binding*>(lua_newuserdatadtor(L, sizeof(param_binding), [](void* ud) {
+        static_cast<param_binding*>(ud)->~param_binding();
     }));
-    new (up) Binding{std::move(binding)};
+    new (up) param_binding{std::move(binding)};
     lua_pushcclosure(L, call_binding, "call_binding", 1);
     return 1;
 }

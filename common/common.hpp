@@ -3,11 +3,12 @@
 #include <filesystem>
 #include <string>
 #include <optional>
+#include <common/error_trail.hpp>
 #ifdef _WIN32
 #include <Windows.h>
 #endif
 
-namespace misc {
+namespace common {
 inline std::optional<std::string> read_file(const std::filesystem::path &path) {
     namespace fs = std::filesystem;
     if (not fs::exists(path)) [[unlikely]] {

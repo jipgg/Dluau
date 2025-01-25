@@ -4,21 +4,22 @@
 #include <ranges>
 namespace fs = std::filesystem;
 namespace rn = std::ranges;
+using std::optional, std::string, std::string_view;
 
 namespace util {
-Opt<String> find_module_path(const String& dllname,  std::string_view priority_dir) {
+optional<string> find_module_path(const string& dllname,  string_view priority_dir) {
     if (not priority_dir.empty()) {
         fs::path potential_path = fs::path(priority_dir) / dllname;
         if (not potential_path.has_extension()) {
             potential_path.replace_extension(".dll");
         }
-        auto standardize = [&potential_path]() -> std::string {
-            std::string standardized = fs::absolute(potential_path).string();
+        auto standardize = [&potential_path]() -> string {
+            string standardized = fs::absolute(potential_path).string();
             rn::replace(standardized, '\\', '/');
             return standardized;
         };
         if (not fs::exists(potential_path)) return std::nullopt;
-        std::string path = fs::absolute(potential_path).string();
+        string path = fs::absolute(potential_path).string();
         rn::replace(path, '\\', '/');
         return path;
     }
@@ -34,37 +35,37 @@ Opt<String> find_module_path(const String& dllname,  std::string_view priority_d
         }
         return find_module_path(dllname + ".dll");
     }
-    String path{buffer};
+    string path{buffer};
     rn::replace(path, '\\', '/');
     return path;
 }
-Dlmodule* init_or_find_module(const String& name, std::string_view priority_dir) {
+dlmodule* init_or_find_module(const string& name, string_view priority_dir) {
     auto found_path = find_module_path(name, priority_dir);
     if (not found_path) return nullptr;
     if (auto it = glob::loaded.find(*found_path); it == glob::loaded.end()) {
         HMODULE hm = LoadLibrary(found_path->c_str());
         if (not hm) [[unlikely]] return nullptr;
-        glob::loaded.emplace(*found_path, make_unique<Dlmodule>(hm, name, *found_path));
+        glob::loaded.emplace(*found_path, make_unique<dlmodule>(hm, name, *found_path));
     }
     return glob::loaded[*found_path].get();
 }
-Opt<uintptr_t> find_proc_address(Dlmodule& module, const String& symbol) {
+optional<uintptr_t> find_proc_address(dlmodule& module, const string& symbol) {
     auto& cached = module.cached;
     if (auto found = cached.find(symbol); found != cached.end()) return cached.at(symbol);
     FARPROC proc = GetProcAddress(module.handle, symbol.c_str());
     if (proc) cached.emplace(symbol, reinterpret_cast<uintptr_t>(proc));
     return proc ? std::make_optional(reinterpret_cast<uintptr_t>(proc)) : std::nullopt;
 }
-Dlmodule* lua_tomodule(lua_State* L, int idx) {
-    if (lua_lightuserdatatag(L, idx) != Dlmodule::tag) {
-        luaL_typeerrorL(L, idx, Dlmodule::tname);
+dlmodule* lua_tomodule(lua_State* L, int idx) {
+    if (lua_lightuserdatatag(L, idx) != dlmodule::tag) {
+        luaL_typeerrorL(L, idx, dlmodule::tname);
     }
-    auto mod = static_cast<Dlmodule*>(lua_tolightuserdatatagged(L, idx, Dlmodule::tag));
+    auto mod = static_cast<dlmodule*>(lua_tolightuserdatatagged(L, idx, dlmodule::tag));
     return mod;
 }
-Dlmodule* lua_pushmodule(lua_State* L, Dlmodule* module) {
-    lua_pushlightuserdatatagged(L, module, Dlmodule::tag);
-    luaL_getmetatable(L, Dlmodule::tname);
+dlmodule* lua_pushmodule(lua_State* L, dlmodule* module) {
+    lua_pushlightuserdatatagged(L, module, dlmodule::tag);
+    luaL_getmetatable(L, dlmodule::tname);
     lua_setmetatable(L, -2);
     return module;
 }

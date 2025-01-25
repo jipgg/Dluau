@@ -7,20 +7,21 @@
 #include <ranges>
 #include <filesystem>
 
-class ErrorInfo {
+namespace common {
+class error_trail {
     std::vector<std::source_location> traceback_;
     std::string message_;
 public:
-    ErrorInfo(const ErrorInfo& a) = default; 
-    ErrorInfo& operator=(const ErrorInfo& a) = default;
-    ErrorInfo(ErrorInfo&& a) noexcept = default;
-    ErrorInfo& operator=(ErrorInfo& a) noexcept = default;
-    ~ErrorInfo() = default;
-    explicit ErrorInfo(std::string message, std::source_location sl = std::source_location::current()):
+    error_trail(const error_trail& a) = default; 
+    error_trail& operator=(const error_trail& a) = default;
+    error_trail(error_trail&& a) noexcept = default;
+    error_trail& operator=(error_trail& a) noexcept = default;
+    ~error_trail() = default;
+    explicit error_trail(std::string message, std::source_location sl = std::source_location::current()):
         message_(std::move(message)) {
         traceback_.emplace_back(std::move(sl));
     }
-    ErrorInfo& propagate(std::source_location sl = std::source_location::current()) {
+    error_trail& propagate(std::source_location sl = std::source_location::current()) {
         traceback_.emplace_back(sl);
         return *this;
     }
@@ -50,7 +51,8 @@ public:
         ret.pop_back();
         return ret;
     }
-    friend std::ostream& operator<<(std::ostream& os, const ErrorInfo& error) {
+    friend std::ostream& operator<<(std::ostream& os, const error_trail& error) {
         return os << error.formatted();
     }
 };
+}

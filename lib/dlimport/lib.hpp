@@ -9,36 +9,31 @@
 #include <string_view>
 #include <optional>
 #include <dluau.h>
-using String = std::string;
-using StrView = std::string_view;
-template <class Ty>
-using Opt = std::optional<Ty>;
-namespace bc = boost::container;
 
-struct Dlmodule {
-    using Handle = HMODULE;
-    Handle handle;
-    String name;
-    String path;
-    Dlmodule(Handle handle, String name, String path):
+struct dlmodule {
+    using alias = HMODULE;
+    alias handle;
+    std::string name;
+    std::string path;
+    dlmodule(alias handle, std::string name, std::string path):
         handle(handle),
         name(name),
         path(path) {}
-    ~Dlmodule() {if (handle) FreeLibrary(handle);}
-    bc::flat_map<String, uintptr_t> cached{};
+    ~dlmodule() {if (handle) FreeLibrary(handle);}
+    boost::container::flat_map<std::string, uintptr_t> cached{};
     inline static const int tag{dluau_newlightuserdatatag()};
     constexpr static const char* tname{"dlmodule"};
     static int create_binding(lua_State* L);
     static void init(lua_State* L);
 };
 namespace glob {
-inline bc::flat_map<String, std::unique_ptr<Dlmodule>> loaded;
+inline boost::container::flat_map<std::string, std::unique_ptr<dlmodule>> loaded;
 inline std::unique_ptr<DCCallVM, decltype(&dcFree)> call_vm{dcNewCallVM(1024), dcFree};
 }
 namespace util {
-Opt<String> find_module_path(const String& dllname, StrView priority_dir = "");
-Dlmodule* init_or_find_module(const String& name, StrView priority_dir = "");
-Opt<uintptr_t> find_proc_address(Dlmodule& module, const String& symbol);
-Dlmodule* lua_tomodule(lua_State* L, int idx);
-Dlmodule* lua_pushmodule(lua_State* L, Dlmodule* module);
+std::optional<std::string> find_module_path(const std::string& dllname, std::string_view priority_dir = "");
+dlmodule* init_or_find_module(const std::string& name, std::string_view priority_dir = "");
+std::optional<uintptr_t> find_proc_address(dlmodule& module, const std::string& symbol);
+dlmodule* lua_tomodule(lua_State* L, int idx);
+dlmodule* lua_pushmodule(lua_State* L, dlmodule* module);
 }

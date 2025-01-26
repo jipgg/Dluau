@@ -30,7 +30,9 @@ static flat_map<lua_State*, string> script_paths;
 
 static optional<path> find_config_file(path root = fs::current_path(), int search_depth = 5) {
     const auto config_file_names = std::to_array<string_view>({
-        ".luaurc", ".dluaurc", ".dluaurc.json", ".luaurc.json"
+        ".luaurc", ".dluaurc",
+        ".dluaurc.json", ".luaurc.json",
+        "luaurc.json", "dluaurc.json",
     });
     auto exists = [&cfn = config_file_names, &root](path& out) -> bool {
         for (string_view name : cfn) {
@@ -208,6 +210,7 @@ void dluau_openlibs(lua_State *L) {
     dluauopen_scan(L);
     dluauopen_dlimport(L);
     dluauopen_meta(L);
+    dluauopen_task(L);
 }
 int dluau_newuserdatatag() {
     static int curr_type_tag = 1;
@@ -241,20 +244,23 @@ int dluau_run(const dluau_Run_options* opts) {
         std::cerr << format(errfmt, "no sources given.");
         return -1;
     }
-    string errmsg;
     using std::views::split;
     for (auto sr : split(string_view(opts->scripts), shared::arg_separator)) {
         string_view script{sr.data(), sr.size()};
         if (auto err = shared::run_file(L, script)) {
-            errmsg = err->formatted();
-            break;
+            std::cerr << format(errfmt, err->formatted());
+            return -1;
         }
         std::cout << "\033[0m";
     }
-    if (not errmsg.empty()) {
-        std::cerr << format(errfmt, errmsg);
-        return -1;
+    while (shared::tasks_in_progress()) {
+        if (auto err = shared::task_step(L)) {
+            std::cerr << format(errfmt, err->formatted());
+            return -1;
+        }
+        std::cout << "\033[0m";
     }
+    std::cout << "\033[0m";
     return 0;
 }
 

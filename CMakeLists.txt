@@ -21,7 +21,7 @@ set(luau_compiler_IMPORT "LUACODE_API=extern \"C\" __declspec(dllimport)")
 set(luau_codegen_IMPORT "LUACODEGEN_API=extern \"C\" __declspec(dllimport)")
 set(lib_EXPORT "DLUAU_LIB_EXPORT")
 
-set(lib_DIR lib)
+set(lib_DIR src)
 set(cli_DIR cli)
 set(common_DIR common)
 file(GLOB_RECURSE lib_SRC ${lib_DIR}/*.cpp)

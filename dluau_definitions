@@ -3,6 +3,10 @@ declare nameof: <T>(v: T) -> string
 declare drequire: typeof(require)
 export type param = 'int' | 'string' | 'double' | 'float'| 'short' |'long' | 'long long'| 'pointer'
 declare class userdata end
+type libtask = {
+    wait: (count: number) -> (),
+}
+declare task: libtask
 
 type callable = {__call: (any) -> never}
 

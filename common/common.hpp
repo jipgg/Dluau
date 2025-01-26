@@ -12,8 +12,15 @@
 
 namespace common {
 struct raii {
-    std::function<void()> subroutine;
-    ~raii() {subroutine();}
+    using fn = std::function<void()>;
+    fn sr;
+    raii() noexcept = default;
+    explicit raii(fn subroutine) noexcept : sr(std::move(subroutine)) {}
+    raii(const raii&) = delete;
+    raii& operator=(const raii&) = delete;
+    raii(raii&& other) noexcept = default;
+    raii& operator=(raii&& other) noexcept = default;
+    ~raii() { if (sr) sr(); }
 };
 inline std::optional<std::string> read_file(const std::filesystem::path &path) {
     namespace fs = std::filesystem;

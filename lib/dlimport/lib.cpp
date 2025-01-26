@@ -13,12 +13,12 @@
 #include "lib.hpp"
 #include <shared.hpp>
 namespace fs = std::filesystem;
-using shared::context_utils::has_permissions;
+using dluau::has_permissions;
 
 constexpr const char* err_loading_perm{"dl loading is not allowed in current script environment."};
 constexpr const char* err_not_found{"dl not found."};
 static std::string script_dir(lua_State* script) {
-    return fs::path(shared::script_paths.at(script)).parent_path().string();
+    return fs::path(dluau::get_script_paths().at(script)).parent_path().string();
 }
 
 static int search_for(lua_State* L) {

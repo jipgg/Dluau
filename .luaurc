@@ -1,6 +1,7 @@
 {
-    "languageMode": "strict",
     "aliases": {
-        "root": "/Users/jip/.dluau/require/"
-    }
+        "root": "$DLUAU_ROOT/require/"
+    },
+    "optimization_level": 2,
+    "debug_level": 1
 }

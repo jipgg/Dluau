@@ -17,31 +17,32 @@ static int newindex(lua_State* L) {
 }
 static int index(lua_State* L) {
     std::string_view key = luaL_checkstring(L, 2); 
+    const auto& paths = dluau::get_script_paths();
     switch (key[0]) {
         case 'p': { /*platform*/
             lua_pushstring(L, get_platform());
             return 1;
         }
         case 'a': { /*args*/
-            if (shared::args.empty()) return 0;
+            if (dluau::args.empty()) return 0;
             using std::views::split;
             lua_newtable(L);
             int i{1};
-            for (auto sv : shared::args | split(arg_separator)) {
+            for (auto sv : dluau::args | split(dluau::arg_separator)) {
                 lua_pushlstring(L, sv.data(), sv.size());
                 lua_rawseti(L, -2, i++);
             }
             return 1;
         }
         case 'l': { /*local_directory*/
-            if (not shared::script_paths.contains(L)) luaL_errorL(L, "unexpected error. script doesn't have a path");
-            const std::filesystem::path path{shared::script_paths[L]}; 
+            if (not paths.contains(L)) luaL_errorL(L, "unexpected error. script doesn't have a path");
+            const std::filesystem::path path{paths.at(L)}; 
             lua_pushstring(L, (path.parent_path().string().c_str()));
             return 1;
         }
         case 'c': { /*current_script*/
-            if (not shared::script_paths.contains(L)) luaL_errorL(L, "unexpected error. script doesn't have a path");
-            const std::filesystem::path path{shared::script_paths[L]}; 
+            if (not paths.contains(L)) luaL_errorL(L, "unexpected error. script doesn't have a path");
+            const std::filesystem::path path{paths.at(L)}; 
             lua_pushstring(L, (path.filename().string().c_str()));
             return 1;
         }
@@ -53,7 +54,7 @@ constexpr luaL_Reg metatable[] = {
     {"__newindex", newindex},
     {nullptr, nullptr}
 };
-namespace shared {
+namespace dluau {
 int push_metadatatable(lua_State* L) {
     lua_newtable(L);
     lua_newtable(L);

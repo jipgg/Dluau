@@ -16,6 +16,8 @@ DLUAU_API bool dluau_istyperegistered(const char* tname);
 DLUAU_API void dluau_registertype(const char* tname);
 DLUAU_API int dluau_stringatom(lua_State* L, const char* key);
 DLUAU_API int dluau_lstringatom(lua_State* L, const char* key, size_t len);
+DLUAU_API int dluau_require(lua_State* L, const char* name);
+DLUAU_API char* dluau_precompile(const char* source_arr, size_t source_size, size_t* outsize);
 DLUAU_API lua_State* dluau_newstate();
 struct dluau_Run_options {
     const char* scripts;

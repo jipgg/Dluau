@@ -4,9 +4,9 @@
 #include <lualib.h>
 #include <luacode.h>
 #include "luacode.h"
-#include <iostream>
 #include <cassert>
 #include <shared.hpp>
+using std::string;
 
 static bool codegen = true;
 static int lua_loadstring(lua_State* L) {
@@ -15,7 +15,7 @@ static int lua_loadstring(lua_State* L) {
     const char* chunkname = luaL_optstring(L, 2, s);
     lua_setsafeenv(L, LUA_ENVIRONINDEX, false);
     size_t outsize;
-    char* bc = luau_compile(s, l, shared::compile_options, &outsize);
+    char* bc = luau_compile(s, l, dluau::compile_options, &outsize);
     std::string bytecode(s, outsize);
     std::free(bc);
     if (luau_load(L, chunkname, bytecode.data(), bytecode.size(), 0) == 0)
@@ -26,6 +26,7 @@ static int lua_loadstring(lua_State* L) {
 }
 
 int lua_collectgarbage(lua_State* L) {
+
     const char* option = luaL_optstring(L, 1, "collect");
     if (strcmp(option, "collect") == 0) {
         lua_gc(L, LUA_GCCOLLECT, 0);
@@ -39,20 +40,11 @@ int lua_collectgarbage(lua_State* L) {
     luaL_error(L, "collectgarbage must be called with 'count' or 'collect'");
 }
 
-static int lua_scan(lua_State* L) {
-    std::string in;
-    std::cin >> in;
-    lua_pushstring(L, in.c_str());
-    return 1;
-}
-
 void dluau_loadfuncs(lua_State *L) {
     const luaL_Reg global_functions[] = {
         {"loadstring", lua_loadstring},
-        //{"require", lua_require},
         {"collectgarbage", lua_collectgarbage},
-        {"scan", lua_scan},
-        {"require", shared::dluau_require},
+        {"require", dluau::require},
         {nullptr, nullptr}
     };
     lua_pushvalue(L, LUA_GLOBALSINDEX);

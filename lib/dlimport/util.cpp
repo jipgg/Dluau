@@ -1,7 +1,6 @@
 #include "lib.hpp"
 #include <shared.hpp>
 #include <filesystem>
-#include <ranges>
 namespace fs = std::filesystem;
 namespace rn = std::ranges;
 using std::optional, std::string, std::string_view;
@@ -27,7 +26,7 @@ optional<string> find_module_path(const string& dllname,  string_view priority_d
     DWORD result = SearchPath(nullptr, dllname.c_str(), nullptr, MAX_PATH, buffer, nullptr);
     if (result == 0 or result > MAX_PATH) {
         if (dllname.ends_with(".dll")) {
-            for (const auto& [state, path] : shared::script_paths) {
+            for (const auto& [state, path] : dluau::get_script_paths()) {
                 fs::path dllpath = fs::path(path).parent_path() / dllname;
                 if (fs::exists(dllpath)) return fs::absolute(dllpath).string();
             }

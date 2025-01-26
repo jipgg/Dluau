@@ -1,6 +1,9 @@
 #include "shared.hpp"
 #include <regex>
 #include <format>
+#include <span>
+using std::string;
+using std::span;
 
 static bool is_free_function(const std::string& input, const std::smatch& m) {
     if (m.position() == 0) return true;
@@ -18,7 +21,7 @@ static std::string name_to_string(const std::string& str) {
     }
     return std::format(fmt, str);
 }
-static void replace_nameof_specifiers(std::string& source) {
+static bool replace_nameof_specifiers(std::string& source) {
     const std::regex expression(R"(\bnameof\((.*?)\))");
     const std::sregex_iterator begin{source.begin(), source.end(), expression};
     const std::sregex_iterator end{};
@@ -31,8 +34,20 @@ static void replace_nameof_specifiers(std::string& source) {
     for (const std::smatch& match : std::views::reverse(entries)) {
         source.replace(match.position(), match.length(), name_to_string(match.str(1)));
     }
+    return not entries.empty();
 }
 
-void shared::process_precompiled_features(std::string &source) {
-    replace_nameof_specifiers(source);
+char* dluau_precompile(const char* source_arr, size_t source_size, size_t* outsize) {
+    string source{source_arr, source_size};
+    if (not replace_nameof_specifiers(source)) {
+        *outsize = 0;
+        return nullptr;
+    }
+    span<char> precompiled{static_cast<char*>(std::malloc(source.size())), source.size()};
+    std::memcpy(precompiled.data(), source.data(), precompiled.size());
+    *outsize = precompiled.size();
+    return precompiled.data();
+}
+bool dluau::precompile(std::string &source) {
+    return replace_nameof_specifiers(source);
 }

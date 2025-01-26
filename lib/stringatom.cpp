@@ -1,12 +1,10 @@
 #include <dluau.h>
-#include <iostream>
 #include <unordered_map>
 #include <shared.hpp>
-#include <format>
 static std::unordered_map<std::string, int16_t> stringatom_registry;
 static int16_t current_stringatom_value{0};
 
-int16_t shared::default_useratom(const char* key, size_t size) {
+int16_t dluau::default_useratom(const char* key, size_t size) {
     const std::string key_value{key, size};
     if (not stringatom_registry.contains(key_value)) {
         stringatom_registry.emplace(key_value, ++current_stringatom_value);

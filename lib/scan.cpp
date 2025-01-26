@@ -31,7 +31,7 @@ static int number(lua_State* L) {
     return 1;
 }
 
-int shared::push_scan(lua_State *L) {
+int dluau::push_scan(lua_State *L) {
     const luaL_Reg funcs[] = {
         {"buffer", buffer},
         {"number", number},

@@ -11,10 +11,8 @@
 #include <boost/container/flat_map.hpp>
 #include <nlohmann/json.hpp>
 #include <variant>
-#include <shared.hpp>
+#include "shared.hpp"
 namespace fs = std::filesystem;
-static lua_CompileOptions copts{.debugLevel = 1};
-lua_CompileOptions* dluau::compile_options{&copts};
 using std::string, std::string_view;
 using std::stringstream, std::ifstream;
 using common::error_trail;
@@ -23,15 +21,17 @@ using nlohmann::json, fs::path;
 using std::optional, std::variant;
 using std::nullopt, std::format;
 
+static lua_CompileOptions copts{.debugLevel = 1};
+lua_CompileOptions* shared::compile_options{&copts};
 static bool config_file_initialized{false};
 static flat_map<string, string> aliases;
 static flat_map<string, int> modules;
 static flat_map<lua_State*, string> script_paths;
 
-static optional<path> find_config_file() {
-    const auto config_file_names = std::to_array<string_view>({".luaurc", ".dluaurc"});
-    constexpr int search_depth{5};
-    path root = fs::current_path();
+static optional<path> find_config_file(path root = fs::current_path(), int search_depth = 5) {
+    const auto config_file_names = std::to_array<string_view>({
+        ".luaurc", ".dluaurc", ".dluaurc.json", ".luaurc.json"
+    });
     auto exists = [&cfn = config_file_names, &root](path& out) -> bool {
         for (string_view name : cfn) {
             const path potential_path = root / name;
@@ -50,6 +50,23 @@ static optional<path> find_config_file() {
 }
 static bool has_alias(const string& str) {
     return str[0] == '@';
+}
+static optional<error_trail> load_aliases(const path& root = fs::current_path(), int search_depth = 5) {
+    auto found_config = find_config_file(root, search_depth);
+    if (not found_config) return nullopt;
+    auto source = common::read_file(*found_config);
+    if (not source) return error_trail(format("couldn't read source '{}.'", found_config->string()));
+    json parsed = json::parse(*source);
+    if (not parsed.contains("aliases")) return nullopt;
+    for (auto [key, val] : parsed["aliases"].items()) {
+        if (not val.is_string()) {
+            return error_trail(format("value in [{}] must be a string '{}'.", key, nlohmann::to_string(val)));
+        }
+        auto p = common::sanitize_path(string(val), root);
+        if (not p) return error_trail(format("failed to sanitize path '{}'", string(val)));
+        aliases.emplace(key, std::move(*p));
+    }
+    return nullopt;
 }
 static optional<error_trail> substitute_alias(string& str) {
     static const std::regex alias_regex{R"(\@[A-Za-z][A-Za-z0-9_-]*)"};
@@ -77,24 +94,6 @@ static optional<path> find_source(path p, const path& root) {
     } else return p;
     return nullopt;
 }
-static optional<error_trail> load_aliases() {
-    auto found_config = find_config_file();
-    if (not found_config) return nullopt;
-    auto source = common::read_file(*found_config);
-    if (not source) return error_trail(format("couldn't read source '{}.'", found_config->string()));
-    json parsed = json::parse(*source);
-    if (not parsed.contains("aliases")) return nullopt;
-    for (auto [key, val] : parsed["aliases"].items()) {
-        if (not val.is_string()) {
-            return error_trail(format("value in [{}] must be a string '{}'.", key, nlohmann::to_string(val)));
-        }
-        auto p = common::sanitize_path(string(val));
-        if (not p) return error_trail(format("failed to sanitize path '{}'", string(val)));
-        std::cout << format("NEW ALIAS: {} -> {}\n", key, *p);
-        aliases.emplace(key, std::move(*p));
-    }
-    return nullopt;
-}
 static variant<string, error_trail> resolve_path(string name, const path& root) {
     if (has_alias(name)) {
         if (auto err = substitute_alias(name)) return err->propagate();
@@ -112,6 +111,10 @@ int dluau_require(lua_State* L, const char* name) {
         if (auto err = load_aliases()) {
             luaL_errorL(L, err->formatted().c_str());
         }
+        //global aliases
+        if (auto r = common::find_environment_variable("DLUAU_ROOT")) {
+            if (auto err = load_aliases(*r, 1)) luaL_errorL(L, err->formatted().c_str());
+        }
     }
     const path script_root{path(script_paths.at(L)).parent_path()};
     auto result = resolve_path(name, script_root);
@@ -128,9 +131,9 @@ int dluau_require(lua_State* L, const char* name) {
     lua_State* M = lua_newthread(lua_mainthread(L));
     luaL_sandboxthread(M);
     script_paths.emplace(M, file_path);
-    dluau::precompile(source);
+    shared::precompile(source);
     size_t bc_len;
-    char* bc_arr = luau_compile(source.data(), source.size(), dluau::compile_options, &bc_len);
+    char* bc_arr = luau_compile(source.data(), source.size(), shared::compile_options, &bc_len);
     common::raii free_after([&bc_arr]{std::free(bc_arr);});
     const string chunkname = '@' + common::make_path_pretty(file_path);
     int status{-1};
@@ -157,14 +160,54 @@ int dluau_require(lua_State* L, const char* name) {
     modules.emplace(file_path, lua_ref(L, -1));
     return 1;
 }
+static int lua_require(lua_State* L) {
+    return dluau_require(L, luaL_checkstring(L, 1));
+}
+static int lua_loadstring(lua_State* L) {
+    size_t l = 0;
+    const char* s = luaL_checklstring(L, 1, &l);
+    const char* chunkname = luaL_optstring(L, 2, s);
+    lua_setsafeenv(L, LUA_ENVIRONINDEX, false);
+    size_t outsize;
+    char* bc = luau_compile(s, l, shared::compile_options, &outsize);
+    std::string bytecode(s, outsize);
+    std::free(bc);
+    if (luau_load(L, chunkname, bytecode.data(), bytecode.size(), 0) == 0)
+        return 1;
+    lua_pushnil(L);
+    lua_insert(L, -2);
+    return 2;
+}
+int lua_collectgarbage(lua_State* L) {
+    string_view option = luaL_optstring(L, 1, "collect");
+    if (option == "collect") {
+        lua_gc(L, LUA_GCCOLLECT, 0);
+        return 0;
+    }
+    if (option == "count") {
+        int c = lua_gc(L, LUA_GCCOUNT, 0);
+        lua_pushnumber(L, c);
+        return 1;
+    }
+    luaL_error(L, "collectgarbage must be called with 'count' or 'collect'");
+}
+void dluau_registerglobals(lua_State *L) {
+    const luaL_Reg global_functions[] = {
+        {"loadstring", lua_loadstring},
+        {"collectgarbage", lua_collectgarbage},
+        {"require", lua_require},
+        {nullptr, nullptr}
+    };
+    lua_pushvalue(L, LUA_GLOBALSINDEX);
+    luaL_register(L, NULL, global_functions);
+    lua_pop(L, 1);
+}
 void dluau_openlibs(lua_State *L) {
     luaL_openlibs(L);
-    dluau_loadfuncs(L);
-    dluau::push_print(L);
-    lua_setglobal(L, "print");
-    dluau::push_scan(L);
-    lua_setglobal(L, "scan");
+    dluauopen_print(L);
+    dluauopen_scan(L);
     dluauopen_dlimport(L);
+    dluauopen_meta(L);
 }
 int dluau_newuserdatatag() {
     static int curr_type_tag = 1;
@@ -176,18 +219,17 @@ int dluau_newlightuserdatatag() {
 }
 lua_State* dluau_newstate() {
     lua_State* L = luaL_newstate();
-    lua_callbacks(L)->useratom = dluau::default_useratom;
-    dluau_openlibs(L);
-    dluau::push_metadatatable(L);
-    lua_setglobal(L, "meta");
+    lua_callbacks(L)->useratom = shared::default_useratom;
+    dluau_registerglobals(L);
     return L;
 }
 int dluau_run(const dluau_Run_options* opts) {
-    dluau::compile_options->debugLevel = opts->debug_level;
-    dluau::compile_options->optimizationLevel = opts->optimization_level;
-    if (opts->args) dluau::args = opts->args;
+    shared::compile_options->debugLevel = opts->debug_level;
+    shared::compile_options->optimizationLevel = opts->optimization_level;
+    if (opts->args) shared::args = opts->args;
     std::unique_ptr<lua_State, decltype(&lua_close)> state{dluau_newstate(), lua_close}; 
     lua_State* L = state.get();
+    dluau_openlibs(L);
     if (opts->global_functions) {
         lua_pushvalue(L, LUA_GLOBALSINDEX);
         luaL_register(L, nullptr, opts->global_functions);
@@ -201,9 +243,9 @@ int dluau_run(const dluau_Run_options* opts) {
     }
     string errmsg;
     using std::views::split;
-    for (auto sr : split(string_view(opts->scripts), dluau::arg_separator)) {
+    for (auto sr : split(string_view(opts->scripts), shared::arg_separator)) {
         string_view script{sr.data(), sr.size()};
-        if (auto err = dluau::run_file(L, script)) {
+        if (auto err = shared::run_file(L, script)) {
             errmsg = err->formatted();
             break;
         }
@@ -215,11 +257,8 @@ int dluau_run(const dluau_Run_options* opts) {
     }
     return 0;
 }
-//cpp
-namespace dluau {
-int require(lua_State* L) {
-    return dluau_require(L, luaL_checkstring(L, 1));
-}
+
+namespace shared {
 bool has_permissions(lua_State* L) {
     lua_Debug ar;
     if (not lua_getinfo(L, 1, "s", &ar)) return false;
@@ -236,7 +275,7 @@ optional<lua_State*> load_file(lua_State* L, string_view path) {
     auto identifier = common::make_path_pretty(common::sanitize_path(script_path).value_or(script_path));
     identifier = "=" + identifier;
     size_t outsize;
-    dluau::precompile(*source);
+    shared::precompile(*source);
     char* bc = luau_compile(
         source->data(), source->size(),
         compile_options, &outsize

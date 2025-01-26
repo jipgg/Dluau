@@ -10,15 +10,15 @@
 #include <shared.hpp>
 #include <filesystem>
 #include <dyncall.h>
-#include "lib.hpp"
+#include "local.hpp"
 #include <shared.hpp>
 namespace fs = std::filesystem;
-using dluau::has_permissions;
+using shared::has_permissions;
 
 constexpr const char* err_loading_perm{"dl loading is not allowed in current script environment."};
 constexpr const char* err_not_found{"dl not found."};
 static std::string script_dir(lua_State* script) {
-    return fs::path(dluau::get_script_paths().at(script)).parent_path().string();
+    return fs::path(shared::get_script_paths().at(script)).parent_path().string();
 }
 
 static int search_for(lua_State* L) {
@@ -57,7 +57,7 @@ static int loaded_modules(lua_State* L) {
     }
     return 1;
 }
-int dluauload_dlimport(lua_State* L) {
+void dluauopen_dlimport(lua_State* L) {
     dlmodule::init(L);
     const luaL_Reg lib[] = {
         {"load", load},
@@ -66,11 +66,5 @@ int dluauload_dlimport(lua_State* L) {
         {"loaded_modules", loaded_modules},
         {nullptr, nullptr}
     };
-    lua_newtable(L);
-    luaL_register(L, nullptr, lib);
-    return 1;
-}
-void dluauopen_dlimport(lua_State* L) {
-    dluauload_dlimport(L);
-    lua_setglobal(L, "dlimport");
+    luaL_register(L, "dlimport", lib);
 }

@@ -83,7 +83,7 @@ static int newindex(lua_State* L) {
     }
     luaL_argerrorL(L, 2, "unknown field");
 }
-int dluau::push_print(lua_State *L) {
+void dluauopen_print(lua_State *L) {
     const luaL_Reg funcs[] = {
         {"reset_colors", [](lua_State* L) {
             std::cout << "\033[0m";
@@ -108,5 +108,5 @@ int dluau::push_print(lua_State *L) {
     };
     luaL_register(L, nullptr, meta);
     lua_setmetatable(L, -2);
-    return 1;
+    lua_setglobal(L, "print");
 }

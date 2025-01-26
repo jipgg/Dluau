@@ -31,7 +31,7 @@ static int number(lua_State* L) {
     return 1;
 }
 
-int dluau::push_scan(lua_State *L) {
+void dluauopen_scan(lua_State *L) {
     const luaL_Reg funcs[] = {
         {"buffer", buffer},
         {"number", number},
@@ -43,5 +43,6 @@ int dluau::push_scan(lua_State *L) {
     lua_pushcfunction(L, call, "scan.__call");
     lua_setfield(L, -2, "__call");
     lua_setmetatable(L, -2);
-    return 1;
+    lua_setglobal(L, "scan");
 }
+

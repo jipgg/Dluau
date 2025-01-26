@@ -1,4 +1,6 @@
 local e = require('module')
+local time = require('@require/qol2/time')
+print(time, time.now())
 local f = require('module')
 local yo = require('module/a')
 print(yo)

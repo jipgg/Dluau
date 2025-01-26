@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-
 typedef struct lua_State lua_State;
 typedef struct luaL_Reg luaL_Reg;
 DLUAU_API int dluau_newuserdatatag();
@@ -27,7 +26,9 @@ struct dluau_Run_options {
     int optimization_level;
 };
 DLUAU_API int dluau_run(const dluau_Run_options* opts);
-DLUAU_API void dluau_loadfuncs(lua_State* L);
+DLUAU_API void dluau_registerglobals(lua_State* L);
 DLUAU_API void dluau_openlibs(lua_State* L);
 DLUAU_API void dluauopen_dlimport(lua_State* L);
-DLUAU_API int dluauload_dlimport(lua_State* L);
+DLUAU_API void dluauopen_print(lua_State* L);
+DLUAU_API void dluauopen_scan(lua_State* L);
+DLUAU_API void dluauopen_meta(lua_State* L);

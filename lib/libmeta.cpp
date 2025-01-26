@@ -17,18 +17,18 @@ static int newindex(lua_State* L) {
 }
 static int index(lua_State* L) {
     std::string_view key = luaL_checkstring(L, 2); 
-    const auto& paths = dluau::get_script_paths();
+    const auto& paths = shared::get_script_paths();
     switch (key[0]) {
         case 'p': { /*platform*/
             lua_pushstring(L, get_platform());
             return 1;
         }
         case 'a': { /*args*/
-            if (dluau::args.empty()) return 0;
+            if (shared::args.empty()) return 0;
             using std::views::split;
             lua_newtable(L);
             int i{1};
-            for (auto sv : dluau::args | split(dluau::arg_separator)) {
+            for (auto sv : shared::args | split(shared::arg_separator)) {
                 lua_pushlstring(L, sv.data(), sv.size());
                 lua_rawseti(L, -2, i++);
             }
@@ -54,14 +54,12 @@ constexpr luaL_Reg metatable[] = {
     {"__newindex", newindex},
     {nullptr, nullptr}
 };
-namespace dluau {
-int push_metadatatable(lua_State* L) {
+void dluauopen_meta(lua_State* L) {
     lua_newtable(L);
     lua_newtable(L);
     luaL_register(L, nullptr, metatable);
     lua_pushstring(L, "locked");
     lua_setfield(L, -2, "__metatable");
     lua_setmetatable(L, -2);
-    return 1;
-}
+    lua_setglobal(L, "meta");
 }

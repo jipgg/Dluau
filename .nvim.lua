@@ -1,7 +1,7 @@
 require"lspconfig".luau_lsp.setup {
     cmd = {"luau-lsp",
         "lsp",
-        "--definitions=/Users/jip/.dluau/definitions",
+        "--definitions=dluau_definitions",
     },
     settings = {
         ["luau-lsp"] = {
@@ -12,6 +12,7 @@ require"lspconfig".luau_lsp.setup {
                 mode = "relativeToFile",
                 directoryAliases = {
                     ["@root"] = "/Users/jip/.dluau/require/",
+                    ["@require"] = "/Users/jip/.dluau/require/",
                 },
             },
         }

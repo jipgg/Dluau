@@ -37,9 +37,13 @@ static bool replace_nameof_specifiers(std::string& source) {
     return not entries.empty();
 }
 
+bool shared::precompile(std::string &source) {
+    return replace_nameof_specifiers(source);
+}
+
 char* dluau_precompile(const char* source_arr, size_t source_size, size_t* outsize) {
     string source{source_arr, source_size};
-    if (not replace_nameof_specifiers(source)) {
+    if (not shared::precompile(source)) {
         *outsize = 0;
         return nullptr;
     }
@@ -47,7 +51,4 @@ char* dluau_precompile(const char* source_arr, size_t source_size, size_t* outsi
     std::memcpy(precompiled.data(), source.data(), precompiled.size());
     *outsize = precompiled.size();
     return precompiled.data();
-}
-bool dluau::precompile(std::string &source) {
-    return replace_nameof_specifiers(source);
 }

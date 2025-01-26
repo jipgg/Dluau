@@ -1,0 +1,46 @@
+declare collectgarbage: (("collect") -> ()) & (("count") -> number)
+declare nameof: <T>(v: T) -> string
+declare drequire: typeof(require)
+export type param = 'int' | 'string' | 'double' | 'float'| 'short' |'long' | 'long long'| 'pointer'
+declare class userdata end
+
+type callable = {__call: (any) -> never}
+
+type console_color = 'default'|'red'|'green'|'yellow'|'blue'|'magenta'|'cyan'|'bright red'|'bright green'|'bright yellow'|'bright blue'|'bright magenta'|'bright cyan'|'white'|'light gray'|'gray'|'black'
+type libprint = {
+    text_color: console_color,
+    background_color: console_color,
+    reset_colors: () -> (),
+    write: <Ts...>(Ts...) -> (),
+}
+declare print: typeof(setmetatable({} :: libprint, {} :: callable)) & (<Ts...>(Ts...)->())
+type libscan = {
+    buffer: ((buffersize: number) -> buffer) & ((b: buffer, len: number?)->buffer),
+    number: () -> number?,
+    integer: () -> number?,
+}
+declare scan: typeof(setmetatable({} :: libscan, {} :: callable)) & (()->string)
+
+type libmeta = {
+    local_directory: string,
+    current_script: string,
+    platform: 'Windows' | 'Linux' | 'macOS' | 'unknown',
+    args: {string}?,
+}
+
+declare meta: libmeta
+
+declare class dlmodule
+    absolute_path: string
+    name: string
+    create_c_binding: (<Return, Args...>(self: dlmodule, returns: param | 'void', func_name: string, ...param) -> ((Args...)->Return))
+    lua_pushcfunction: <As..., Rs...>(module: dlmodule, symbol: string) -> ((As...)->(Rs...))
+end
+type libdlimport = {
+    load: (dlname: string) -> dlmodule,
+    try_load: (dlname: string) -> dlmodule | string,
+    search_for: (dlname: string) -> string?,
+    loaded_modules: () -> {dlmodule},
+}
+declare dlimport: libdlimport
+

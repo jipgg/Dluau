@@ -65,10 +65,10 @@ bool dluau_istyperegistered(const char *tname) {
 
 int dluau_registertypetagged(const char *tname) {
     userdata_types.add_tagged(tname);
-    dluau::compile_options->userdataTypes = userdata_types.zarray();
+    shared::compile_options->userdataTypes = userdata_types.zarray();
     return userdata_types.get_tag(tname);
 }
 void dluau_registertype(const char* tname) {
     userdata_types.add(tname);
-    dluau::compile_options->userdataTypes = userdata_types.zarray();
+    shared::compile_options->userdataTypes = userdata_types.zarray();
 }

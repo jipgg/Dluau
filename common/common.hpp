@@ -45,18 +45,28 @@ inline std::optional<std::filesystem::path> get_executable_path() {
     return std::string(buffer, length);
 #endif
 }
-inline std::optional<std::string> sanitize_path(std::string_view path) {
-    std::string str{path};
+inline std::optional<std::string> find_environment_variable(const std::string& name) {
+    if (const char* env = getenv(name.c_str())) {
+        return env;
+    }
+    return std::nullopt;
+}
+inline std::optional<std::string> sanitize_path(std::string_view p, const std::filesystem::path& cwd = std::filesystem::current_path()) {
+    std::string str{p};
     std::smatch sm;
     static const std::regex env_var_specified{R"(\$[A-Za-z][A-Za-z0-9_-]*)"};
     if (std::regex_search(str, sm, env_var_specified)) {
         const std::string var = sm.str().substr(1);
-        if (const char* env = getenv(var.c_str())) {
-            str.replace(sm.position(), sm.length(), env); 
+        if (auto env = find_environment_variable(var)) {
+            str.replace(sm.position(), sm.length(), *env); 
         } else {
             return std::nullopt;
         }
     } else {
+        std::filesystem::path path{p};
+        if (path.is_relative()) {
+            path = cwd / path;
+        }
         str = std::filesystem::absolute(path).string();
     }
     std::ranges::replace(str, '\\', '/');

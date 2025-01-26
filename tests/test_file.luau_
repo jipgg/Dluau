@@ -1,0 +1,17 @@
+print(`{meta.current_script}: test hello world`)
+print("a", "b", "c", "d", 120, meta)
+
+print.text_color = 'red'
+print.background_color = 'light gray'
+print.background_color = 'black'
+print(print.background_color)
+print.background_color = 'default'
+print(print.background_color)
+print('tyoo')
+print.reset_colors()
+local i = buffer.create(10)
+local v = vector.create(10, 10, 10)
+local v2 = vector.create(10, 20, 30)
+local e = scan.number()
+print(`number is {e}`)
+print(print.background_color)

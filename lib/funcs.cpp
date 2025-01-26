@@ -209,9 +209,10 @@ static int lua_scan(lua_State* L) {
 void dluau_loadfuncs(lua_State *L) {
     const luaL_Reg global_functions[] = {
         {"loadstring", lua_loadstring},
-        {"require", lua_require},
+        //{"require", lua_require},
         {"collectgarbage", lua_collectgarbage},
         {"scan", lua_scan},
+        {"require", shared::dluau_require},
         {nullptr, nullptr}
     };
     lua_pushvalue(L, LUA_GLOBALSINDEX);

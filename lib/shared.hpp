@@ -12,6 +12,9 @@ namespace shared {
 extern lua_CompileOptions* compile_options;
 int push_metadatatable(lua_State* L);
 int16_t default_useratom(const char* key, size_t len);
+int dluau_require(lua_State* L);
+int push_print(lua_State* L);
+int push_scan(lua_State* L);
 inline lua_State* main_state;
 inline std::string_view args;
 inline boost::container::flat_map<lua_State*, std::string> script_paths;

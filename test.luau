@@ -1,5 +1,6 @@
-local mod = require('./mod')
+local mod = drequire('./mod')
 print(`{meta.current_script}: {nameof(mod)}`)
+local mod2 = drequire('mod')
 local my_variable = 1
 
 local function abc()

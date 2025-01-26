@@ -11,6 +11,10 @@ constexpr const char* errfmt_exception = "\033[31mCaught exception: {}\033[0m\n"
 void dluau_openlibs(lua_State *L) {
     luaL_openlibs(L);
     dluau_loadfuncs(L);
+    shared::push_print(L);
+    lua_setglobal(L, "print");
+    shared::push_scan(L);
+    lua_setglobal(L, "scan");
     dluauopen_dlimport(L);
 }
 int dluau_newuserdatatag() {

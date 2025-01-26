@@ -66,7 +66,6 @@ target_link_libraries(lib PUBLIC
     dyncall_s
     nlohmann_json::nlohmann_json
 )
-target_link_libraries(lib PRIVATE Luau.Config)
 set(lib_NAME dluaulib)
 set_target_properties(lib PROPERTIES OUTPUT_NAME ${lib_NAME})
 

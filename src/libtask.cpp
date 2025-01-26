@@ -20,7 +20,7 @@ using lthread = lua_State*;
 struct waiter {
     stime_point start;
     duration<double> length;
-    raii ref;
+    int ref;
 };
 enum class job {
     waiter, cleaner
@@ -35,25 +35,19 @@ static vector<cleaning_instruction> janitor;
 
 static int wait(lua_State* L) {
     if (not lua_isyieldable(L)) luaL_errorL(L, "current context is not yieldable");
+    auto now = steady_clock::now(); 
     if (waiting.contains(L)) {
-        std::cout << std::format("WAITING AGAIN {}\n", luaL_checknumber(L, 1));
-        waiting[L].length += duration<double>(luaL_checknumber(L, 1));
+        waiting[L].start = now;
+        waiting[L].length = duration<double>(luaL_optnumber(L, 1, 0.001));
         return lua_yield(L, 0);
     }
-    auto now = steady_clock::now(); 
     auto length = duration<double>(luaL_checknumber(L, 1));
     lua_pushthread(L);
-    lua_State* main_thread = lua_mainthread(L);
-    int ref = lua_ref(main_thread, -1);
-        std::cout << std::format("WAITING {}\n", ref);
-    raii dtor([ref, main_thread] {
-        std::cout << std::format("removing reference {}\n", ref);
-        lua_unref(main_thread, ref);
-    });
+    int ref = lua_ref(L, -1);
     waiting.emplace(L, waiter{
         .start = std::move(now),
         .length = std::move(length),
-        .ref = std::move(dtor),
+        .ref = ref,
     });
     return lua_yield(L, 0);
 }
@@ -65,19 +59,20 @@ bool tasks_in_progress() {
 optional<error_trail> task_step(lua_State* L) {
     const auto now = steady_clock::now();
     for (auto& [state, waiter] : waiting) {
-        const auto old_length = waiter.length;
+        const auto old_start = waiter.start;
         if (now - waiter.start < waiter.length) continue;
         const int status = lua_resume(state, L, 0);
-        const bool yielded_independently = waiter.length == old_length;
+        const bool yielded_independently = waiter.start == old_start;
         if (status == LUA_OK or yielded_independently) {
             janitor.emplace_back(state, job::waiter);
-        } else if (status != LUA_YIELD) {
-            return error_trail(lua_tostring(state, -1));
-        }
+            continue;
+        } else if (status == LUA_YIELD) {
+        } else return error_trail(lua_tostring(state, -1));
     }
     for (const auto& v : janitor) {
         switch (v.job) {
             case job::waiter:
+                lua_unref(L, waiting.at(v.state).ref);
                 waiting.erase(v.state);
                 continue;
             case job::cleaner:

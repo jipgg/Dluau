@@ -14,7 +14,6 @@ print.reset_colors()
 print("YOOOOOOOOOOOOOOOO")
 print.text_color = "cyan"
 print(time.now():format('%X'))
-print(time.now() - now);
 print.reset_colors()
 local f = require('module')
 local yo = require('module/a')

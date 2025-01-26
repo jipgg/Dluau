@@ -115,9 +115,7 @@ int shared::dluau_require(lua_State* L) {
     size_t bc_len;
     char* bc_arr = luau_compile(source.data(), source.size(), shared::compile_options, &bc_len);
     cm::raii free_after([&bc_arr]{std::free(bc_arr);});
-
     const string chunkname = '@' + cm::make_path_pretty(file_path);
-    bool bad_module_require = false;
     int status{-1};
     if (luau_load(M, chunkname.c_str(), bc_arr, bc_len, 0) == LUA_OK) {
         status = lua_resume(M, L, 0);

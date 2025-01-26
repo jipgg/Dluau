@@ -37,11 +37,11 @@ optional<string> read_file(const fs::path &path) {
     return file_stream.str();
 }
 optional<lua_State*> load(lua_State* L, string_view path) {
-    const fs::path script_path{path};
+    string script_path{path};
     optional<string> source = read_file(script_path);
     using namespace std::string_literals;
     if (not source) return std::nullopt;
-    auto identifier = script_path.filename().string();
+    auto identifier = common::make_path_pretty(common::sanitize_path(script_path).value_or(script_path));
     identifier = "=" + identifier;
     size_t outsize;
     shared::process_precompiled_features(*source);

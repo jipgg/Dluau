@@ -5,7 +5,7 @@
 #include <iostream>
 #include <format>
 #include <memory>
-constexpr const char* errfmt = "\033[31mLuau: {}\033[0m\n";
+constexpr const char* errfmt = "\033[31m{}\033[0m\n";
 constexpr const char* errfmt_exception = "\033[31mCaught exception: {}\033[0m\n";
 
 void dluau_openlibs(lua_State *L) {
@@ -49,7 +49,7 @@ int dluau_run(const dluau_Run_options* opts) {
     }
     luaL_sandbox(L);
     if (opts->scripts == nullptr) {
-        std::cerr << std::format(errfmt, "Lumin: no sources given.");
+        std::cerr << std::format(errfmt, "no sources given.");
         return -1;
     }
     std::string errmsg;

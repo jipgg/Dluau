@@ -1,5 +1,5 @@
-local e = drequire('module')
-local f = drequire('module')
+local e = require('module')
+local f = require('module')
 print(`e2: {e}, {e}`)
 for i, v in e do
     print(`{i} = {v}`)

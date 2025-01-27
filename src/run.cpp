@@ -20,6 +20,7 @@ using boost::container::flat_map;
 using nlohmann::json, fs::path;
 using std::optional, std::variant;
 using std::nullopt, std::format;
+using std::get, std::get_if;
 
 static lua_CompileOptions copts{.debugLevel = 1};
 lua_CompileOptions* shared::compile_options{&copts};
@@ -64,9 +65,14 @@ static optional<error_trail> load_aliases(const path& root = fs::current_path(),
         if (not val.is_string()) {
             return error_trail(format("value in [{}] must be a string '{}'.", key, nlohmann::to_string(val)));
         }
-        auto p = common::sanitize_path(string(val), root);
-        if (not p) return error_trail(format("failed to sanitize path '{}'", string(val)));
-        aliases.emplace(key, std::move(*p));
+        string valstr{val};
+        if (valstr.at(0) == '$') {
+            auto opt = common::substitute_environment_variable(valstr);
+            if (not opt) return error_trail(format("failed to find env path '{}'", valstr));
+            valstr = *opt;
+        }
+        auto path = common::sanitize_path(string(val), root);
+        aliases.emplace(key, std::move(path));
     }
     return nullopt;
 }
@@ -102,9 +108,7 @@ static variant<string, error_trail> resolve_path(string name, const path& root) 
     }
     auto found_source = find_source(name, root);
     if (not found_source) return error_trail("couldnt find source path");
-    auto path = common::sanitize_path(found_source->string());
-    if (not path) return error_trail("failed to sanitize path"); 
-    return *path;
+    return common::sanitize_path(found_source->string());
 }
 //api
 int dluau_require(lua_State* L, const char* name) {
@@ -133,11 +137,12 @@ int dluau_require(lua_State* L, const char* name) {
     lua_State* M = lua_newthread(lua_mainthread(L));
     luaL_sandboxthread(M);
     script_paths.emplace(M, file_path);
+    const auto pretty_path = common::make_path_pretty(file_path);
     shared::precompile(source);
     size_t bc_len;
     char* bc_arr = luau_compile(source.data(), source.size(), shared::compile_options, &bc_len);
     common::raii free_after([&bc_arr]{std::free(bc_arr);});
-    const string chunkname = '@' + common::make_path_pretty(file_path);
+    const string chunkname = '@' + pretty_path;
     int status{-1};
     if (luau_load(M, chunkname.c_str(), bc_arr, bc_len, 0) == LUA_OK) {
         status = lua_resume(M, L, 0);
@@ -226,7 +231,7 @@ lua_State* dluau_newstate() {
     dluau_registerglobals(L);
     return L;
 }
-int dluau_run(const dluau_Run_options* opts) {
+int dluau_run(const dluau_runoptions* opts) {
     shared::compile_options->debugLevel = opts->debug_level;
     shared::compile_options->optimizationLevel = opts->optimization_level;
     if (opts->args) shared::args = opts->args;
@@ -274,14 +279,14 @@ bool has_permissions(lua_State* L) {
 const flat_map<lua_State*, string>& get_script_paths() {
     return script_paths;
 }
-optional<lua_State*> load_file(lua_State* L, string_view path) {
+variant<lua_State*, error_trail> load_file(lua_State* L, string_view path) {
     string script_path{path};
     optional<string> source = common::read_file(script_path);
-    if (not source) return nullopt;
-    auto identifier = common::make_path_pretty(common::sanitize_path(script_path).value_or(script_path));
+    if (not source) return error_trail(format("couldn't read source '{}'.", script_path));
+    auto identifier = common::make_path_pretty(common::sanitize_path(script_path));
+    shared::precompile(*source);
     identifier = "=" + identifier;
     size_t outsize;
-    shared::precompile(*source);
     char* bc = luau_compile(
         source->data(), source->size(),
         compile_options, &outsize
@@ -295,14 +300,16 @@ optional<lua_State*> load_file(lua_State* L, string_view path) {
         luaL_sandboxthread(script_thread);
         return script_thread;
     }
-    return nullopt;
+    return error_trail(format("failed to load '{}'\nreason: {}\nsource: {}", script_path, lua_tostring(script_thread, -1), *source));
 }
 optional<error_trail> run_file(lua_State* L, string_view script_path) {
     auto r = load_file(L, script_path);
-    if (not r) return error_trail(format("failed to load script '{}'", script_path));
-    int status = lua_resume(*r, L, 0);
+    if (auto* err = get_if<error_trail>(&r)) return err->propagate();
+
+    auto* co = get<lua_State*>(r);
+    int status = lua_resume(co, L, 0);
     if (status != LUA_OK and status != LUA_YIELD) {
-        return error_trail{luaL_checkstring(*r, -1)};
+        return error_trail{luaL_checkstring(co, -1)};
     }
     return nullopt;
 }

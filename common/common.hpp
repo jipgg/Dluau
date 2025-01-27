@@ -58,7 +58,7 @@ inline std::optional<std::string> find_environment_variable(const std::string& n
     }
     return std::nullopt;
 }
-inline std::optional<std::string> sanitize_path(std::string_view p, const std::filesystem::path& cwd = std::filesystem::current_path()) {
+inline std::optional<std::string> substitute_environment_variable(std::string_view p) {
     std::string str{p};
     std::smatch sm;
     static const std::regex env_var_specified{R"(\$[A-Za-z][A-Za-z0-9_-]*)"};
@@ -66,16 +66,19 @@ inline std::optional<std::string> sanitize_path(std::string_view p, const std::f
         const std::string var = sm.str().substr(1);
         if (auto env = find_environment_variable(var)) {
             str.replace(sm.position(), sm.length(), *env); 
+            return str;
         } else {
             return std::nullopt;
         }
-    } else {
-        std::filesystem::path path{p};
-        if (path.is_relative()) {
-            path = cwd / path;
-        }
-        str = std::filesystem::absolute(path).string();
     }
+    return std::nullopt;
+}
+inline std::string sanitize_path(std::string_view p, const std::filesystem::path& cwd = std::filesystem::current_path()) {
+    std::string str{p};
+    std::smatch sm;
+    std::filesystem::path path{p};
+    if (path.is_relative()) path = cwd / path;
+    str = std::filesystem::absolute(path).string();
     std::ranges::replace(str, '\\', '/');
     if (str.ends_with('/')) str.pop_back();
     return str;

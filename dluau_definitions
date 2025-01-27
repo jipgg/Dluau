@@ -4,9 +4,16 @@ declare drequire: typeof(require)
 export type param = 'int' | 'string' | 'double' | 'float'| 'short' |'long' | 'long long'| 'pointer'
 declare class userdata end
 type libtask = {
-    wait: (count: number) -> (),
+    wait: (count: number?) -> (),
+    spawn: (fn: ()->()) -> (),
+    defer: (fn: ()->()) -> (),
 }
 declare task: libtask
+
+type script = {
+    directory: string,
+}
+declare script:script
 
 type callable = {__call: (any) -> never}
 

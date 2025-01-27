@@ -32,7 +32,7 @@ int host_main(const vector<string_view>& args) {
     try {
         auto src = get_if_param(args, "--sources=");
         auto ar = get_if_param(args, "--args=");
-        dluau_Run_options opts{};
+        dluau_runoptions opts{};
         opts.scripts = src ? src->c_str() : nullptr;
         opts.args = ar ? ar->c_str() : nullptr;
         opts.optimization_level = contains(args, "-O2") ? 2 : contains(args, "-O1") ? 1 : 0;

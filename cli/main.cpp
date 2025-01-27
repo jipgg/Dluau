@@ -75,7 +75,9 @@ static int without_command(span<char*> arg_span) {
     string args;
     for (char* v : arg_span) args.append(v) += ',';
     args.pop_back();
-    return run(config, &args);
+    const int ec = run(config, &args);
+    std::cout << std::format("Exited with {}.\n", ec);
+    return ec;
 }
 static int with_run_command(span<char*> arg_span) {
     auto found_config_path = find_config();

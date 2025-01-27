@@ -5,12 +5,13 @@
 #include <dluau.h>
 #include <string_view>
 #include <optional>
+#include <variant>
 #include <common/error_trail.hpp>
 
 namespace shared {
 extern lua_CompileOptions* compile_options;
 const boost::container::flat_map<lua_State*, std::string>& get_script_paths();
-std::optional<lua_State*> load_file(lua_State* L, std::string_view path);
+std::variant<lua_State*, common::error_trail> load_file(lua_State* L, std::string_view path);
 std::optional<common::error_trail> run_file(lua_State* L, std::string_view script_path);
 bool tasks_in_progress();
 std::optional<common::error_trail> task_step(lua_State* L);

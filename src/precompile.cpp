@@ -2,10 +2,15 @@
 #include <regex>
 #include <format>
 #include <span>
-using std::string;
-using std::span;
+#include <functional>
+using std::string, std::format;
+using std::span, std::vector, std::function;
+using std::smatch, std::regex, std::sregex_iterator;
+using string_replace = function<string(const string& str)>;
+namespace vw = std::views;
+constexpr const char* str_format{"(\"{}\")"};
 
-static bool is_free_function(const std::string& input, const std::smatch& m) {
+static bool is_global_scope(const string& input, const smatch& m) {
     if (m.position() == 0) return true;
     size_t position = m.position();
     char preceding = input[--position];
@@ -14,35 +19,46 @@ static bool is_free_function(const std::string& input, const std::smatch& m) {
     }
     return preceding != '.' and preceding != ':';
 }
-static std::string name_to_string(const std::string& str) {
-    constexpr const char* fmt{"\"{}\""};
+static string name_to_string(const string& str) {
     if (str.find('.') != str.npos) {
-        return std::format(fmt, str.substr(str.find_last_of('.') + 1));
+        return str.substr(str.find_last_of('.') + 1);
     }
-    return std::format(fmt, str);
+    return str;
 }
-static bool replace_nameof_specifiers(std::string& source) {
-    const std::regex expression(R"(\bnameof\((.*?)\))");
-    const std::sregex_iterator begin{source.begin(), source.end(), expression};
-    const std::sregex_iterator end{};
+static bool replace_meta_specifiers(string& source, const regex& expression, const string_replace& fn) {
+    const sregex_iterator begin{source.begin(), source.end(), expression};
+    const sregex_iterator end{};
 
-    std::vector<std::smatch> entries;
+    vector<smatch> entries;
     for (auto it = begin; it != end; ++it) {
-        if (not is_free_function(source, *it)) continue;
+        if (not is_global_scope(source, *it)) continue;
         entries.emplace_back(*it);
     }
-    for (const std::smatch& match : std::views::reverse(entries)) {
-        source.replace(match.position(), match.length(), name_to_string(match.str(1)));
+    for (const smatch& match : vw::reverse(entries)) {
+        constexpr const char* fmt{"(\"{}\")"};
+        source.replace(match.position(), match.length(), format(fmt, fn(match.str(1))));
     }
     return not entries.empty();
+
+}
+static bool replace_nameof_specifiers(string& source) {
+    const regex expression(R"(\bnameof\((.*?)\))");
+    auto to_string = [](const string& str) {
+        constexpr const char* fmt{"(\"{}\")"};
+        if (str.find('.') != str.npos) {
+            return str.substr(str.find_last_of('.') + 1);
+        }
+        return str;
+    };
+    return replace_meta_specifiers(source, expression, name_to_string);
 }
 
-bool shared::precompile(std::string &source) {
+bool shared::precompile(string &source) {
     return replace_nameof_specifiers(source);
 }
 
-char* dluau_precompile(const char* source_arr, size_t source_size, size_t* outsize) {
-    string source{source_arr, source_size};
+char* dluau_precompile(const char* src, size_t src_len, size_t* outsize) {
+    string source{src, src_len};
     if (not shared::precompile(source)) {
         *outsize = 0;
         return nullptr;

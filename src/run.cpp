@@ -232,7 +232,7 @@ lua_State* dluau_newstate() {
     return L;
 }
 int dluau_run(const dluau_runoptions* opts) {
-    shared::compile_options->debugLevel = opts->debug_level;
+    shared::compile_options->debugLevel = 3;
     shared::compile_options->optimizationLevel = opts->optimization_level;
     if (opts->args) shared::args = opts->args;
     std::unique_ptr<lua_State, decltype(&lua_close)> state{dluau_newstate(), lua_close}; 
@@ -263,7 +263,6 @@ int dluau_run(const dluau_runoptions* opts) {
             std::cerr << format(errfmt, err->formatted());
             return -1;
         }
-        std::cout << "\033[0m";
     }
     std::cout << "\033[0m";
     return 0;

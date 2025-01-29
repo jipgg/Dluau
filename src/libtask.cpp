@@ -6,34 +6,45 @@
 #include <variant>
 #include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
+#include <utility>
+#include <ranges>
+#include <algorithm>
 using namespace std::chrono_literals;
 namespace chr = std::chrono;
+namespace rngs = std::ranges;
 using chr::steady_clock;
 using stime_point = steady_clock::time_point;
 using chr::milliseconds, chr::duration;
 using std::variant, std::queue;
 using std::optional, std::nullopt;
-using std::vector;
+using std::vector, std::tuple;
 using boost::container::flat_map;
 using boost::container::flat_set;
 using common::error_trail, common::raii;
-using lthread = lua_State*;
+using luathread = lua_State*;
+
+struct deferrer {
+    lua_State* state;
+    int ref;
+    int argn;
+};
 
 struct waiter {
     stime_point start;
     duration<double> length;
+    int argn;
     int ref;
 };
 enum class job {
     waiter, cleaner
 };
 struct cleaning_instruction {
-    lthread state;
+    luathread state;
     job job;
 };
 
-static flat_map<lthread, waiter> waiting;
-static flat_set<lua_State*> deferred;
+static flat_map<luathread, waiter> waiting;
+static vector<deferrer> deferred;
 static vector<cleaning_instruction> janitor;
 
 static bool has_errored(lua_State* state) {
@@ -58,31 +69,77 @@ static int wait(lua_State* L) {
     waiting.emplace(L, waiter{
         .start = now,
         .length = sec,
+        .argn = 0,
         .ref = ref,
     });
     return lua_yield(L, 0);
 }
-static int spawn(lua_State* L) {
-    if (lua_isfunction(L, 1)) {
-        lua_State* state = lua_newthread(L);
-        lua_pushvalue(L, 1);
+static tuple<lua_State*, int> resolve_task_argument(lua_State* L, int idx) {
+    lua_State* state = nullptr;
+    const int top = lua_gettop(L);
+    if (lua_isfunction(L, idx)) {
+        state = lua_newthread(L);
+        lua_pushvalue(L, idx);
         lua_xmove(L, state, 1);
-        const int status = lua_resume(state, L, 0);
-        if (has_errored(status)) {
-            lua_xmove(state, L, 1);
-            lua_error(L);
-        }
+    } else if (lua_isthread(L, idx)) {
+        state = lua_tothread(L, idx);
+        lua_pushvalue(L, idx);
+    }
+    if (state) {
+        for (int i{idx + 1}; i <= top; ++i) lua_pushvalue(L, i);
+        lua_xmove(L, state, top - idx);
+    }
+    return {state, top - idx};
+}
+static int spawn(lua_State* L) {
+    auto [state, argn] = resolve_task_argument(L, 1);
+    if (not state) luaL_typeerrorL(L, 1, "function or thread");
+    const int status = lua_resume(state, L, argn);
+    if (has_errored(status)) {
+        lua_xmove(state, L, 1);
+        lua_error(L);
     }
     return 1;
 }
-static int defer(lua_State* L) {
-    if (lua_isfunction(L, 1)) {
-        lua_State* state = lua_newthread(L);
-        lua_pushvalue(L, 1);
-        lua_xmove(L, state, 1);
-        deferred.emplace(state);
-    }
+static int delay(lua_State* L) {
+    const auto now = steady_clock::now();
+    const auto sec = duration<double>(luaL_optnumber(L, 1, 0));
+    auto [state, argn] = resolve_task_argument(L, 2);
+    if (not state) luaL_typeerrorL(L, 1, "function or thread");
+    waiting.emplace(state, waiter{
+        .start = now,
+        .length = sec,
+        .argn = argn,
+        .ref = lua_ref(L, -1),
+    });
     return 1;
+}
+static int defer(lua_State* L) {
+    auto [state, argn] = resolve_task_argument(L, 1);
+    if (not state) luaL_typeerrorL(L, 1, "function or thread");
+    deferred.push_back(deferrer{
+        .state = state,
+        .ref = lua_ref(L, -1),
+        .argn = argn,
+    });
+    return 1;
+}
+static int cancel(lua_State* L) {
+    lua_State* state = lua_tothread(L, 1);
+    if (waiting.contains(state)) {
+        lua_unref(L, waiting[state].ref);
+        waiting.erase(state);
+        return 0;
+    }
+    auto in_deferred = rngs::find_if(deferred, [&state](deferrer& e) {
+        return e.state == state;
+    });
+    if (in_deferred != rngs::end(deferred)) {
+        lua_unref(L, in_deferred->ref);
+        deferred.erase(in_deferred);
+        return 0;
+    }
+    return 0;
 }
 
 namespace shared {
@@ -91,17 +148,18 @@ bool tasks_in_progress() {
 }
 optional<error_trail> task_step(lua_State* L) {
     const auto now = steady_clock::now();
-    for (lua_State* state : deferred) {
-        auto status = lua_resume(state, L, 0);
+    for (auto& d : deferred) {
+        auto status = lua_resume(d.state, L, d.argn);
+        lua_unref(L, d.ref);
         if (has_errored(status)) {
-            return error_trail(lua_tostring(state, -1));
+            return error_trail(lua_tostring(d.state, -1));
         }
     }
     deferred.clear();
     for (auto& [state, waiter] : waiting) {
         const auto old_start = waiter.start;
         if (now - waiter.start < waiter.length) continue;
-        const int status = lua_resume(state, L, 0);
+        const int status = lua_resume(state, L, waiter.argn);
         const bool yielded_independently{
             status == LUA_YIELD
             and waiter.start == old_start
@@ -133,6 +191,8 @@ void dluauopen_task(lua_State* L) {
         {"wait", wait},
         {"spawn", spawn},
         {"defer", defer},
+        {"delay", delay},
+        {"cancel", cancel},
         {nullptr, nullptr}
     };
     luaL_register(L, "task", lib);

@@ -4,9 +4,11 @@ declare drequire: typeof(require)
 export type param = 'int' | 'string' | 'double' | 'float'| 'short' |'long' | 'long long'| 'pointer'
 declare class userdata end
 type libtask = {
-    wait: (count: number?) -> (),
-    spawn: (fn: ()->()) -> (),
-    defer: (fn: ()->()) -> (),
+    wait: (seconds: number?) -> (),
+    spawn: <Ts...>(fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
+    defer: <Ts...>(fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
+    delay: <Ts...>(seconds: number, fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
+    cancel: (task: thread) -> (),
 }
 declare task: libtask
 

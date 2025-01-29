@@ -9,6 +9,8 @@ type libtask = {
     defer: <Ts...>(fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
     delay: <Ts...>(seconds: number, fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
     cancel: (task: thread) -> (),
+    after: <Ts...>(wait_for: thread, fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
+    after_this: <Ts...>(fn_or_thread: ((Ts...)->())| thread, Ts...) -> thread,
 }
 declare task: libtask
 

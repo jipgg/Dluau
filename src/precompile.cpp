@@ -52,7 +52,6 @@ static bool replace_nameof_specifiers(string& source) {
     };
     return replace_meta_specifiers(source, expression, name_to_string);
 }
-
 bool shared::precompile(string &source) {
     return replace_nameof_specifiers(source);
 }

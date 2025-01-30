@@ -11,11 +11,13 @@
 #include <boost/container/flat_map.hpp>
 #include <nlohmann/json.hpp>
 #include <variant>
+#include <array>
 #include "shared.hpp"
 namespace fs = std::filesystem;
 using std::string, std::string_view;
 using std::stringstream, std::ifstream;
 using common::error_trail;
+using std::to_array, std::pair, std::regex;
 using boost::container::flat_map;
 using nlohmann::json, fs::path;
 using std::optional, std::variant;
@@ -110,6 +112,31 @@ static variant<string, error_trail> resolve_path(string name, const path& root) 
     if (not found_source) return error_trail("couldnt find source path");
     return common::sanitize_path(found_source->string());
 }
+static decltype(auto) get_precompiled_library_values(const string& path) {
+    auto as_string_literal = [](const string& str) {
+        return format("(\"{}\")", str);
+    };
+    auto get_platform = [] {
+#if defined(_WIN32)
+        return "Windows";
+#elif defined(__linux__)
+        return "Linux";
+#elif defined(__APPLE__) && defined(__MACH__)
+        return "macOS";
+#endif
+        return "unknown";
+    };
+    const auto arr = to_array<pair<regex, string>>({
+        {regex(R"(\bscript.directory\b)"), as_string_literal(fs::path(path).parent_path().string())},
+        {regex(R"(\bscript.file_path\b)"), as_string_literal(path)},
+        {regex(R"(\bscript.name\b)"), as_string_literal(fs::path(path).stem().string())},
+
+        {regex(R"(\bmeta.os_name\b)"), as_string_literal(get_platform())},
+        {regex(R"(\bmeta.debug_level\b)"), std::to_string(shared::compile_options->debugLevel)},
+        {regex(R"(\bmeta.optimization_level\b)"), std::to_string(shared::compile_options->optimizationLevel)},
+    });
+    return arr;
+}
 //api
 int dluau_require(lua_State* L, const char* name) {
     if (not config_file_initialized) {
@@ -138,7 +165,7 @@ int dluau_require(lua_State* L, const char* name) {
     luaL_sandboxthread(M);
     script_paths.emplace(M, file_path);
     const auto pretty_path = common::make_path_pretty(file_path);
-    shared::precompile(source);
+    shared::precompile(source, get_precompiled_library_values(pretty_path));
     size_t bc_len;
     char* bc_arr = luau_compile(source.data(), source.size(), shared::compile_options, &bc_len);
     common::raii free_after([&bc_arr]{std::free(bc_arr);});
@@ -214,7 +241,6 @@ void dluau_openlibs(lua_State *L) {
     dluauopen_print(L);
     dluauopen_scan(L);
     dluauopen_dlimport(L);
-    dluauopen_meta(L);
     dluauopen_task(L);
 }
 int dluau_newuserdatatag() {
@@ -283,7 +309,7 @@ variant<lua_State*, error_trail> load_file(lua_State* L, string_view path) {
     optional<string> source = common::read_file(script_path);
     if (not source) return error_trail(format("couldn't read source '{}'.", script_path));
     auto identifier = common::make_path_pretty(common::sanitize_path(script_path));
-    shared::precompile(*source);
+    shared::precompile(*source, get_precompiled_library_values(identifier));
     identifier = "=" + identifier;
     size_t outsize;
     char* bc = luau_compile(

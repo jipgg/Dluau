@@ -6,7 +6,13 @@
 #include <string_view>
 #include <optional>
 #include <variant>
+#include <regex>
 #include <common/error_trail.hpp>
+
+struct dluau_static_value {
+    const char* regex;
+    const char* value;
+};
 
 namespace shared {
 extern lua_CompileOptions* compile_options;
@@ -20,4 +26,5 @@ constexpr char arg_separator{','};
 int16_t default_useratom(const char* key, size_t len);
 inline std::string_view args;
 bool precompile(std::string& source);
+bool precompile(std::string& source, std::span<const std::pair<std::regex, std::string>> sv);
 }

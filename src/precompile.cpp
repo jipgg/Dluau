@@ -1,10 +1,11 @@
 #include "shared.hpp"
 #include <regex>
 #include <format>
+#include <common.hpp>
 #include <span>
 #include <functional>
 using std::string, std::format;
-using std::span, std::vector, std::function;
+using std::span, std::vector, std::function, std::pair;
 using std::smatch, std::regex, std::sregex_iterator;
 using string_replace = function<string(const string& str)>;
 namespace vw = std::views;
@@ -35,8 +36,8 @@ static bool replace_meta_specifiers(string& source, const regex& expression, con
         entries.emplace_back(*it);
     }
     for (const smatch& match : vw::reverse(entries)) {
-        constexpr const char* fmt{"(\"{}\")"};
-        source.replace(match.position(), match.length(), format(fmt, fn(match.str(1))));
+        //constexpr const char* fmt{"(\"{}\")"};
+        source.replace(match.position(), match.length(), fn(match.str(1)));
     }
     return not entries.empty();
 
@@ -46,14 +47,24 @@ static bool replace_nameof_specifiers(string& source) {
     auto to_string = [](const string& str) {
         constexpr const char* fmt{"(\"{}\")"};
         if (str.find('.') != str.npos) {
-            return str.substr(str.find_last_of('.') + 1);
+            return format(fmt, str.substr(str.find_last_of('.') + 1));
         }
-        return str;
+        return format(fmt, str);
     };
-    return replace_meta_specifiers(source, expression, name_to_string);
+    return replace_meta_specifiers(source, expression, to_string);
 }
 bool shared::precompile(string &source) {
     return replace_nameof_specifiers(source);
+}
+bool shared::precompile(string &source, span<const pair<regex, string>> static_values) {
+    bool did_something{};
+    did_something = replace_nameof_specifiers(source);
+    for (const auto& v : static_values) {
+        auto to_value = [&val = v.second](const string& e) -> string {return val;};
+        did_something = replace_meta_specifiers(source, v.first, to_value);
+    }
+    std::cout << common::get_user_folder().value_or("") << std::endl;
+    return did_something;
 }
 
 char* dluau_precompile(const char* src, size_t src_len, size_t* outsize) {

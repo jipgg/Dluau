@@ -17,12 +17,9 @@ using shared::has_permissions;
 
 constexpr const char* err_loading_perm{"dl loading is not allowed in current script environment."};
 constexpr const char* err_not_found{"dl not found."};
-static std::string script_dir(lua_State* script) {
-    return fs::path(shared::get_script_paths().at(script)).parent_path().string();
-}
 
 static int search_for(lua_State* L) {
-    if (auto path = util::find_module_path(luaL_checkstring(L, 1), script_dir(L))) {
+    if (auto path = util::find_module_path(luaL_checkstring(L, 1))) {
         lua_pushstring(L, path->c_str());
         return 1;
     }
@@ -30,7 +27,7 @@ static int search_for(lua_State* L) {
 }
 static int load(lua_State* L) {
     if (not has_permissions(L)) luaL_errorL(L, err_loading_perm);
-    dlmodule* module = util::init_or_find_module(luaL_checkstring(L, 1), script_dir(L));
+    dlmodule* module = util::init_or_find_module(luaL_checkstring(L, 1));
     if (not module) luaL_argerrorL(L, 1, err_not_found);
     util::lua_pushmodule(L, module);
     return 1;
@@ -40,7 +37,7 @@ static int try_load(lua_State* L) {
         lua_pushstring(L, err_loading_perm);
         return 1;
     }
-    auto module = util::init_or_find_module(luaL_checkstring(L, 1), script_dir(L));
+    auto module = util::init_or_find_module(luaL_checkstring(L, 1));
     if (not module) {
         lua_pushstring(L, err_not_found);
         return 1;

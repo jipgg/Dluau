@@ -33,5 +33,4 @@ DLUAU_API void dluau_openlibs(lua_State* L);
 DLUAU_API void dluauopen_dlimport(lua_State* L);
 DLUAU_API void dluauopen_print(lua_State* L);
 DLUAU_API void dluauopen_scan(lua_State* L);
-DLUAU_API void dluauopen_meta(lua_State* L);
 DLUAU_API void dluauopen_task(lua_State* L);

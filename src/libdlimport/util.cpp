@@ -1,12 +1,14 @@
 #include "local.hpp"
 #include <shared.hpp>
 #include <filesystem>
+#include <common.hpp>
 namespace fs = std::filesystem;
 namespace rn = std::ranges;
 using std::optional, std::string, std::string_view;
 
 namespace util {
-optional<string> find_module_path(const string& dllname,  string_view priority_dir) {
+optional<string> find_module_path(const string& dllname) {
+    /*
     if (not priority_dir.empty()) {
         fs::path potential_path = fs::path(priority_dir) / dllname;
         if (not potential_path.has_extension()) {
@@ -37,9 +39,14 @@ optional<string> find_module_path(const string& dllname,  string_view priority_d
     string path{buffer};
     rn::replace(path, '\\', '/');
     return path;
+    */
+    std::string path{dllname};
+    path = common::substitute_user_folder(path).value_or(path);
+    if (not fs::exists(path)) return std::nullopt;
+    return common::sanitize_path(path);
 }
-dlmodule* init_or_find_module(const string& name, string_view priority_dir) {
-    auto found_path = find_module_path(name, priority_dir);
+dlmodule* init_or_find_module(const string& name) {
+    auto found_path = find_module_path(name);
     if (not found_path) return nullptr;
     if (auto it = glob::loaded.find(*found_path); it == glob::loaded.end()) {
         HMODULE hm = LoadLibrary(found_path->c_str());

@@ -1,49 +1,51 @@
 declare collectgarbage: (("collect") -> ()) & (("count") -> number)
 declare nameof: <T>(v: T) -> string
-declare drequire: typeof(require)
 export type param = 'int' | 'string' | 'double' | 'float'| 'short' |'long' | 'long long'| 'pointer'
 declare class userdata end
-type libtask = {
+type task_library = {
     wait: (seconds: number?) -> (),
     spawn: <Ts...>(fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
     defer: <Ts...>(fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
     delay: <Ts...>(seconds: number, fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
     cancel: (task: thread) -> (),
-    after: <Ts...>(wait_for: thread, fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
+    after: (<Ts...>(wait_for: thread, fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread)
+        & (<Ts...>(fn_or_thread: ((Ts...)->())| thread, Ts...) -> thread),
     after_this: <Ts...>(fn_or_thread: ((Ts...)->())| thread, Ts...) -> thread,
 }
-declare task: libtask
+declare task: task_library
 
-type script = {
+type script_precompiled_library = {
     directory: string,
+    path: string,
+    name: string,
 }
-declare script:script
+declare script: script_precompiled_library
+
+type meta_precompiled_library = {
+    os_name: 'Windows'| 'Linux' | 'macOS'| 'unknown',
+    debug_level: number,
+    optimization_level: number,
+}
+
+declare meta: meta_precompiled_library
 
 type callable = {__call: (any) -> never}
 
 type console_color = 'default'|'red'|'green'|'yellow'|'blue'|'magenta'|'cyan'|'bright red'|'bright green'|'bright yellow'|'bright blue'|'bright magenta'|'bright cyan'|'white'|'light gray'|'gray'|'black'
-type libprint = {
+type print_library = {
     text_color: console_color,
     background_color: console_color,
     reset_colors: () -> (),
     write: <Ts...>(Ts...) -> (),
 }
-declare print: typeof(setmetatable({} :: libprint, {} :: callable)) & (<Ts...>(Ts...)->())
-type libscan = {
+declare print: typeof(setmetatable({} :: print_library, {} :: callable)) & (<Ts...>(Ts...)->())
+type scan_library = {
     buffer: ((buffersize: number) -> buffer) & ((b: buffer, len: number?)->buffer),
     number: () -> number?,
     integer: () -> number?,
 }
-declare scan: typeof(setmetatable({} :: libscan, {} :: callable)) & (()->string)
+declare scan: typeof(setmetatable({} :: scan_library, {} :: callable)) & (()->string)
 
-type libmeta = {
-    local_directory: string,
-    current_script: string,
-    platform: 'Windows' | 'Linux' | 'macOS' | 'unknown',
-    args: {string}?,
-}
-
-declare meta: libmeta
 
 declare class dlmodule
     absolute_path: string
@@ -51,11 +53,11 @@ declare class dlmodule
     create_c_binding: (<Return, Args...>(self: dlmodule, returns: param | 'void', func_name: string, ...param) -> ((Args...)->Return))
     lua_pushcfunction: <As..., Rs...>(module: dlmodule, symbol: string) -> ((As...)->(Rs...))
 end
-type libdlimport = {
-    load: (dlname: string) -> dlmodule,
-    try_load: (dlname: string) -> dlmodule | string,
+type dlimport_library = {
+    load: (dlpath: string) -> dlmodule,
+    try_load: (dlpath: string) -> dlmodule | string,
     search_for: (dlname: string) -> string?,
     loaded_modules: () -> {dlmodule},
 }
-declare dlimport: libdlimport
+declare dlimport: dlimport_library 
 

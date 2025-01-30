@@ -1,11 +1,11 @@
-local time = require('@require/qol2/time')
 print.text_color = 'blue'
 local this_thread = coroutine.running()
 print(nameof(this_thread), this_thread, coroutine.status(this_thread))
 local co = coroutine.create(function(word: string)
     print(`im a coroutine {word}`)
 end)
-task.after_this(function()
+print(`precomp: {nameof(this_thread)}`)
+task.after(function()
     print("Script is finished")
 end)
 

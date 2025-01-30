@@ -8,6 +8,7 @@
 #include <regex>
 #ifdef _WIN32
 #include <Windows.h>
+#include <shlobj.h>
 #endif
 
 namespace common {
@@ -55,6 +56,27 @@ inline std::optional<std::filesystem::path> get_executable_path() {
 inline std::optional<std::string> find_environment_variable(const std::string& name) {
     if (const char* env = getenv(name.c_str())) {
         return env;
+    }
+    return std::nullopt;
+}
+inline std::optional<std::string> get_user_folder() {
+    char user[MAX_PATH];
+    const bool success = SUCCEEDED(
+        SHGetFolderPathA(NULL, CSIDL_PROFILE, NULL, 0, user)
+    );
+    if (success) {
+        std::string folder{user};
+        std::ranges::replace(folder, '\\', '/');
+        return folder;
+    }
+    return std::nullopt;
+}
+inline std::optional<std::string> substitute_user_folder(std::string_view p) {
+    if (p[0] != '~') return std::nullopt;
+    if (auto opt = get_user_folder()) {
+        std::string path{p};
+        path.replace(0, 1, *opt);
+        return path;
     }
     return std::nullopt;
 }

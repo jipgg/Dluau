@@ -28,6 +28,7 @@ static lua_CompileOptions copts{.debugLevel = 1};
 lua_CompileOptions* shared::compile_options{&copts};
 static bool config_file_initialized{false};
 static flat_map<string, string> aliases;
+static flat_map<string, string> root_require_directories;
 static flat_map<string, int> modules;
 static flat_map<lua_State*, string> script_paths;
 
@@ -55,6 +56,36 @@ static optional<path> find_config_file(path root = fs::current_path(), int searc
 }
 static bool has_alias(const string& str) {
     return str[0] == '@';
+}
+static bool maybe_root_dir(const string& str) {
+    fs::path path{str};
+    bool maybe = path.is_relative()
+        and (not fs::exists(path))
+        and (not fs::exists(path.replace_extension(".luau")));
+    return maybe;
+}
+static optional<error_trail> load_root_require_directories() {
+    const auto env = common::find_environment_variable("DLUAU_ROOT");
+    if (not env) return nullopt;
+    fs::path require_dir{*env + "/require"};
+    if (not fs::exists(require_dir)) return nullopt;
+    if (not fs::is_directory(require_dir)) return error_trail{"require must be a directory"};
+    for (const auto entry : fs::directory_iterator(require_dir)) {
+        if (not entry.is_directory()) continue;
+        const fs::path path = entry.path();
+        root_require_directories.emplace(path.filename().string(), common::sanitize_path(path.string()));
+    }
+    return nullopt;
+}
+static optional<error_trail> substitute_root_directory(string& path) {
+    string dirname = path;
+    if (path.find('/') != string::npos) {
+        dirname = dirname.substr(0, dirname.find_last_of('/'));
+    }
+    if (not root_require_directories.contains(dirname)) return error_trail("unknown directory");
+    const auto& dir = root_require_directories.at(dirname);
+    path.replace(0, dirname.length(), dir);
+    return nullopt;
 }
 static optional<error_trail> load_aliases(const path& root = fs::current_path(), int search_depth = 5) {
     auto found_config = find_config_file(root, search_depth);
@@ -107,6 +138,8 @@ static optional<path> find_source(path p, const path& root) {
 static variant<string, error_trail> resolve_path(string name, const path& root) {
     if (has_alias(name)) {
         if (auto err = substitute_alias(name)) return err->propagate();
+    } else if (maybe_root_dir(name)) {
+        if (auto err = substitute_root_directory(name)) return err->propagate();
     }
     auto found_source = find_source(name, root);
     if (not found_source) return error_trail("couldnt find source path");
@@ -116,24 +149,10 @@ static decltype(auto) get_precompiled_library_values(const string& path) {
     auto as_string_literal = [](const string& str) {
         return format("(\"{}\")", str);
     };
-    auto get_platform = [] {
-#if defined(_WIN32)
-        return "Windows";
-#elif defined(__linux__)
-        return "Linux";
-#elif defined(__APPLE__) && defined(__MACH__)
-        return "macOS";
-#endif
-        return "unknown";
-    };
     const auto arr = to_array<pair<regex, string>>({
         {regex(R"(\bscript.directory\b)"), as_string_literal(fs::path(path).parent_path().string())},
-        {regex(R"(\bscript.file_path\b)"), as_string_literal(path)},
+        {regex(R"(\bscript.path\b)"), as_string_literal(path)},
         {regex(R"(\bscript.name\b)"), as_string_literal(fs::path(path).stem().string())},
-
-        {regex(R"(\bmeta.os_name\b)"), as_string_literal(get_platform())},
-        {regex(R"(\bmeta.debug_level\b)"), std::to_string(shared::compile_options->debugLevel)},
-        {regex(R"(\bmeta.optimization_level\b)"), std::to_string(shared::compile_options->optimizationLevel)},
     });
     return arr;
 }
@@ -142,6 +161,9 @@ int dluau_require(lua_State* L, const char* name) {
     if (not config_file_initialized) {
         config_file_initialized = true;
         if (auto err = load_aliases()) {
+            luaL_errorL(L, err->formatted().c_str());
+        }
+        if (auto err = load_root_require_directories()) {
             luaL_errorL(L, err->formatted().c_str());
         }
         //global aliases

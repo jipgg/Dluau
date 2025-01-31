@@ -1,0 +1,74 @@
+{
+    "@roblox/global/nameof": {
+        "documentation": "Returns the variable name as a `string`. This is a precompiled function, meaning it is substited as a string literal at runtime."
+    },
+    "@roblox/global/task": {
+        "documentation": "Roblox's `task` library implementation for dluau with some slight deviations."
+    },
+    "@roblox/global/task.wait": {
+        "documentation": "Yields the running coroutine `thread` for the specified amount of seconds."
+    },
+    "@roblox/global/task.spawn": {
+        "documentation": "Runs a `function` or `thread` to run in a non-blocking manner."
+    },
+    "@roblox/global/task.defer": {
+        "documentation": "Defers a `function` or `thread` to be executed next resumption cycle."
+    },
+    "@roblox/global/task.cancel": {
+        "documentation": "Cancels a `thread` if this thread exists in the task scheduler."
+    },
+    "@roblox/global/task.wait_until": {
+        "documentation": "Waits until the specified thread has finished before resuming the current thread."
+    },
+    "@roblox/global/task.delay_until": {
+        "documentation": "Delays a `function` or `thread` to be ran once the specified thread has finished"
+    },
+    "@roblox/global/task.this": {
+        "documentation": "The currently running `thread`. Semantically the same as `coroutine.running()`."
+    },
+    "@roblox/global/dlimport": {
+        "documentation": "The dlimport library for importing dlmodules and dll function symbols."
+    },
+    "@roblox/global/dlimport.load": {
+        "documentation": "Loads the specified DLL into the environment and returns a `dlmodule` object.\nCalling this function multiple times for the same path will return the same `dlmodule` instance."
+    },
+    "@roblox/global/dlimport.try_load": {
+        "documentation": "Same as `dlimport.load`, but returns an error message if it fails."
+    },
+    "@roblox/global/dlimport.search_path": {
+        "documentation": "Searches for the specified dll in the conventional places for dlls to reside."
+    },
+    "@roblox/global/dlimport.loaded_modules": {
+        "documentation": "Returns an array-like table of all the currently loaded DLLs."
+    },
+    "@roblox/globaltype/dlmodule.path": {
+        "documentation": "File path to the module."
+    },
+    "@roblox/globaltype/dlmodule.name": {
+        "documentation": "Name of the module."
+    },
+    "@roblox/globaltype/dlmodule.lua_pushcfunction": {
+        "documentation": "imports a `lua_CFunction` (C API) and returns it as a function. Symbol is prefixed with 'lua_' internally."
+    },
+    "@roblox/globaltype/dlmodule.create_c_binding": {
+        "documentation": "Creates a function closure for a true C function signature. Currently only c primitives are supported. Aggregate (struct) types are coming eventually.\nCaution: this is fundamentally memory unsafe, be certain about the exact export function return types and parameters before using."
+    },
+    "@roblox/global/print": {
+        "documentation": "Prints all the arguments to the console. `tostring` implicitly gets called on all arguments.\n`.separator`: The global separator `print` uses.\n`.noline`: Identical to print, but does not write a new line at the end."
+    },
+    "@roblox/global/script": {
+        "documentation": "Collection of precompiled info related to the current script."
+    },
+    "@roblox/global/script.directory": {
+        "documentation": "Parent directory of the current script."
+    },
+    "@roblox/global/script.path": {
+        "documentation": "Filesystem path of the current script."
+    },
+    "@roblox/global/script.name": {
+        "documentation": "Name (without file extension) of the current script."
+    },
+    "@roblox/global/scan": {
+        "documentation": "Reads a line from the console.\n`.buffer`: Reads the data from the console and writes it to a buffer. Allows you to read `\\n` characters."
+    }
+}

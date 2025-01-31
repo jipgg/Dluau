@@ -60,7 +60,7 @@ if root_conf then
         directory_aliases['@' .. key] = vim.fs.normalize(DLUAU_ROOT.."/"..value)
     end
 end
-local cwd_conf = load_config(vim.uv.cwd().."/.dluaurc.json")
+local cwd_conf = load_config(vim.uv.cwd().."/.luaurc") or load_config(uv.cwd().."/.dluaurc.json")
 if cwd_conf then
     for key, value in pairs(cwd_conf.aliases) do
         if string.find(value, '$') then
@@ -80,6 +80,7 @@ require"lspconfig".luau_lsp.setup {
     cmd = {"luau-lsp",
         "lsp",
         "--definitions=dluau_definitions",
+        "--docs=dluau_docs.json",
     },
     settings = {
         ["luau-lsp"] = {

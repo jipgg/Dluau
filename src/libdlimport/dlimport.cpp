@@ -44,25 +44,27 @@ static int load(lua_State* L) {
     util::lua_pushmodule(L, module);
     return 1;
 }
-static int init_module(lua_State* L) {
+static int require_module(lua_State* L) {
     const string name = luaL_checkstring(L, 1);
     dlmodule* module = load_module(L);
     if (not module) luaL_argerrorL(L, 1, err_not_found);
-    auto proc = util::find_proc_address(*module, "lua_initmodule");
-    if (not proc) luaL_errorL(L, "module '%s' does not export a symbol 'lua_initmodule'.", name.c_str());
-    lua_pushcfunction(L, reinterpret_cast<lua_CFunction>(*proc), (name + " lua_initmodule").c_str());
+    auto proc = util::find_proc_address(*module, "dlmodule_require");
+    if (not proc) luaL_errorL(L, "module '%s' does not export a symbol 'dlmodule_require'.", name.c_str());
+    lua_pushcfunction(L, reinterpret_cast<lua_CFunction>(*proc), (name + " dlmodule_require").c_str());
     lua_call(L, 0, 1);
     return 1;
 }
-static int try_load(lua_State* L) {
+static int protected_load(lua_State* L) {
     if (not has_permissions(L)) {
+        lua_pushnil(L);
         lua_pushstring(L, err_loading_perm);
-        return 1;
+        return 2;
     }
     auto module = util::init_or_find_module(luaL_checkstring(L, 1));
     if (not module) {
+        lua_pushnil(L);
         lua_pushstring(L, err_not_found);
-        return 1;
+        return 2;
     }
     util::lua_pushmodule(L, module);
     return 1;
@@ -79,9 +81,9 @@ static int loaded_modules(lua_State* L) {
 void dluauopen_dlimport(lua_State* L) {
     dlmodule::init(L);
     const luaL_Reg lib[] = {
-        {"initmodule", init_module},
+        {"require", require_module},
         {"load", load},
-        {"tryload", try_load},
+        {"pload", protected_load},
         {"searchpath", search_path},
         {"getmodules", loaded_modules},
         {nullptr, nullptr}

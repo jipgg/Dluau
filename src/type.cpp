@@ -56,7 +56,7 @@ private:
 
 static userdata_type_registry userdata_types;
 
-int dluau_gettagfromtname(const char *tname) {
+int dluau_gettagfromtype(const char *tname) {
     return userdata_types.get_tag(tname);
 }
 bool dluau_istyperegistered(const char *tname) {

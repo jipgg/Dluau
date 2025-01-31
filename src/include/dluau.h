@@ -18,8 +18,8 @@ DLUAU_API int dluau_newuserdatatag();
 // while keeping the tags synchronized between dlls.
 DLUAU_API int dluau_newlightuserdatatag();
 // When the type is registered this returns the tag.
-// Returns 0 otherwise.
-DLUAU_API int dluau_gettagfromtname(const char* tname);
+// Returns 0 when not registered or not a tagged type.
+DLUAU_API int dluau_gettagfromtype(const char* tname);
 // Registers a type with a tag.
 // Returns the tag.
 DLUAU_API int dluau_registertypetagged(const char* tname);

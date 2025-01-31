@@ -81,9 +81,9 @@ declare class dlmodule
     importcfunction: <As..., Rs...>(module: dlmodule, symbol: string) -> ((As...)->(Rs...))
 end
 type dlimport = {
-    initmodule: <Module>(name: string) -> Module,
-    load: (dlpath: string) -> dlmodule,
-    tryload: (dlpath: string) -> dlmodule | string,
+    require: <Data...>(target: string) -> (Data...),
+    load: (target: string) -> dlmodule,
+    pload: (target: string) -> (dlmodule?, string),
     searchpath: (dlname: string) -> string?,
     getmodules: () -> {dlmodule},
 }

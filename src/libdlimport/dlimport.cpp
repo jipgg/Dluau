@@ -28,24 +28,25 @@ static int search_path(lua_State* L) {
     }
     return 0;
 }
-static int load(lua_State* L) {
+static const auto dl_file_extensions = std::to_array<string>({".so", ".dll", ".dylib"});
+static dlmodule* load_module(lua_State* L) {
     if (not has_permissions(L)) luaL_errorL(L, err_loading_perm);
-    dlmodule* module = util::init_or_find_module(luaL_checkstring(L, 1));
+    const string name = luaL_checkstring(L, 1);
+    auto resolved = shared::resolve_require_path(L, name, dl_file_extensions);
+    if (auto err = std::get_if<error_trail>(&resolved)) {
+        luaL_errorL(L, "couldn't resolve path for '%s'.", name.c_str());
+    }
+    return util::init_or_find_module(std::get<string>(resolved));
+}
+static int load(lua_State* L) {
+    dlmodule* module = load_module(L);
     if (not module) luaL_argerrorL(L, 1, err_not_found);
     util::lua_pushmodule(L, module);
     return 1;
 }
 static int init_module(lua_State* L) {
-    const auto& paths = shared::get_script_paths();
-    if (not paths.contains(L)) luaL_errorL(L, "initmodule is only allowed from a script thread");
-    if (not has_permissions(L)) luaL_errorL(L, err_loading_perm);
     const string name = luaL_checkstring(L, 1);
-    static const auto dl_file_extensions = std::to_array<string>({".so", ".dll", ".dylib"});
-    auto resolved = shared::resolve_path(name, filesystem::path(paths.at(L)).parent_path(), dl_file_extensions);
-    if (auto err = std::get_if<error_trail>(&resolved)) {
-        luaL_errorL(L, "couldn't resolve path for '%s'.", name.c_str());
-    }
-    dlmodule* module = util::init_or_find_module(std::get<string>(resolved));
+    dlmodule* module = load_module(L);
     if (not module) luaL_argerrorL(L, 1, err_not_found);
     auto proc = util::find_proc_address(*module, "lua_initmodule");
     if (not proc) luaL_errorL(L, "module '%s' does not export a symbol 'lua_initmodule'.", name.c_str());

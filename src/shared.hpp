@@ -22,6 +22,7 @@ extern lua_CompileOptions* compile_options;
 const flat_map<lua_State*, string>& get_script_paths();
 const flat_map<string, string>& get_aliases();
 static const auto default_file_extensions = std::to_array<string>({".luau", ".lua"});
+variant<string, error_trail> resolve_require_path(lua_State* L, string name, span<const string> file_exts = default_file_extensions);
 variant<string, error_trail> resolve_path(string name, const path& base, span<const string> file_exts = default_file_extensions);
 variant<lua_State*, error_trail> load_file(lua_State* L, string_view path);
 optional<error_trail> run_file(lua_State* L, string_view script_path);

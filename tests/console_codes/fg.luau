@@ -1,0 +1,20 @@
+local ESC = string.char(27)
+return table.freeze{
+    black = `{ESC}[30m`,
+    red = `{ESC}[31m`,
+    green = `{ESC}[32m`,
+    yellow = `{ESC}[33m`,
+    blue = `{ESC}[34m`,
+    magenta = `{ESC}[35m`,
+    cyan = `{ESC}[36m`,
+    white = `{ESC}[37m`,
+    default = `{ESC}[39m`,
+    brightblack = `{ESC}[90m`,
+    brightred = `{ESC}[91m`,
+    brightgreen = `{ESC}[92m`,
+    brightyellow = `{ESC}[93m`,
+    brightblue = `{ESC}[94m`,
+    brightmagenta = `{ESC}[95m`,
+    brightcyan = `{ESC}[96m`,
+    brightwhite = `{ESC}[97m`,
+}

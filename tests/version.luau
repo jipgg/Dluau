@@ -21,6 +21,5 @@ local function describe<T>(val: T, name: string?): string
     return str
 end
 print(describe(dlimport.loaded_modules()))
-print.text_color = 'green'
-print(`{script.name} tests successful`)
-print.reset_colors()
+local cc = require('console_codes')
+print(`{cc.brightgreen}{script.name} tests successful{cc.reset}`)

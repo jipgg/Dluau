@@ -121,7 +121,6 @@ static variant<string, error_trail> resolve_path(string name, const path& root) 
     if (has_alias(name)) {
         if (auto err = substitute_alias(name)) return err->propagate();
     }
-    std::cout << "NAME: " << name << '\n';
     auto found_source = find_source(name, root);
     if (not found_source) return error_trail("couldnt find source path");
     return common::sanitize_path(found_source->string());
@@ -153,7 +152,6 @@ int dluau_require(lua_State* L, const char* name) {
         }
     }
     const path script_root{path(script_paths.at(L)).parent_path()};
-    std::cout << std::format("SCRIPPT DITRL: {}\n", script_root.string());
     auto result = resolve_path(name, script_root);
     if (auto* err = std::get_if<error_trail>(&result)) {
         luaL_errorL(L, err->message().c_str());

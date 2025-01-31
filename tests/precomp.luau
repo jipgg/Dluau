@@ -6,6 +6,5 @@ assert(typeof(script.name) == 'string')
 assert(typeof(script.path) == 'string')
 local _ = script.directory:len()
 print(script.directory, script.name)
-print.text_color = 'green'
-print(`{script.name} tests success`)
-print.reset_colors()
+local cc = require('console_codes')
+print(`{cc.brightgreen}{script.name} tests successful{cc.reset}`)

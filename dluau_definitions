@@ -23,12 +23,9 @@ declare script: script
 
 type callable = {__call: (any) -> never}
 
-type console_color = 'default'|'red'|'green'|'yellow'|'blue'|'magenta'|'cyan'|'bright red'|'bright green'|'bright yellow'|'bright blue'|'bright magenta'|'bright cyan'|'white'|'light gray'|'gray'|'black'
 type print = {
-    text_color: console_color,
-    background_color: console_color,
-    reset_colors: () -> (),
-    write: <Ts...>(Ts...) -> (),
+    separator: string,
+    noline: <Ts...>(Ts...)->(),
 }
 declare print: typeof(setmetatable({} :: print, {} :: callable)) & (<Ts...>(Ts...)->())
 type scan = {

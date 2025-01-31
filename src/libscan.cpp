@@ -24,23 +24,16 @@ static int buffer(lua_State* L) {
     std::cin.read(buf, len);
     return 1;
 }
-static int number(lua_State* L) {
-    double d; 
-    std::cin >> d;
-    lua_pushnumber(L, d);
-    return 1;
-}
 
 void dluauopen_scan(lua_State *L) {
     const luaL_Reg funcs[] = {
         {"buffer", buffer},
-        {"number", number},
         {nullptr, nullptr}
     };
     lua_newtable(L);
     luaL_register(L, nullptr, funcs);
     lua_newtable(L);
-    lua_pushcfunction(L, call, "scan.__call");
+    lua_pushcfunction(L, call, "__call");
     lua_setfield(L, -2, "__call");
     lua_setmetatable(L, -2);
     lua_setglobal(L, "scan");

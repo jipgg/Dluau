@@ -1,4 +1,3 @@
-print.text_color = 'blue'
 local this_thread = coroutine.running()
 print(nameof(this_thread), this_thread, coroutine.status(this_thread))
 local co = coroutine.create(function(word: string)
@@ -41,6 +40,5 @@ this_thread = coroutine.running()
 print(nameof(this_thread), this_thread, coroutine.status(this_thread))
 print(`defer {v}`)
 task.wait(6)
-print.text_color = 'green'
-print(`{script.name} tests successful`)
-print.reset_colors()
+local cc = require('console_codes')
+print(`{cc.brightgreen}{script.name} tests successful{cc.reset}`)

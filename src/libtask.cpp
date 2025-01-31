@@ -168,10 +168,10 @@ static int index(lua_State* L) {
         lua_pushthread(L);
         return 1;
     }
-    luaL_argerrorL(L, 2, "unknown field");
+    luaL_errorL(L, "unknown field '%s' in task", luaL_checkstring(L, 2));
 }
 
-static int wait_until(lua_State* L) {
+static int yield_until(lua_State* L) {
     lua_State* thread = lua_tothread(L, 1);
     const int waiting_for_ref = lua_ref(L, 1);
     lua_pushthread(L);
@@ -266,8 +266,8 @@ void dluauopen_task(lua_State* L) {
         {"defer", defer},
         {"delay", delay},
         {"cancel", cancel},
-        {"wait_until", wait_until},
-        {"delay_until", delay_until},
+        {"yieldtil", yield_until},
+        {"delaytil", delay_until},
         {nullptr, nullptr}
     };
     lua_newtable(L);

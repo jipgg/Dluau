@@ -32,6 +32,9 @@ public:
         return message_;
     }
     std::string formatted() const {
+#ifdef NDEBUG
+        return message();
+#else
         namespace fs = std::filesystem;
         std::string ret =  std::format("{}:\n", message_);
         for (const auto& sl : traceback_ | std::views::reverse) {
@@ -50,6 +53,7 @@ public:
         }
         ret.pop_back();
         return ret;
+#endif
     }
     friend std::ostream& operator<<(std::ostream& os, const error_trail& error) {
         return os << error.formatted();

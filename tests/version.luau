@@ -3,10 +3,10 @@ print(dluaulib_name)
 local dluaulib = dlimport.load(dluaulib_name)
 print(dluaulib.path, dluaulib.name)
 local version = {
-    string = dluaulib:create_raw_c_binding('string', 'get_version') :: () -> string,
-    major = dluaulib:create_raw_c_binding('int', 'get_version_major') :: () -> number,
-    minor = dluaulib:create_raw_c_binding('int', 'get_version_minor') :: () -> number,
-    patch = dluaulib:create_raw_c_binding('int', 'get_version_patch') :: () -> number,
+    string = dluaulib:rawcbinding('string', 'get_version') :: () -> string,
+    major = dluaulib:rawcbinding('int', 'get_version_major') :: () -> number,
+    minor = dluaulib:rawcbinding('int', 'get_version_minor') :: () -> number,
+    patch = dluaulib:rawcbinding('int', 'get_version_patch') :: () -> number,
 }
 print(version.string())
 print(`version is {version.major()}.{version.minor()}.{version.patch()}`)

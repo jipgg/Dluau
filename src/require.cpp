@@ -5,6 +5,7 @@
 #include <nlohmann/json.hpp>
 #include <string>
 namespace filesystem = std::filesystem;
+namespace ranges = std::ranges;
 using std::optional, std::nullopt;
 using boost::container::flat_map;
 using std::string, std::string_view;
@@ -97,11 +98,15 @@ static optional<error_trail> substitute_alias(string& str) {
     str.replace(sm.position(), sm.length(), aliases[alias]);
     return nullopt;
 }
-
+bool is_path_inside(const fspath& base, const fspath& candidate) {
+    auto abs_base = std::filesystem::canonical(base);
+    auto abs_candidate = std::filesystem::canonical(candidate);
+    return std::mismatch(abs_base.begin(), abs_base.end(), abs_candidate.begin()).first == abs_base.end();
+}
 int dluau_require(lua_State* L, const char* name) {
     auto result = shared::resolve_require_path(L, name);
     if (auto* err = std::get_if<error_trail>(&result)) {
-        luaL_errorL(L, err->message().c_str());
+        luaL_errorL(L, err->formatted().c_str());
     }
     const string file_path{std::move(std::get<string>(result))};
     if (luamodules.contains(file_path)) {
@@ -118,7 +123,12 @@ int dluau_require(lua_State* L, const char* name) {
     size_t bc_len;
     char* bc_arr = luau_compile(source.data(), source.size(), shared::compile_options, &bc_len);
     common::raii free_after([&bc_arr]{std::free(bc_arr);});
-    const string chunkname = '@' + pretty_path;
+    string chunkname;
+    if (is_path_inside(filesystem::current_path(), file_path)) {
+        chunkname = filesystem::relative(file_path).string();
+        ranges::replace(chunkname, '\\', '/');
+    } else chunkname = pretty_path;
+    chunkname = '@' + chunkname;
     int status{-1};
     if (luau_load(M, chunkname.c_str(), bc_arr, bc_len, 0) == LUA_OK) {
         status = lua_resume(M, L, 0);
@@ -166,9 +176,11 @@ variant<lua_State*, error_trail> load_file(lua_State* L, string_view path) {
     string script_path{path};
     optional<string> source = common::read_file(script_path);
     if (not source) return error_trail(format("couldn't read source '{}'.", script_path));
-    auto identifier = common::make_path_pretty(common::sanitize_path(script_path));
-    shared::precompile(*source, get_precompiled_library_values(identifier));
-    identifier = "=" + identifier;
+    auto pretty_path = common::make_path_pretty(common::sanitize_path(script_path));
+    shared::precompile(*source, get_precompiled_library_values(pretty_path));
+    string identifier{filesystem::relative(script_path).string()};
+    ranges::replace(identifier, '\\', '/');
+    identifier = '=' + identifier;
     size_t outsize;
     char* bc = luau_compile(
         source->data(), source->size(),
@@ -195,7 +207,7 @@ variant<string, error_trail> resolve_require_path(lua_State* L, string name, spa
     const fspath script_path{fspath(script_paths.at(L)).parent_path()};
     auto result = shared::resolve_path(name, script_path, file_exts);
     if (auto* err = std::get_if<error_trail>(&result)) {
-        luaL_errorL(L, err->message().c_str());
+        luaL_errorL(L, err->formatted().c_str());
     }
     return std::get<string>(result);
 }

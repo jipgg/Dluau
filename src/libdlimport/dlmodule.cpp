@@ -5,8 +5,8 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 constexpr int unintialized{-1};
-static int importcfunction_sa{unintialized};
-static int create_raw_c_binding_sa{unintialized};
+static int importfunction_sa{unintialized};
+static int rawcbinding_sa{unintialized};
 using std::string_view, std::string;
 using common::error_trail;
 
@@ -23,9 +23,9 @@ static int index(lua_State* L) {
     luaL_argerrorL(L, 2, "index was null");
 }
 
-static int lua_cfunction(lua_State* L) {
+static int importfunction(lua_State* L) {
     using namespace std::string_literals;
-    const string proc_key = "lua_"s + luaL_checkstring(L, 2);
+    const string proc_key = "dlmodule_"s + luaL_checkstring(L, 2);
     auto opt = util::find_proc_address(*util::lua_tomodule(L, 1), proc_key);
     if (not opt) luaL_errorL(L, "lua_CFunction was not found ");
     const auto fmt = std::format("CFunction: {}", proc_key);
@@ -36,15 +36,15 @@ static int namecall(lua_State* L) {
     dlmodule& module = *util::lua_tomodule(L, 1);
     int atom;
     lua_namecallatom(L, &atom);
-    if (atom == importcfunction_sa) return lua_cfunction(L);
-    else if(atom == create_raw_c_binding_sa) return dlmodule::create_binding(L);
+    if (atom == importfunction_sa) return importfunction(L);
+    else if(atom == rawcbinding_sa) return dlmodule::create_binding(L);
     luaL_errorL(L, error_trail{std::format("invalid namecall '{}'", atom) }.formatted().c_str());
 }
 
 void dlmodule::init(lua_State* L) {
     if (luaL_newmetatable(L, dlmodule::tname)) {
-        importcfunction_sa = dluau_stringatom(L, "importcfunction");
-        create_raw_c_binding_sa = dluau_stringatom(L, "create_raw_c_binding");
+        importfunction_sa = dluau_stringatom(L, "importfunction");
+        rawcbinding_sa = dluau_stringatom(L, "rawcbinding");
         lua_setlightuserdataname(L, dlmodule::tag, dlmodule::tname);
         const luaL_Reg meta[] = {
             {"__index", index},

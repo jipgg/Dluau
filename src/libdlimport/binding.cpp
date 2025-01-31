@@ -124,6 +124,6 @@ int dlmodule::create_binding(lua_State* L) {
         static_cast<param_binding*>(ud)->~param_binding();
     }));
     new (up) param_binding{std::move(binding)};
-    lua_pushcclosure(L, call_binding, "call_binding", 1);
+    lua_pushcclosure(L, call_binding, "cfunctionbinding", 1);
     return 1;
 }

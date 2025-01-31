@@ -3,29 +3,8 @@ declare nameof: <T>(v: T) -> string
 export type param = 'int' | 'string' | 'double' | 'float'| 'short' |'long' | 'long long'| 'pointer'
 declare class userdata end
 
-
-export type osdate = {
-    day: number,
-    month: number,
-    year: number,
-    min: number,
-    sec: number,
-    hour: number,
-    wday: number,
-    yday: number,
-    isdst: boolean,
-}
-export type osdateopt = {
-    day: number?,
-    month: number?,
-    year: number?,
-    min: number?,
-    sec: number?,
-    hour: number?,
-    wday: number?,
-    yday: number?,
-    isdst: boolean?,
-}
+export type osdate = {day: number, month: number, year: number, min: number, sec: number, hour: number, wday: number, yday: number, isdst: boolean}
+export type osdateopt = {day: number?, month: number?, year: number?, min: number?, sec: number?, hour: number?, wday: number?, yday: number?, isdst: boolean?}
 type osdateformatargs = '%a'|'%A'|'%b'|'%B'|'%c'|'%d'|'%H'|'%I'|'%M'|'%m'|'%p'|'%S'|'%w'|'%x'|'%X'|'%Y'|'%y'|'%%'
 type os = {
     execute: (command: string) -> number,
@@ -48,8 +27,8 @@ type task = {
     defer: <Ts...>(fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
     delay: <Ts...>(seconds: number, fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
     cancel: (task: thread) -> (),
-    wait_until: (task_to_finish: thread) -> thread,
-    delay_until: <Ts...>(task_to_finish: thread, fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
+    yieldtil: (task_to_finish: thread) -> thread,
+    delaytil: <Ts...>(task_to_finish: thread, fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
     this: thread,
 }
 declare task: task
@@ -77,11 +56,11 @@ declare scan: typeof(setmetatable({} :: scan, {} :: callable)) & (()->string)
 declare class dlmodule
     path: string
     name: string
-    create_raw_c_binding: (<Return, Args...>(self: dlmodule, returns: param | 'void', func_name: string, ...param) -> ((Args...)->Return))
-    importcfunction: <As..., Rs...>(module: dlmodule, symbol: string) -> ((As...)->(Rs...))
+    rawcbinding: (<Return, Args...>(self: dlmodule, returns: param | 'void', func_name: string, ...param) -> ((Args...)->Return))
+    importfunction: <As..., Rs...>(module: dlmodule, symbol: string) -> ((As...)->(Rs...))
 end
 type dlimport = {
-    require: <Data...>(target: string) -> (Data...),
+    require: (target: string) -> unknown,
     load: (target: string) -> dlmodule,
     pload: (target: string) -> (dlmodule?, string),
     searchpath: (dlname: string) -> string?,

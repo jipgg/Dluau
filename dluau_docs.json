@@ -17,10 +17,10 @@
     "@roblox/global/task.cancel": {
         "documentation": "Cancels a `thread` if this thread exists in the task scheduler."
     },
-    "@roblox/global/task.wait_until": {
+    "@roblox/global/task.yieldtil": {
         "documentation": "Waits until the specified thread has finished before resuming the current thread."
     },
-        "@roblox/global/task.delay_until": {
+        "@roblox/global/task.delaytil": {
         "documentation": "Delays a `function` or `thread` to be ran once the specified thread has finished"
     },
     "@roblox/global/task.this": {
@@ -28,6 +28,9 @@
     },
     "@roblox/global/dlimport": {
         "documentation": "The dlimport library for importing dlmodules and dll/so function symbols."
+    },
+    "@roblox/global/dlimport.require": {
+        "documentation": "Imports a dlmodule instantly. This requires for the 'dlrequire' lua_CFunction to be exported"
     },
     "@roblox/global/dlimport.load": {
         "documentation": "Loads the specified DLL into the environment and returns a `dlmodule` object.\nCalling this function multiple times for the same path will return the same `dlmodule` instance."
@@ -47,10 +50,10 @@
     "@roblox/globaltype/dlmodule.name": {
         "documentation": "Name of the module."
     },
-    "@roblox/globaltype/dlmodule.importcfunction": {
-        "documentation": "imports a `lua_CFunction` (C API) and returns it as a function. Symbol is prefixed with 'lua_' internally."
+    "@roblox/globaltype/dlmodule.importfunction": {
+        "documentation": "imports a `lua_CFunction` (C API) and returns it as a function. Symbol is prefixed with 'dlmodule_' internally as a way to distinguish between dlmodule lua_CFunctions and true c functions."
     },
-    "@roblox/globaltype/dlmodule.create_raw_c_binding": {
+    "@roblox/globaltype/dlmodule.rawcbinding": {
         "documentation": "Creates a function closure for a true C function signature. Currently only c primitives are supported. Aggregate (struct) types are coming eventually.\nCaution: this is fundamentally memory unsafe, be certain about the exact export function return types and parameters before using."
     },
     "@roblox/global/print": {

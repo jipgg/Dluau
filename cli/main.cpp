@@ -85,7 +85,7 @@ static int with_run_command(span<char*> arg_span) {
     }
     auto config_var = read_config(*found_config_path);
     if (auto* err = std::get_if<error_trail>(&config_var)) {
-        output_error(err->message());
+        output_error(err->formatted());
         return -1;
     }
     const auto& config = std::get<configuration>(config_var);

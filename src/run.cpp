@@ -115,14 +115,14 @@ int dluau_run(const dluau_runoptions* opts) {
     for (auto sr : split(string_view(opts->scripts), shared::arg_separator)) {
         string_view script{sr.data(), sr.size()};
         if (auto err = shared::run_file(L, script)) {
-            std::cerr << format(errfmt, err->message());
+            std::cerr << format(errfmt, err->formatted());
             return -1;
         }
         std::cout << "\033[0m";
     }
     while (shared::tasks_in_progress()) {
         if (auto err = shared::task_step(L)) {
-            std::cerr << format(errfmt, err->message());
+            std::cerr << format(errfmt, err->formatted());
             return -1;
         }
     }

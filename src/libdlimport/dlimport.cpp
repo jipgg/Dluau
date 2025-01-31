@@ -47,10 +47,11 @@ static int load(lua_State* L) {
 static int require_module(lua_State* L) {
     const string name = luaL_checkstring(L, 1);
     dlmodule* module = load_module(L);
+    constexpr const char* function_signature = "dlrequire";
     if (not module) luaL_argerrorL(L, 1, err_not_found);
-    auto proc = util::find_proc_address(*module, "dlmodule_require");
-    if (not proc) luaL_errorL(L, "module '%s' does not export a symbol 'dlmodule_require'.", name.c_str());
-    lua_pushcfunction(L, reinterpret_cast<lua_CFunction>(*proc), (name + " dlmodule_require").c_str());
+    auto proc = util::find_proc_address(*module, function_signature);
+    if (not proc) luaL_errorL(L, "module '%s' does not export a symbol '%s'.", name.c_str(), function_signature);
+    lua_pushcfunction(L, reinterpret_cast<lua_CFunction>(*proc), (name + std::format(" {}", function_signature)).c_str());
     lua_call(L, 0, 1);
     return 1;
 }

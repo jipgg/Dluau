@@ -1,4 +1,3 @@
--- rough remote config file for luau-lsp support for dluau in neovim
 local DLUAU_ROOT = os.getenv("DLUAU_ROOT")
 local ROOT_REQUIRE_DIR = DLUAU_ROOT.."/require"
 local ROOT_CONFIG = os.getenv("DLUAU_ROOT").."/.dluaurc.json"
@@ -6,7 +5,7 @@ local directory_aliases = {}
 local uv = vim.uv
 
 local function load_root_dirs(path)
-    local dir = uv.fs_opendir(path, nil)
+    local dir = uv.fs_opendir(path, nil) -- Open the directory, max 20 entries at a time
     if not dir then
         error("Failed to open directory: " .. path)
     end

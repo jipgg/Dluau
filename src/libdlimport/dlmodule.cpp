@@ -5,8 +5,8 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 constexpr int unintialized{-1};
-static int lua_cfunction_stringatom{unintialized};
-static int create_binding_stringatom{unintialized};
+static int importcfunction_sa{unintialized};
+static int create_raw_c_binding_sa{unintialized};
 using std::string_view, std::string;
 using common::error_trail;
 
@@ -36,15 +36,15 @@ static int namecall(lua_State* L) {
     dlmodule& module = *util::lua_tomodule(L, 1);
     int atom;
     lua_namecallatom(L, &atom);
-    if (atom == lua_cfunction_stringatom) return lua_cfunction(L);
-    else if(atom == create_binding_stringatom) return dlmodule::create_binding(L);
+    if (atom == importcfunction_sa) return lua_cfunction(L);
+    else if(atom == create_raw_c_binding_sa) return dlmodule::create_binding(L);
     luaL_errorL(L, error_trail{std::format("invalid namecall '{}'", atom) }.formatted().c_str());
 }
 
 void dlmodule::init(lua_State* L) {
     if (luaL_newmetatable(L, dlmodule::tname)) {
-        lua_cfunction_stringatom = dluau_stringatom(L, "lua_pushcfunction");
-        create_binding_stringatom = dluau_stringatom(L, "create_c_binding");
+        importcfunction_sa = dluau_stringatom(L, "importcfunction");
+        create_raw_c_binding_sa = dluau_stringatom(L, "create_raw_c_binding");
         lua_setlightuserdataname(L, dlmodule::tag, dlmodule::tname);
         const luaL_Reg meta[] = {
             {"__index", index},

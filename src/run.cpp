@@ -13,16 +13,17 @@
 #include <variant>
 #include <array>
 #include "shared.hpp"
-namespace fs = std::filesystem;
+namespace filesystem = std::filesystem;
 using std::string, std::string_view;
 using std::stringstream, std::ifstream;
 using common::error_trail;
 using std::to_array, std::pair, std::regex;
 using boost::container::flat_map;
-using nlohmann::json, fs::path;
+using nlohmann::json, filesystem::path;
 using std::optional, std::variant;
 using std::nullopt, std::format;
 using std::get, std::get_if;
+using shared::default_file_extensions;
 
 static lua_CompileOptions copts{.debugLevel = 1};
 lua_CompileOptions* shared::compile_options{&copts};
@@ -31,7 +32,7 @@ static flat_map<string, string> aliases;
 static flat_map<string, int> modules;
 static flat_map<lua_State*, string> script_paths;
 
-static optional<path> find_config_file(path root = fs::current_path(), int search_depth = 5) {
+static optional<path> find_config_file(path root = filesystem::current_path(), int search_depth = 5) {
     const auto config_file_names = std::to_array<string_view>({
         ".luaurc", ".dluaurc",
         ".dluaurc.json", ".luaurc.json",
@@ -40,7 +41,7 @@ static optional<path> find_config_file(path root = fs::current_path(), int searc
     auto exists = [&cfn = config_file_names, &root](path& out) -> bool {
         for (string_view name : cfn) {
             const path potential_path = root / name;
-            if (fs::exists(potential_path)) {
+            if (filesystem::exists(potential_path)) {
                 out = potential_path;
                 return true;
             } 
@@ -59,17 +60,17 @@ static bool has_alias(const string& str) {
 static optional<error_trail> load_root_require_aliases() {
     const auto env = common::find_environment_variable("DLUAU_ROOT");
     if (not env) return nullopt;
-    fs::path require_dir{*env + "/require"};
-    if (not fs::exists(require_dir)) return nullopt;
-    if (not fs::is_directory(require_dir)) return error_trail{"require must be a directory"};
-    for (const auto entry : fs::directory_iterator(require_dir)) {
+    path require_dir{*env + "/require"};
+    if (not filesystem::exists(require_dir)) return nullopt;
+    if (not filesystem::is_directory(require_dir)) return error_trail{"require must be a directory"};
+    for (const auto entry : filesystem::directory_iterator(require_dir)) {
         if (not entry.is_directory()) continue;
-        const fs::path path = entry.path();
+        const filesystem::path path = entry.path();
         aliases.emplace(path.filename().string(), common::sanitize_path(path.string()));
     }
     return nullopt;
 }
-static optional<error_trail> load_aliases(const path& root = fs::current_path(), int search_depth = 5) {
+static optional<error_trail> load_aliases(const path& root = filesystem::current_path(), int search_depth = 5) {
     auto found_config = find_config_file(root, search_depth);
     if (not found_config) return nullopt;
     auto source = common::read_file(*found_config);
@@ -96,7 +97,7 @@ static optional<error_trail> load_aliases(const path& root = fs::current_path(),
     return nullopt;
 }
 static optional<error_trail> substitute_alias(string& str) {
-    static const std::regex alias_regex{R"(\@[A-Za-z][A-Za-z0-9_-]*)"};
+    static const regex alias_regex{R"(\@[A-Za-z][A-Za-z0-9_-]*)"};
     std::smatch sm;
     if (not std::regex_search(str, sm, alias_regex)) {
         return error_trail(format("failed match allias regex {}", str));
@@ -108,35 +109,32 @@ static optional<error_trail> substitute_alias(string& str) {
     str.replace(sm.position(), sm.length(), aliases[alias]);
     return nullopt;
 }
-static optional<path> find_source(path p, const path& root) {
-    if (p.is_relative()) p = root / p;
-    if (not fs::exists(p)) {
+static optional<path> find_source(path p, const path& base, std::span<const string> file_exts = default_file_extensions) {
+    if (p.is_relative()) p = base / p;
+    if (not filesystem::exists(p)) {
         if (not p.has_extension()) {
-            p.replace_extension(".luau");
-            if (fs::exists(p)) return p;
+            for (const string& ext : file_exts) {
+                p.replace_extension(ext);
+                if (filesystem::exists(p)) return p;
+            }
         }
-    } else if (fs::is_directory(p)) {
-        p /= "init.luau";
-        if (fs::exists(p)) return p; 
+    } else if (filesystem::is_directory(p)) {
+        for (const string& ext : file_exts) {
+            p /= std::format("init{}", ext);
+            if (filesystem::exists(p)) return p; 
+            p = p.parent_path();
+        }
     } else return p;
     return nullopt;
 }
-static variant<string, error_trail> resolve_path(string name, const path& root) {
-    if (has_alias(name)) {
-        if (auto err = substitute_alias(name)) return err->propagate();
-    }
-    auto found_source = find_source(name, root);
-    if (not found_source) return error_trail("couldnt find source path");
-    return common::sanitize_path(found_source->string());
-}
-static decltype(auto) get_precompiled_library_values(const string& path) {
+static decltype(auto) get_precompiled_library_values(const string& p) {
     auto as_string_literal = [](const string& str) {
         return format("(\"{}\")", str);
     };
     const auto arr = to_array<pair<regex, string>>({
-        {regex(R"(\bscript.directory\b)"), as_string_literal(fs::path(path).parent_path().string())},
-        {regex(R"(\bscript.path\b)"), as_string_literal(path)},
-        {regex(R"(\bscript.name\b)"), as_string_literal(fs::path(path).stem().string())},
+        {regex(R"(\bscript.directory\b)"), as_string_literal(path(p).parent_path().string())},
+        {regex(R"(\bscript.path\b)"), as_string_literal(p)},
+        {regex(R"(\bscript.name\b)"), as_string_literal(path(p).stem().string())},
     });
     return arr;
 }
@@ -157,8 +155,9 @@ int dluau_require(lua_State* L, const char* name) {
         }
         */
     }
+    if (not script_paths.contains(L)) luaL_errorL(L, "require is only allowed from a script thread");
     const path script_root{path(script_paths.at(L)).parent_path()};
-    auto result = resolve_path(name, script_root);
+    auto result = shared::resolve_path(name, script_root);
     if (auto* err = std::get_if<error_trail>(&result)) {
         luaL_errorL(L, err->message().c_str());
     }
@@ -303,6 +302,17 @@ int dluau_run(const dluau_runoptions* opts) {
 }
 
 namespace shared {
+variant<string, error_trail> resolve_path(string name, const path& base, std::span<const string> file_exts) {
+    if (has_alias(name)) {
+        if (auto err = substitute_alias(name)) return err->propagate();
+    }
+    auto found_source = find_source(name, base, file_exts);
+    if (not found_source) return error_trail("couldnt find source path");
+    return common::sanitize_path(found_source->string());
+}
+const flat_map<string, string>& get_aliases() {
+    return aliases;
+}
 bool has_permissions(lua_State* L) {
     lua_Debug ar;
     if (not lua_getinfo(L, 1, "s", &ar)) return false;
@@ -327,7 +337,7 @@ variant<lua_State*, error_trail> load_file(lua_State* L, string_view path) {
     string bytecode{bc, outsize};
     std::free(bc);
     lua_State* script_thread = lua_newthread(L);
-    script_paths.emplace(script_thread, fs::absolute(path).string());
+    script_paths.emplace(script_thread, filesystem::absolute(path).string());
     const int load_status = luau_load(script_thread, identifier.c_str(), bytecode.data(), bytecode.size(), 0);
     if (load_status == LUA_OK) {
         luaL_sandboxthread(script_thread);

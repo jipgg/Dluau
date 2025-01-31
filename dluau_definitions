@@ -37,14 +37,15 @@ declare scan: typeof(setmetatable({} :: scan, {} :: callable)) & (()->string)
 declare class dlmodule
     path: string
     name: string
-    create_c_binding: (<Return, Args...>(self: dlmodule, returns: param | 'void', func_name: string, ...param) -> ((Args...)->Return))
-    lua_pushcfunction: <As..., Rs...>(module: dlmodule, symbol: string) -> ((As...)->(Rs...))
+    create_raw_c_binding: (<Return, Args...>(self: dlmodule, returns: param | 'void', func_name: string, ...param) -> ((Args...)->Return))
+    import_cfunction: <As..., Rs...>(module: dlmodule, symbol: string) -> ((As...)->(Rs...))
 end
 type dlimport = {
+    initmodule: <Module>(name: string) -> Module,
     load: (dlpath: string) -> dlmodule,
-    try_load: (dlpath: string) -> dlmodule | string,
-    search_path: (dlname: string) -> string?,
-    loaded_modules: () -> {dlmodule},
+    tryload: (dlpath: string) -> dlmodule | string,
+    searchpath: (dlname: string) -> string?,
+    getmodules: () -> {dlmodule},
 }
 declare dlimport: dlimport 
 

@@ -14,7 +14,7 @@ local function load_root_dirs(path)
         for _, entry in ipairs(entries) do
             local entry_path = path .. "/" .. entry.name
             if entry.type == "directory" then
-                directory_aliases[entry.name] = entry_path
+                directory_aliases['@' .. entry.name] = entry_path
             end
         end
         entries = uv.fs_readdir(dir)
@@ -75,7 +75,6 @@ if cwd_conf then
         directory_aliases['@' .. key] = vim.fs.normalize(""..value)
     end
 end
-print(vim.inspect(directory_aliases))
 
 require"lspconfig".luau_lsp.setup {
     cmd = {"luau-lsp",

@@ -7,39 +7,16 @@ namespace rn = std::ranges;
 using std::optional, std::string, std::string_view;
 
 namespace util {
-optional<string> find_module_path(const string& dllname) {
-    /*
-    if (not priority_dir.empty()) {
-        fs::path potential_path = fs::path(priority_dir) / dllname;
-        if (not potential_path.has_extension()) {
-            potential_path.replace_extension(".dll");
-        }
-        auto standardize = [&potential_path]() -> string {
-            string standardized = fs::absolute(potential_path).string();
-            rn::replace(standardized, '\\', '/');
-            return standardized;
-        };
-        if (not fs::exists(potential_path)) return std::nullopt;
-        string path = fs::absolute(potential_path).string();
-        rn::replace(path, '\\', '/');
-        return path;
-    }
+optional<string> search_path(const string& dlname) {
     char buffer[MAX_PATH];
-    DWORD result = SearchPath(nullptr, dllname.c_str(), nullptr, MAX_PATH, buffer, nullptr);
+    DWORD result = SearchPath(nullptr, dlname.c_str(), nullptr, MAX_PATH, buffer, nullptr);
     if (result == 0 or result > MAX_PATH) {
-        if (dllname.ends_with(".dll")) {
-            for (const auto& [state, path] : shared::get_script_paths()) {
-                fs::path dllpath = fs::path(path).parent_path() / dllname;
-                if (fs::exists(dllpath)) return fs::absolute(dllpath).string();
-            }
-            return std::nullopt;
-        }
-        return find_module_path(dllname + ".dll");
+        return search_path(dlname + ".dll");
     }
     string path{buffer};
-    rn::replace(path, '\\', '/');
-    return path;
-    */
+    return common::make_path_pretty(common::sanitize_path(path));
+}
+optional<string> find_module_path(const string& dllname) {
     std::string path{dllname};
     path = common::substitute_user_folder(path).value_or(path);
     if (not fs::exists(path)) return std::nullopt;

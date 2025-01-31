@@ -80,6 +80,10 @@ inline std::optional<std::string> substitute_user_folder(std::string_view p) {
     }
     return std::nullopt;
 }
+inline std::optional<std::string> substitute_c_drive(std::string_view p) {
+    if (p[0] != 'C' or p[1] != ':') return std::nullopt;
+        return std::string(p.substr(2));
+}
 inline std::optional<std::string> substitute_environment_variable(std::string_view p) {
     std::string str{p};
     std::smatch sm;

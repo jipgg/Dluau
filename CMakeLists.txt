@@ -20,6 +20,9 @@ set(luau_vm_IMPORT "LUA_API=extern \"C\" __declspec(dllimport)")
 set(luau_compiler_IMPORT "LUACODE_API=extern \"C\" __declspec(dllimport)")
 set(luau_codegen_IMPORT "LUACODEGEN_API=extern \"C\" __declspec(dllimport)")
 set(lib_EXPORT "DLUAU_LIB_EXPORT")
+set(version_MAJOR 0)
+set(version_MINOR 1)
+set(version_PATCH 0)
 
 set(lib_DIR src)
 set(cli_DIR cli)
@@ -54,6 +57,9 @@ target_compile_definitions(lib PRIVATE
     ${luau_compiler_EXPORT}
     ${luau_codegen_EXPORT}
     ${lib_EXPORT}
+    DLUAU_VERSION_MAJOR=${version_MAJOR}
+    DLUAU_VERSION_MINOR=${version_MINOR}
+    DLUAU_VERSION_PATCH=${version_PATCH}
 )
 target_include_directories(lib PRIVATE ${lib_DIR} ${DynCall_DIR})
 target_include_directories(lib PUBLIC ${lib_DIR}/include)

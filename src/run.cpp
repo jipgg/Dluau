@@ -28,7 +28,6 @@ static lua_CompileOptions copts{.debugLevel = 1};
 lua_CompileOptions* shared::compile_options{&copts};
 static bool config_file_initialized{false};
 static flat_map<string, string> aliases;
-static flat_map<string, string> root_require_directories;
 static flat_map<string, int> modules;
 static flat_map<lua_State*, string> script_paths;
 
@@ -57,14 +56,7 @@ static optional<path> find_config_file(path root = fs::current_path(), int searc
 static bool has_alias(const string& str) {
     return str[0] == '@';
 }
-static bool maybe_root_dir(const string& str) {
-    fs::path path{str};
-    bool maybe = path.is_relative()
-        and (not fs::exists(path))
-        and (not fs::exists(path.replace_extension(".luau")));
-    return maybe;
-}
-static optional<error_trail> load_root_require_directories() {
+static optional<error_trail> load_root_require_aliases() {
     const auto env = common::find_environment_variable("DLUAU_ROOT");
     if (not env) return nullopt;
     fs::path require_dir{*env + "/require"};
@@ -73,18 +65,8 @@ static optional<error_trail> load_root_require_directories() {
     for (const auto entry : fs::directory_iterator(require_dir)) {
         if (not entry.is_directory()) continue;
         const fs::path path = entry.path();
-        root_require_directories.emplace(path.filename().string(), common::sanitize_path(path.string()));
+        aliases.emplace(path.filename().string(), common::sanitize_path(path.string()));
     }
-    return nullopt;
-}
-static optional<error_trail> substitute_root_directory(string& path) {
-    string dirname = path;
-    if (path.find('/') != string::npos) {
-        dirname = dirname.substr(0, dirname.find_last_of('/'));
-    }
-    if (not root_require_directories.contains(dirname)) return error_trail("unknown directory");
-    const auto& dir = root_require_directories.at(dirname);
-    path.replace(0, dirname.length(), dir);
     return nullopt;
 }
 static optional<error_trail> load_aliases(const path& root = fs::current_path(), int search_depth = 5) {
@@ -138,9 +120,8 @@ static optional<path> find_source(path p, const path& root) {
 static variant<string, error_trail> resolve_path(string name, const path& root) {
     if (has_alias(name)) {
         if (auto err = substitute_alias(name)) return err->propagate();
-    } else if (maybe_root_dir(name)) {
-        if (auto err = substitute_root_directory(name)) return err->propagate();
     }
+    std::cout << "NAME: " << name << '\n';
     auto found_source = find_source(name, root);
     if (not found_source) return error_trail("couldnt find source path");
     return common::sanitize_path(found_source->string());
@@ -161,20 +142,21 @@ int dluau_require(lua_State* L, const char* name) {
     if (not config_file_initialized) {
         config_file_initialized = true;
         if (auto err = load_aliases()) {
-            luaL_errorL(L, err->formatted().c_str());
+            luaL_errorL(L, err->message().c_str());
         }
-        if (auto err = load_root_require_directories()) {
-            luaL_errorL(L, err->formatted().c_str());
+        if (auto err = load_root_require_aliases()) {
+            luaL_errorL(L, err->message().c_str());
         }
         //global aliases
         if (auto r = common::find_environment_variable("DLUAU_ROOT")) {
-            if (auto err = load_aliases(*r, 1)) luaL_errorL(L, err->formatted().c_str());
+            if (auto err = load_aliases(*r, 1)) luaL_errorL(L, err->message().c_str());
         }
     }
     const path script_root{path(script_paths.at(L)).parent_path()};
+    std::cout << std::format("SCRIPPT DITRL: {}\n", script_root.string());
     auto result = resolve_path(name, script_root);
     if (auto* err = std::get_if<error_trail>(&result)) {
-        luaL_errorL(L, err->formatted().c_str());
+        luaL_errorL(L, err->message().c_str());
     }
     const string file_path{std::move(std::get<string>(result))};
     if (modules.contains(file_path)) {
@@ -301,14 +283,14 @@ int dluau_run(const dluau_runoptions* opts) {
     for (auto sr : split(string_view(opts->scripts), shared::arg_separator)) {
         string_view script{sr.data(), sr.size()};
         if (auto err = shared::run_file(L, script)) {
-            std::cerr << format(errfmt, err->formatted());
+            std::cerr << format(errfmt, err->message());
             return -1;
         }
         std::cout << "\033[0m";
     }
     while (shared::tasks_in_progress()) {
         if (auto err = shared::task_step(L)) {
-            std::cerr << format(errfmt, err->formatted());
+            std::cerr << format(errfmt, err->message());
             return -1;
         }
     }

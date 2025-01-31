@@ -21,6 +21,7 @@ using std::vector, std::tuple;
 using boost::container::flat_map;
 using boost::container::flat_set;
 using common::error_trail, common::raii;
+using std::string_view;
 using luathread = lua_State*;
 
 struct deferrer {
@@ -161,13 +162,33 @@ static int cancel(lua_State* L) {
     }
     return 0;
 }
-static int after_this(lua_State* L) {
-    lua_State* thread = L;
+static int index(lua_State* L) {
+    string_view key = luaL_checkstring(L, 2);
+    if (key == "this") {
+        lua_pushthread(L);
+        return 1;
+    }
+    luaL_argerrorL(L, 2, "unknown field");
+}
+
+static int wait_until(lua_State* L) {
+    lua_State* thread = lua_tothread(L, 1);
+    const int waiting_for_ref = lua_ref(L, 1);
     lua_pushthread(L);
-    const int waiting_for_ref = lua_ref(L, -1);
-    lua_pop(L, 1);
-    auto [state, argn] = resolve_task_argument(L, 1);
-    if (not state) luaL_typeerrorL(L, 1, "function or thread");
+    const int ref = lua_ref(L, -1);
+    do_after.emplace(L, afterer{
+        .after_this = thread,
+        .after_this_ref = waiting_for_ref,
+        .ref = lua_ref(L, -1),
+        .argn = 0,
+    });
+    return lua_yield(L, 1);
+}
+static int delay_until(lua_State* L) {
+    lua_State* thread = lua_tothread(L, 1);
+    const int waiting_for_ref = lua_ref(L, 1);
+    auto [state, argn] = resolve_task_argument(L, 2);
+    if (not state) luaL_typeerrorL(L, 2, "function or thread");
     do_after.emplace(state, afterer{
         .after_this = thread,
         .after_this_ref = waiting_for_ref,
@@ -175,36 +196,6 @@ static int after_this(lua_State* L) {
         .argn = argn,
     });
     return 1;
-}
-static int after(lua_State* L) {
-    const bool after_what_specified = lua_isfunction(L, 2) or lua_isthread(L, 2);
-    if (after_what_specified) {
-        lua_State* thread = lua_tothread(L, 1);
-        const int waiting_for_ref = lua_ref(L, 1);
-        auto [state, argn] = resolve_task_argument(L, 2);
-        if (not state) luaL_typeerrorL(L, 2, "function or thread");
-        do_after.emplace(state, afterer{
-            .after_this = thread,
-            .after_this_ref = waiting_for_ref,
-            .ref = lua_ref(L, -1),
-            .argn = argn,
-        });
-        return 1;
-    } else {
-        lua_State* thread = L;
-        lua_pushthread(L);
-        const int waiting_for_ref = lua_ref(L, -1);
-        lua_pop(L, 1);
-        auto [state, argn] = resolve_task_argument(L, 1);
-        if (not state) luaL_typeerrorL(L, 1, "function or thread");
-        do_after.emplace(state, afterer{
-            .after_this = thread,
-            .after_this_ref = waiting_for_ref,
-            .ref = lua_ref(L, -1),
-            .argn = argn,
-        });
-        return 1;
-    }
 }
 
 namespace shared {
@@ -275,9 +266,18 @@ void dluauopen_task(lua_State* L) {
         {"defer", defer},
         {"delay", delay},
         {"cancel", cancel},
-        {"after", after},
-        {"after_this", after_this},
+        {"wait_until", wait_until},
+        {"delay_until", delay_until},
         {nullptr, nullptr}
     };
-    luaL_register(L, "task", lib);
+    lua_newtable(L);
+    luaL_register(L, nullptr, lib);
+    lua_newtable(L);
+    lua_pushstring(L, "locked");
+    lua_setfield(L, -2, "__metatable");
+    lua_pushcfunction(L, index, "__index");
+    lua_setfield(L, -2, "__index");
+    lua_setmetatable(L, -2);
+    lua_setreadonly(L, -1, true);
+    lua_setglobal(L, "task");
 }

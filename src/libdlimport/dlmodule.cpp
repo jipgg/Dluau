@@ -1,6 +1,9 @@
 #include "local.hpp"
 #include <format>
 #include <common/error_trail.hpp>
+#include <common.hpp>
+#include <filesystem>
+namespace fs = std::filesystem;
 constexpr int unintialized{-1};
 static int lua_cfunction_stringatom{unintialized};
 static int create_binding_stringatom{unintialized};
@@ -10,11 +13,11 @@ using common::error_trail;
 static int index(lua_State* L) {
     dlmodule* module = util::lua_tomodule(L, 1);
     const string_view key = luaL_checkstring(L, 2);
-    if (key == "absolute_path") {
-        lua_pushstring(L, module->path.c_str());
+    if (key == "path") {
+        lua_pushstring(L, common::make_path_pretty(module->path).c_str());
         return 1;
     } else if (key == "name") {
-        lua_pushstring(L, module->name.c_str());
+        lua_pushstring(L, fs::path(module->path).stem().string().c_str());
         return 1;
     }
     luaL_argerrorL(L, 2, "index was null");

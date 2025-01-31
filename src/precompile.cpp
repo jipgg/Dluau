@@ -63,7 +63,6 @@ bool shared::precompile(string &source, span<const pair<regex, string>> static_v
         auto to_value = [&val = v.second](const string& e) -> string {return val;};
         did_something = replace_meta_specifiers(source, v.first, to_value);
     }
-    std::cout << common::get_user_folder().value_or("") << std::endl;
     return did_something;
 }
 

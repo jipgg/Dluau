@@ -2,62 +2,52 @@ declare collectgarbage: (("collect") -> ()) & (("count") -> number)
 declare nameof: <T>(v: T) -> string
 export type param = 'int' | 'string' | 'double' | 'float'| 'short' |'long' | 'long long'| 'pointer'
 declare class userdata end
-type task_library = {
+type task = {
     wait: (seconds: number?) -> (),
     spawn: <Ts...>(fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
     defer: <Ts...>(fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
     delay: <Ts...>(seconds: number, fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
     cancel: (task: thread) -> (),
-    after: (<Ts...>(wait_for: thread, fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread)
-        & (<Ts...>(fn_or_thread: ((Ts...)->())| thread, Ts...) -> thread),
-    after_this: <Ts...>(fn_or_thread: ((Ts...)->())| thread, Ts...) -> thread,
+    wait_until: (task_to_finish: thread) -> thread,
+    delay_until: <Ts...>(task_to_finish: thread, fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
+    this: thread,
 }
-declare task: task_library
+declare task: task
 
-type script_precompiled_library = {
+type script = {
     directory: string,
     path: string,
     name: string,
 }
-declare script: script_precompiled_library
-
-type meta_precompiled_library = {
-    os_name: 'Windows'| 'Linux' | 'macOS'| 'unknown',
-    debug_level: number,
-    optimization_level: number,
-}
-
-declare meta: meta_precompiled_library
+declare script: script
 
 type callable = {__call: (any) -> never}
 
 type console_color = 'default'|'red'|'green'|'yellow'|'blue'|'magenta'|'cyan'|'bright red'|'bright green'|'bright yellow'|'bright blue'|'bright magenta'|'bright cyan'|'white'|'light gray'|'gray'|'black'
-type print_library = {
+type print = {
     text_color: console_color,
     background_color: console_color,
     reset_colors: () -> (),
     write: <Ts...>(Ts...) -> (),
 }
-declare print: typeof(setmetatable({} :: print_library, {} :: callable)) & (<Ts...>(Ts...)->())
-type scan_library = {
+declare print: typeof(setmetatable({} :: print, {} :: callable)) & (<Ts...>(Ts...)->())
+type scan = {
     buffer: ((buffersize: number) -> buffer) & ((b: buffer, len: number?)->buffer),
     number: () -> number?,
-    integer: () -> number?,
 }
-declare scan: typeof(setmetatable({} :: scan_library, {} :: callable)) & (()->string)
-
+declare scan: typeof(setmetatable({} :: scan, {} :: callable)) & (()->string)
 
 declare class dlmodule
-    absolute_path: string
+    path: string
     name: string
     create_c_binding: (<Return, Args...>(self: dlmodule, returns: param | 'void', func_name: string, ...param) -> ((Args...)->Return))
     lua_pushcfunction: <As..., Rs...>(module: dlmodule, symbol: string) -> ((As...)->(Rs...))
 end
-type dlimport_library = {
+type dlimport = {
     load: (dlpath: string) -> dlmodule,
     try_load: (dlpath: string) -> dlmodule | string,
-    search_for: (dlname: string) -> string?,
+    search_path: (dlname: string) -> string?,
     loaded_modules: () -> {dlmodule},
 }
-declare dlimport: dlimport_library 
+declare dlimport: dlimport 
 

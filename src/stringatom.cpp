@@ -1,7 +1,12 @@
 #include <dluau.h>
 #include <unordered_map>
+#include <ranges>
+#include <algorithm>
 #include <shared.hpp>
-static std::unordered_map<std::string, int16_t> stringatom_registry;
+namespace ranges = std::ranges;
+using std::string;
+using std::pair;
+static std::unordered_map<string, int16_t> stringatom_registry;
 static int16_t current_stringatom_value{0};
 
 int16_t shared::default_useratom(const char* key, size_t size) {
@@ -10,6 +15,12 @@ int16_t shared::default_useratom(const char* key, size_t size) {
         stringatom_registry.emplace(key_value, ++current_stringatom_value);
     }
     return stringatom_registry.at(key_value);
+}
+const char* dluau_findstringatom(int atom) {
+    auto predicate = [&atom](const pair<string, int16_t>& pair) {return pair.second == atom;};
+    auto found = ranges::find_if(stringatom_registry, predicate);
+    if (found != ranges::end(stringatom_registry)) return found->first.c_str();
+    return nullptr;
 }
 int dluau_stringatom(lua_State* L, const char *key) {
     if (stringatom_registry.contains(key)) return stringatom_registry.at(key);

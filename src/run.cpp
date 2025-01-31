@@ -85,8 +85,12 @@ static optional<error_trail> load_aliases(const path& root = fs::current_path(),
             auto opt = common::substitute_environment_variable(valstr);
             if (not opt) return error_trail(format("failed to find env path '{}'", valstr));
             valstr = *opt;
+        } else if (valstr.at(0) == '~') {
+            auto opt = common::substitute_user_folder(valstr);
+            if (not opt) return error_trail("failed to get user folder");
+            valstr = *opt;
         }
-        auto path = common::sanitize_path(string(val), root);
+        auto path = common::sanitize_path(valstr, root);
         aliases.emplace(key, std::move(path));
     }
     return nullopt;
@@ -143,6 +147,7 @@ int dluau_require(lua_State* L, const char* name) {
         if (auto err = load_aliases()) {
             luaL_errorL(L, err->message().c_str());
         }
+        /*
         if (auto err = load_root_require_aliases()) {
             luaL_errorL(L, err->message().c_str());
         }
@@ -150,6 +155,7 @@ int dluau_require(lua_State* L, const char* name) {
         if (auto r = common::find_environment_variable("DLUAU_ROOT")) {
             if (auto err = load_aliases(*r, 1)) luaL_errorL(L, err->message().c_str());
         }
+        */
     }
     const path script_root{path(script_paths.at(L)).parent_path()};
     auto result = resolve_path(name, script_root);

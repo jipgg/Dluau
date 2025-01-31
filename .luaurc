@@ -1,0 +1,6 @@
+{
+    "languageMode": "strict",
+    "aliases": {
+        "time": "~/.dluau/require/time/"
+    }
+}

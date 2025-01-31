@@ -1,5 +1,4 @@
 local time = require '@time'
-
 print(time.now())
 assert(typeof(script.directory) == 'string')
 assert(typeof(script.name) == 'string')

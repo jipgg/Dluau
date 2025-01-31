@@ -53,7 +53,7 @@ local function load_config(path)
     return parsed
 end
 
-load_root_dirs(ROOT_REQUIRE_DIR)
+--load_root_dirs(ROOT_REQUIRE_DIR)
 local root_conf = load_config(ROOT_CONFIG)
 if root_conf then
     for key, value in pairs(root_conf.aliases) do
@@ -63,16 +63,7 @@ end
 local cwd_conf = load_config(vim.uv.cwd().."/.luaurc") or load_config(uv.cwd().."/.dluaurc.json")
 if cwd_conf then
     for key, value in pairs(cwd_conf.aliases) do
-        if string.find(value, '$') then
-            local ending = string.find(value, "/")
-            if ending then
-                local after = string.sub(value, ending)
-                value = os.getenv(string.sub(value, 2, ending - 1)) .. after
-            else
-                value = os.getenv(string.sub(value, 2))
-            end
-        end
-        directory_aliases['@' .. key] = vim.fs.normalize(""..value)
+        directory_aliases['@' .. key] = vim.fs.normalize(value)
     end
 end
 

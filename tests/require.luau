@@ -1,3 +1,8 @@
+local dltime = dlimport.load("@time/time")
+print(`path for {nameof(dltime)} is {dltime.path}`)
+local initmodule: ()->() = dltime:importcfunction("initmodule")
+print(`{nameof(initmodule)} is {typeof(initmodule)}`)
+assert(typeof(initmodule) == 'function')
 local module = require('dummy_module')
 assert(module.name == 'init')
 local submodule = require('dummy_module/submodule')

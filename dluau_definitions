@@ -2,6 +2,7 @@ declare collectgarbage: (("collect") -> ()) & (("count") -> number)
 declare nameof: <T>(v: T) -> string
 export type param = 'int' | 'string' | 'double' | 'float'| 'short' |'long' | 'long long'| 'pointer'
 declare class userdata end
+
 type task = {
     wait: (seconds: number?) -> (),
     spawn: <Ts...>(fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
@@ -38,7 +39,7 @@ declare class dlmodule
     path: string
     name: string
     create_raw_c_binding: (<Return, Args...>(self: dlmodule, returns: param | 'void', func_name: string, ...param) -> ((Args...)->Return))
-    import_cfunction: <As..., Rs...>(module: dlmodule, symbol: string) -> ((As...)->(Rs...))
+    importcfunction: <As..., Rs...>(module: dlmodule, symbol: string) -> ((As...)->(Rs...))
 end
 type dlimport = {
     initmodule: <Module>(name: string) -> Module,

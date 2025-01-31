@@ -11,6 +11,7 @@ using std::string, std::string_view;
 using std::span;
 using nlohmann::json;
 using std::pair, std::regex;
+using std::format;
 using fspath = filesystem::path;
 using common::error_trail;
 using shared::default_file_extensions;
@@ -98,15 +99,7 @@ static optional<error_trail> substitute_alias(string& str) {
 }
 
 int dluau_require(lua_State* L, const char* name) {
-    if (not config_file_initialized) {
-        config_file_initialized = true;
-        if (auto err = load_aliases()) {
-            luaL_errorL(L, err->message().c_str());
-        }
-    }
-    if (not script_paths.contains(L)) luaL_errorL(L, "require is only allowed from a script thread");
-    const fspath script_root{fspath(script_paths.at(L)).parent_path()};
-    auto result = shared::resolve_path(name, script_root);
+    auto result = shared::resolve_require_path(L, name);
     if (auto* err = std::get_if<error_trail>(&result)) {
         luaL_errorL(L, err->message().c_str());
     }
@@ -215,7 +208,7 @@ variant<string, error_trail> resolve_path(string name, const path& base, span<co
         name = *with_user;
     }
     auto found_source = find_source(name, base, file_exts);
-    if (not found_source) return error_trail("couldnt find source path");
+    if (not found_source) return error_trail(format("couldn't find source for '{}'", name));
     return common::sanitize_path(found_source->string());
 }
 const flat_map<string, string>& get_aliases() {

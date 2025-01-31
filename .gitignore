@@ -2,3 +2,4 @@
 bin/
 clangd/
 cmake/
+.nvim.lua

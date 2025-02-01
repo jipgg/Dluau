@@ -22,6 +22,13 @@ optional<string> find_module_path(const string& dllname) {
     if (not fs::exists(path)) return std::nullopt;
     return common::sanitize_path(path);
 }
+dlmodule& init_module(const string& path) {
+    if (auto it = glob::loaded.find(path); it == glob::loaded.end()) {
+        HMODULE hm = LoadLibrary(path.c_str());
+        glob::loaded.emplace(path, make_unique<dlmodule>(hm, fs::path(path).stem().string(), path));
+    }
+    return *glob::loaded[path];
+}
 dlmodule* init_or_find_module(const string& name) {
     auto found_path = find_module_path(name);
     if (not found_path) return nullptr;

@@ -19,7 +19,6 @@ using common::error_trail;
 using std::string, std::string_view;
 
 constexpr const char* err_loading_perm{"dl loading is not allowed in current script environment."};
-constexpr const char* err_not_found{"dl not found."};
 
 static int search_path(lua_State* L) {
     if (auto path = util::search_path(luaL_checkstring(L, 1))) {
@@ -29,27 +28,27 @@ static int search_path(lua_State* L) {
     return 0;
 }
 static const auto dl_file_extensions = std::to_array<string>({".so", ".dll", ".dylib"});
-static dlmodule* load_module(lua_State* L) {
+static dlmodule& load_module(lua_State* L) {
     if (not has_permissions(L)) luaL_errorL(L, err_loading_perm);
     const string name = luaL_checkstring(L, 1);
     auto resolved = shared::resolve_require_path(L, name, dl_file_extensions);
     if (auto err = std::get_if<error_trail>(&resolved)) {
         luaL_errorL(L, "couldn't resolve path for '%s'.", name.c_str());
     }
-    return util::init_or_find_module(std::get<string>(resolved));
+    auto p = std::get<string>(resolved);
+    std::cout << "P IS " << p << '\n';
+    return util::init_module(p);
 }
 static int load(lua_State* L) {
-    dlmodule* module = load_module(L);
-    if (not module) luaL_argerrorL(L, 1, err_not_found);
-    util::lua_pushmodule(L, module);
+    dlmodule& module = load_module(L);
+    util::lua_pushmodule(L, &module);
     return 1;
 }
 static int require_module(lua_State* L) {
     const string name = luaL_checkstring(L, 1);
-    dlmodule* module = load_module(L);
+    dlmodule& module = load_module(L);
     constexpr const char* function_signature = "dlrequire";
-    if (not module) luaL_argerrorL(L, 1, err_not_found);
-    auto proc = util::find_proc_address(*module, function_signature);
+    auto proc = util::find_proc_address(module, function_signature);
     if (not proc) luaL_errorL(L, "module '%s' does not export a symbol '%s'.", name.c_str(), function_signature);
     lua_pushcfunction(L, reinterpret_cast<lua_CFunction>(*proc), (name + std::format(" {}", function_signature)).c_str());
     lua_call(L, 0, 1);
@@ -64,7 +63,7 @@ static int protected_load(lua_State* L) {
     auto module = util::init_or_find_module(luaL_checkstring(L, 1));
     if (not module) {
         lua_pushnil(L);
-        lua_pushstring(L, err_not_found);
+        luaL_errorL(L, "couldn't find module '%s'.", luaL_checkstring(L, 1));
         return 2;
     }
     util::lua_pushmodule(L, module);

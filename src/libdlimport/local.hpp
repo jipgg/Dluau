@@ -33,6 +33,7 @@ inline std::unique_ptr<DCCallVM, decltype(&dcFree)> call_vm{dcNewCallVM(1024), d
 namespace util {
 std::optional<std::string> find_module_path(const std::string& dlpath);
 dlmodule* init_or_find_module(const std::string& name);
+dlmodule& init_module(const std::string& path);
 std::optional<uintptr_t> find_proc_address(dlmodule& module, const std::string& symbol);
 dlmodule* lua_tomodule(lua_State* L, int idx);
 dlmodule* lua_pushmodule(lua_State* L, dlmodule* module);

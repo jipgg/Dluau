@@ -33,16 +33,16 @@
         "documentation": "Imports a dlmodule instantly. This requires for the 'dlrequire' lua_CFunction to be exported"
     },
     "@roblox/global/dlimport.load": {
-        "documentation": "Loads the specified DLL into the environment and returns a `dlmodule` object.\nCalling this function multiple times for the same path will return the same `dlmodule` instance."
+        "documentation": "Loads the specified dlmodule into the environment and returns a `dlmodule` object.\nCalling this function multiple times for the same path will return the same `dlmodule` instance."
     },
-    "@roblox/global/dlimport.tryload": {
-        "documentation": "Same as `dlimport.load`, but returns an error message if it fails."
+    "@roblox/global/dlimport.pload": {
+        "documentation": "Same as `dlimport.load`, but protected call similar to pcall."
     },
     "@roblox/global/dlimport.searchpath": {
-        "documentation": "Searches for the specified dll in the conventional places for dlls to reside."
+        "documentation": "Searches for the specified dll/so file in the conventional places."
     },
     "@roblox/global/dlimport.getmodules": {
-        "documentation": "Returns an array-like table of all the currently loaded DLLs."
+        "documentation": "Returns an array-like table of all the currently loaded dlmodules."
     },
     "@roblox/globaltype/dlmodule.path": {
         "documentation": "File path to the module."

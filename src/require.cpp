@@ -203,12 +203,10 @@ variant<string, error_trail> resolve_require_path(lua_State* L, string name, spa
         config_file_initialized = true;
         if (auto err = load_aliases()) err->propagate();
     }
-    if (not script_paths.contains(L)) luaL_errorL(L, "require is only allowed from a script thread");
+    if (not script_paths.contains(L)) return error_trail("require is only allowed from a script thread");
     const fspath script_path{fspath(script_paths.at(L)).parent_path()};
     auto result = shared::resolve_path(name, script_path, file_exts);
-    if (auto* err = std::get_if<error_trail>(&result)) {
-        luaL_errorL(L, err->formatted().c_str());
-    }
+    if (auto* err = std::get_if<error_trail>(&result)) return err->propagate();
     return std::get<string>(result);
 }
 variant<string, error_trail> resolve_path(string name, const path& base, span<const string> file_exts) {

@@ -24,10 +24,10 @@ static int index(lua_State* L) {
 }
 
 static int importfunction(lua_State* L) {
-    const string proc_key = string("dlmodule_") + luaL_checkstring(L, 2);
+    const string proc_key = string("dlexport_") + luaL_checkstring(L, 2);
     auto opt = dlimport::find_proc_address(*dlimport::lua_tomodule(L, 1), proc_key);
-    if (not opt) luaL_errorL(L, "lua_CFunction was not found ");
-    const auto fmt = std::format("CFunction: {}", proc_key);
+    if (not opt) luaL_errorL(L, "lua_CFunction '%s' was not found ", proc_key.c_str());
+    const auto fmt = std::format("dlimported:{}", proc_key);
     lua_pushcfunction(L, reinterpret_cast<lua_CFunction>(*opt), fmt.c_str());
     return 1;
 }

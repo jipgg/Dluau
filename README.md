@@ -25,7 +25,7 @@ target_link_libraries(yourtarget PRIVATE dluaulib-stub)
 After building your own DLL you can then include it with `dlimport.require('mymodule')`.
 For this to work you need to export a `dlrequire` lua_CFunction from your dlmodule, this function will get invoked when called from luau.
 You can also import specific lua_CFunctions by first loading the dlmodule and then calling the `importfunction` method.
-This again requires you to prefix your exported C function symbol with `dlfunction_*`.
+This again requires you to prefix your exported C function symbol with `dlexport_`*.
 This convention serves as a safeguard because i didn't find a practical way to ensure an exported symbol is indeed of type lua_CFunction,
 since dlimport also supports creating bindings of 'true' c functions (currently only supports primitive c types as return type and parameters,
 but i plan on eventually support aggregate types (c structs) once i out a good way to register these dynamically in luau) this seemed like the best compromise to create a barrier between

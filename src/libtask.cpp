@@ -67,6 +67,19 @@ static bool is_finished(lua_State* L, int ref) {
     lua_pop(L, 1);
     return finished;
 }
+static optional<error_trail> close_thread(lua_State* L, lua_State* co) {
+    lua_getglobal(L, "coroutine");
+    lua_getfield(L, -1, "close");
+    lua_remove(L, -2);
+    lua_pushthread(co);
+    lua_xmove(co, L, 1);
+    if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
+        std::string errmsg = lua_tostring(L, -1);
+        lua_pop(L, 1);
+        return error_trail(std::move(errmsg));
+    }
+    return nullopt;
+}
 
 static bool has_errored(lua_State* state) {
     const int status = lua_status(state);
@@ -147,7 +160,10 @@ static int defer(lua_State* L) {
     return 1;
 }
 static int cancel(lua_State* L) {
+    if (not lua_isthread(L, 1)) luaL_typeerrorL(L, 1, "thread");
     lua_State* state = lua_tothread(L, 1);
+    auto err = close_thread(L, state);
+    if (err) luaL_errorL(L, err->formatted().c_str());
     if (waiting.contains(state)) {
         lua_unref(L, waiting[state].ref);
         waiting.erase(state);
@@ -172,7 +188,7 @@ static int index(lua_State* L) {
     luaL_errorL(L, "unknown field '%s' in task", luaL_checkstring(L, 2));
 }
 
-static int yield_until(lua_State* L) {
+static int wait_util(lua_State* L) {
     lua_State* thread = lua_tothread(L, 1);
     const int waiting_for_ref = lua_ref(L, 1);
     lua_pushthread(L);
@@ -299,8 +315,8 @@ void dluauopen_task(lua_State* L) {
         {"defer", defer},
         {"delay", delay},
         {"cancel", cancel},
-        {"yieldtil", yield_until},
-        {"delaytil", delay_until},
+        {"waituntil", wait_util},
+        {"delayuntil", delay_until},
         {nullptr, nullptr}
     };
     lua_newtable(L);

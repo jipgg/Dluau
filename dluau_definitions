@@ -27,8 +27,8 @@ type task = {
     defer: <Ts...>(fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
     delay: <Ts...>(seconds: number, fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
     cancel: (task: thread) -> (),
-    yieldtil: (task_to_finish: thread) -> thread,
-    delaytil: <Ts...>(task_to_finish: thread, fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
+    waituntil: (task_to_finish: thread) -> thread,
+    delayuntil: <Ts...>(task_to_finish: thread, fn_or_thread: ((Ts...)->()) | thread, Ts...) -> thread,
     this: thread,
 }
 declare task: task

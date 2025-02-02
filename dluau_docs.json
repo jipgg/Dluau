@@ -17,10 +17,10 @@
     "@roblox/global/task.cancel": {
         "documentation": "Cancels a `thread` if this thread exists in the task scheduler."
     },
-    "@roblox/global/task.yieldtil": {
+    "@roblox/global/task.waituntil": {
         "documentation": "Waits until the specified thread has finished before resuming the current thread."
     },
-        "@roblox/global/task.delaytil": {
+        "@roblox/global/task.delayuntil": {
         "documentation": "Delays a `function` or `thread` to be ran once the specified thread has finished"
     },
     "@roblox/global/task.this": {

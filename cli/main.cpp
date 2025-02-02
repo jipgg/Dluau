@@ -48,7 +48,7 @@ static void expand_source_file(string_view file, string& to) {
 }
 
 static void expand_source_directory(string_view dir, string& to) {
-    for (auto entry : fs::directory_iterator(dir)) {
+    for (auto entry : filesystem::directory_iterator(dir)) {
         if (not entry.is_regular_file()) continue;
         const auto file = entry.path();
         if (file.extension() != ".luau") continue;

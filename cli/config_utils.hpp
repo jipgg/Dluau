@@ -8,13 +8,13 @@
 #include <variant>
 #include <common.hpp>
 #include "cli.hpp"
-namespace fs = std::filesystem;
+namespace filesystem = std::filesystem;
 using std::optional, std::string, std::unique_ptr, std::variant, std::function;
 using common::error_trail;
 using cli::configuration;
 
 static optional<string> find_config(const string& name = "") {
-    for (auto entry : fs::recursive_directory_iterator(fs::current_path())) {
+    for (auto entry : filesystem::recursive_directory_iterator(filesystem::current_path())) {
         const std::string str = entry.path().string();
         if (not str.ends_with(name + ".proj.luau")) continue;
         return str;

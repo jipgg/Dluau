@@ -1,39 +1,38 @@
-#include "local.hpp"
+#include "dlimport.hpp"
 #include <format>
 #include <common/error_trail.hpp>
 #include <common.hpp>
 #include <filesystem>
-namespace fs = std::filesystem;
 constexpr int unintialized{-1};
 static int importfunction_sa{unintialized};
 static int rawcbinding_sa{unintialized};
 using std::string_view, std::string;
 using common::error_trail;
+using dlimport::dlmodule;
 
 static int index(lua_State* L) {
-    dlmodule* module = util::lua_tomodule(L, 1);
+    dlmodule* module = dlimport::lua_tomodule(L, 1);
     const string_view key = luaL_checkstring(L, 2);
     if (key == "path") {
-        lua_pushstring(L, common::make_path_pretty(module->path).c_str());
+        lua_pushstring(L, module->path.string().c_str());
         return 1;
     } else if (key == "name") {
-        lua_pushstring(L, fs::path(module->path).stem().string().c_str());
+        lua_pushstring(L, module->name.c_str());
         return 1;
     }
     luaL_argerrorL(L, 2, "index was null");
 }
 
 static int importfunction(lua_State* L) {
-    using namespace std::string_literals;
-    const string proc_key = "dlmodule_"s + luaL_checkstring(L, 2);
-    auto opt = util::find_proc_address(*util::lua_tomodule(L, 1), proc_key);
+    const string proc_key = string("dlmodule_") + luaL_checkstring(L, 2);
+    auto opt = dlimport::find_proc_address(*dlimport::lua_tomodule(L, 1), proc_key);
     if (not opt) luaL_errorL(L, "lua_CFunction was not found ");
     const auto fmt = std::format("CFunction: {}", proc_key);
     lua_pushcfunction(L, reinterpret_cast<lua_CFunction>(*opt), fmt.c_str());
     return 1;
 }
 static int namecall(lua_State* L) {
-    dlmodule& module = *util::lua_tomodule(L, 1);
+    dlmodule& module = *dlimport::lua_tomodule(L, 1);
     int atom;
     lua_namecallatom(L, &atom);
     if (atom == importfunction_sa) return importfunction(L);

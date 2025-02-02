@@ -1,43 +1,51 @@
-#include "local.hpp"
+#include "dlimport.hpp"
 #include <shared.hpp>
 #include <filesystem>
+#include <functional>
 #include <common.hpp>
 namespace fs = std::filesystem;
-namespace rn = std::ranges;
 using std::optional, std::string, std::string_view;
+using std::variant;
+using common::error_trail;
 
-namespace util {
-optional<string> search_path(const string& dlname) {
+namespace dlimport {
+static dlmodule_map dlmodules;
+const dlmodule_map& get_dlmodules() {
+    return dlmodules;
+}
+static const auto dl_file_extensions = std::to_array<string>({".so", ".dll", ".dylib"});
+variant<dlmodule_ref, error_trail> load_module(lua_State* L) {
+    if (not shared::has_permissions(L)) return error_trail("current environment context does not allow loading");
+    const string name = luaL_checkstring(L, 1);
+    auto resolved = shared::resolve_require_path(L, name, dl_file_extensions);
+    if (auto err = std::get_if<error_trail>(&resolved)) return err->propagate();
+    auto p = std::get<string>(resolved);
+    return std::ref(init_module(p));
+}
+optional<fs::path> search_path(const fs::path& dlpath) {
     char buffer[MAX_PATH];
+    const string dlname = dlpath.string();
     DWORD result = SearchPath(nullptr, dlname.c_str(), nullptr, MAX_PATH, buffer, nullptr);
     if (result == 0 or result > MAX_PATH) {
-        return search_path(dlname + ".dll");
+        if (not dlpath.has_extension()) {
+            fs::path path = dlpath;
+            for (const auto& ext : dl_file_extensions) {
+                path = path.replace_extension(ext);
+                auto opt = search_path(path);
+                if (opt) return std::move(opt);
+            }
+        }
+        return std::nullopt;
     }
     string path{buffer};
-    return common::make_path_pretty(common::sanitize_path(path));
+    return common::normalize_path(path);
 }
-optional<string> find_module_path(const string& dllname) {
-    std::string path{dllname};
-    path = common::substitute_user_folder(path).value_or(path);
-    if (not fs::exists(path)) return std::nullopt;
-    return common::sanitize_path(path);
-}
-dlmodule& init_module(const string& path) {
-    if (auto it = glob::loaded.find(path); it == glob::loaded.end()) {
-        HMODULE hm = LoadLibrary(path.c_str());
-        glob::loaded.emplace(path, make_unique<dlmodule>(hm, fs::path(path).stem().string(), path));
+dlmodule& init_module(const fs::path& path) {
+    if (auto it = dlmodules.find(path); it == dlmodules.end()) {
+        HMODULE hm = LoadLibrary(path.string().c_str());
+        dlmodules.emplace(path, make_unique<dlmodule>(hm, path.stem().string(), path));
     }
-    return *glob::loaded[path];
-}
-dlmodule* init_or_find_module(const string& name) {
-    auto found_path = find_module_path(name);
-    if (not found_path) return nullptr;
-    if (auto it = glob::loaded.find(*found_path); it == glob::loaded.end()) {
-        HMODULE hm = LoadLibrary(found_path->c_str());
-        if (not hm) [[unlikely]] return nullptr;
-        glob::loaded.emplace(*found_path, make_unique<dlmodule>(hm, name, *found_path));
-    }
-    return glob::loaded[*found_path].get();
+    return *dlmodules.at(path);
 }
 optional<uintptr_t> find_proc_address(dlmodule& module, const string& symbol) {
     auto& cached = module.cached;

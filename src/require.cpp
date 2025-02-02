@@ -4,16 +4,15 @@
 #include <filesystem>
 #include <nlohmann/json.hpp>
 #include <string>
-namespace filesystem = std::filesystem;
+namespace fs = std::filesystem;
 namespace ranges = std::ranges;
 using std::optional, std::nullopt;
 using boost::container::flat_map;
 using std::string, std::string_view;
-using std::span;
+using std::span, std::variant;
 using nlohmann::json;
 using std::pair, std::regex;
 using std::format;
-using fspath = filesystem::path;
 using common::error_trail;
 using shared::default_file_extensions;
 
@@ -22,28 +21,30 @@ static flat_map<string, int> luamodules;
 static flat_map<lua_State*, string> script_paths;
 static bool config_file_initialized{false};
 
-static auto get_precompiled_library_values(const string& p) {
-    auto as_string_literal = [](const string& str) {
+static auto get_precompiled_library_values(const fs::path& p) {
+    auto as_string_literal = [](const fs::path& path) {
+        auto str = path.string();
+        ranges::replace(str, '\\', '/');
         return format("(\"{}\")", str);
     };
     const auto arr = std::to_array<std::pair<regex, string>>({
-        {std::regex(R"(\bscript.directory\b)"), as_string_literal(fspath(p).parent_path().string())},
+        {std::regex(R"(\bscript.directory\b)"), as_string_literal(p.parent_path())},
         {regex(R"(\bscript.path\b)"), as_string_literal(p)},
-        {regex(R"(\bscript.name\b)"), as_string_literal(fspath(p).stem().string())},
+        {regex(R"(\bscript.name\b)"), as_string_literal(fs::path(p).stem())},
     });
     return arr;
 }
 
-static optional<fspath> find_config_file(fspath root = filesystem::current_path(), int search_depth = 5) {
+static variant<fs::path, error_trail> find_config_file(fs::path base = fs::current_path(), int search_depth = 5) {
     const auto config_file_names = std::to_array<string_view>({
         ".luaurc", ".dluaurc",
         ".dluaurc.json", ".luaurc.json",
         "luaurc.json", "dluaurc.json",
     });
-    auto exists = [&cfn = config_file_names, &root](fspath& out) -> bool {
+    auto exists = [&cfn = config_file_names, &base](fs::path& out) -> bool {
         for (string_view name : cfn) {
-            const fspath potential_path = root / name;
-            if (filesystem::exists(potential_path)) {
+            const fs::path potential_path = base / name;
+            if (fs::exists(potential_path)) {
                 out = potential_path;
                 return true;
             } 
@@ -51,37 +52,31 @@ static optional<fspath> find_config_file(fspath root = filesystem::current_path(
         return false;
     };
     int depth{};
-    fspath potential_path;
-    while (not exists(potential_path) and depth++ < search_depth) root = root.parent_path();
-    if (potential_path.empty()) return nullopt;
+    fs::path potential_path;
+    while (not exists(potential_path) and depth++ < search_depth) base = base.parent_path();
+    if (potential_path.empty()) return error_trail("could not find config file");
     return potential_path;
 }
 static bool has_alias(const string& str) {
     return str[0] == '@';
 }
-static optional<error_trail> load_aliases(const fspath& root = filesystem::current_path(), int search_depth = 5) {
-    auto found_config = find_config_file(root, search_depth);
-    if (not found_config) return nullopt;
-    auto source = common::read_file(*found_config);
-    if (not source) return error_trail(format("couldn't read source '{}.'", found_config->string()));
+static optional<error_trail> load_aliases(const fs::path& base = fs::current_path(), int search_depth = 5) {
+    auto found_config = find_config_file(base, search_depth);
+    if (auto err = get_if<error_trail>(&found_config)) return nullopt;
+    auto source = common::read_file(get<fs::path>(found_config));
+    if (not source) return error_trail(format("couldn't read source '{}.'", get<fs::path>(found_config).string()));
     json parsed = json::parse(*source);
     if (not parsed.contains("aliases")) return nullopt;
     for (auto [key, val] : parsed["aliases"].items()) {
         if (not val.is_string()) {
             return error_trail(format("value in [{}] must be a string '{}'.", key, nlohmann::to_string(val)));
         }
-        string valstr{val};
-        if (valstr.at(0) == '$') {
-            auto opt = common::substitute_environment_variable(valstr);
-            if (not opt) return error_trail(format("failed to find env path '{}'", valstr));
-            valstr = *opt;
-        } else if (valstr.at(0) == '~') {
-            auto opt = common::substitute_user_folder(valstr);
-            if (not opt) return error_trail("failed to get user folder");
-            valstr = *opt;
-        }
-        auto path = common::sanitize_path(valstr, root);
-        aliases.emplace(key, std::move(path));
+        fs::path path{string(val)};
+        auto with_user_folder = common::substitute_user_folder(path);
+        if (auto err = get_if<error_trail>(&with_user_folder)) return err->propagate();
+        else path = get<fs::path>(with_user_folder);
+        auto normalized = common::normalize_path(path);
+        aliases.emplace(key, std::move(normalized.string()));
     }
     return nullopt;
 }
@@ -98,17 +93,12 @@ static optional<error_trail> substitute_alias(string& str) {
     str.replace(sm.position(), sm.length(), aliases[alias]);
     return nullopt;
 }
-bool is_path_inside(const fspath& base, const fspath& candidate) {
-    auto abs_base = std::filesystem::canonical(base);
-    auto abs_candidate = std::filesystem::canonical(candidate);
-    return std::mismatch(abs_base.begin(), abs_base.end(), abs_candidate.begin()).first == abs_base.end();
-}
 int dluau_require(lua_State* L, const char* name) {
     auto result = shared::resolve_require_path(L, name);
-    if (auto* err = std::get_if<error_trail>(&result)) {
+    if (auto* err = get_if<error_trail>(&result)) {
         luaL_errorL(L, err->formatted().c_str());
     }
-    const string file_path{std::move(std::get<string>(result))};
+    const string file_path{std::move(get<string>(result))};
     if (luamodules.contains(file_path)) {
         lua_getref(L, luamodules[file_path]);
         return 1;
@@ -118,16 +108,11 @@ int dluau_require(lua_State* L, const char* name) {
     lua_State* M = lua_newthread(lua_mainthread(L));
     luaL_sandboxthread(M);
     script_paths.emplace(M, file_path);
-    const auto pretty_path = common::make_path_pretty(file_path);
-    shared::precompile(source, get_precompiled_library_values(pretty_path));
+    shared::precompile(source, get_precompiled_library_values(file_path));
     size_t bc_len;
     char* bc_arr = luau_compile(source.data(), source.size(), shared::compile_options, &bc_len);
     common::raii free_after([&bc_arr]{std::free(bc_arr);});
-    string chunkname;
-    if (is_path_inside(filesystem::current_path(), file_path)) {
-        chunkname = filesystem::relative(file_path).string();
-        ranges::replace(chunkname, '\\', '/');
-    } else chunkname = pretty_path;
+    string chunkname = file_path;
     chunkname = '@' + chunkname;
     int status{-1};
     if (luau_load(M, chunkname.c_str(), bc_arr, bc_len, 0) == LUA_OK) {
@@ -153,19 +138,19 @@ int dluau_require(lua_State* L, const char* name) {
     luamodules.emplace(file_path, lua_ref(L, -1));
     return 1;
 }
-static optional<fspath> find_source(fspath p, const fspath& base, span<const string> file_exts = default_file_extensions) {
+static optional<fs::path> find_source(fs::path p, const fs::path& base, span<const string> file_exts = default_file_extensions) {
     if (p.is_relative()) p = base / p;
-    if (not filesystem::exists(p)) {
+    if (not fs::exists(p)) {
         if (not p.has_extension()) {
             for (const string& ext : file_exts) {
                 p.replace_extension(ext);
-                if (filesystem::exists(p)) return p;
+                if (fs::exists(p)) return p;
             }
         }
-    } else if (filesystem::is_directory(p)) {
+    } else if (fs::is_directory(p)) {
         for (const string& ext : file_exts) {
             p /= std::format("init{}", ext);
-            if (filesystem::exists(p)) return p; 
+            if (fs::exists(p)) return p; 
             p = p.parent_path();
         }
     } else return p;
@@ -176,9 +161,9 @@ variant<lua_State*, error_trail> load_file(lua_State* L, string_view path) {
     string script_path{path};
     optional<string> source = common::read_file(script_path);
     if (not source) return error_trail(format("couldn't read source '{}'.", script_path));
-    auto pretty_path = common::make_path_pretty(common::sanitize_path(script_path));
-    shared::precompile(*source, get_precompiled_library_values(pretty_path));
-    string identifier{filesystem::relative(script_path).string()};
+    auto normalized = common::normalize_path(script_path);
+    shared::precompile(*source, get_precompiled_library_values(normalized.string()));
+    string identifier{fs::relative(script_path).string()};
     ranges::replace(identifier, '\\', '/');
     identifier = '=' + identifier;
     size_t outsize;
@@ -189,7 +174,7 @@ variant<lua_State*, error_trail> load_file(lua_State* L, string_view path) {
     string bytecode{bc, outsize};
     std::free(bc);
     lua_State* script_thread = lua_newthread(L);
-    script_paths.emplace(script_thread, filesystem::absolute(path).string());
+    script_paths.emplace(script_thread, normalized.string());
     const int load_status = luau_load(script_thread, identifier.c_str(), bytecode.data(), bytecode.size(), 0);
     if (load_status == LUA_OK) {
         luaL_sandboxthread(script_thread);
@@ -204,22 +189,29 @@ variant<string, error_trail> resolve_require_path(lua_State* L, string name, spa
         if (auto err = load_aliases()) err->propagate();
     }
     if (not script_paths.contains(L)) return error_trail("require is only allowed from a script thread");
-    const fspath script_path{fspath(script_paths.at(L)).parent_path()};
-    auto result = shared::resolve_path(name, script_path, file_exts);
-    if (auto* err = std::get_if<error_trail>(&result)) return err->propagate();
-    return std::get<string>(result);
+    const fs::path script_path{fs::path(script_paths.at(L)).parent_path()};
+    if (name[0] == '@') {
+        if (auto err = substitute_alias(name)) return err->propagate();
+    } else if (name[0] == '~') {
+        auto with_user = common::substitute_user_folder(name);
+        if (auto err = get_if<error_trail>(&with_user)) return err->propagate();
+        name = get<fs::path>(with_user).string();
+    }
+    auto found_source = find_source(name, script_path, file_exts);
+    if (not found_source) return error_trail(format("couldn't find source for '{}'", name));
+    return common::normalize_path(*found_source).string();
 }
 variant<string, error_trail> resolve_path(string name, const path& base, span<const string> file_exts) {
     if (has_alias(name)) {
         if (auto err = substitute_alias(name)) return err->propagate();
     } else if (name[0] == '~') {
         auto with_user = common::substitute_user_folder(name);
-        if (not with_user) return error_trail(std::format("couldn't resolve user profile for '{}'.", name));
-        name = *with_user;
+        if (auto err = get_if<error_trail>(&with_user)) return err->propagate();
+        name = get<fs::path>(with_user).string();
     }
     auto found_source = find_source(name, base, file_exts);
     if (not found_source) return error_trail(format("couldn't find source for '{}'", name));
-    return common::sanitize_path(found_source->string());
+    return common::normalize_path(*found_source).string();
 }
 const flat_map<string, string>& get_aliases() {
     return aliases;

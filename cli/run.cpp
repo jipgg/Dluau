@@ -45,7 +45,7 @@ static int run_windows_host(span<char> zarg) {
 }
 int cli::run(const configuration& config, const string* const args) {
     using namespace std::string_literals;
-    auto path = common::get_executable_path();
+    auto path = common::get_bin_path();
     if (not path) {
         std::cerr << "\033[31mFailed to get executable path.\033[0m\n";
         return -2;

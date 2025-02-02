@@ -4,30 +4,23 @@
 #include <format>
 #include "luacode.h"
 #include <lua.h>
-#include <filesystem>
 #include <common.hpp>
 #include <format>
 #include <lualib.h>
 #include <boost/container/flat_map.hpp>
 #include <nlohmann/json.hpp>
 #include <variant>
-#include <array>
 #include "shared.hpp"
-namespace filesystem = std::filesystem;
 using std::string, std::string_view;
 using std::stringstream, std::ifstream;
 using common::error_trail;
-using std::to_array, std::pair, std::regex;
-using boost::container::flat_map;
-using nlohmann::json, filesystem::path;
-using std::optional, std::variant;
+using nlohmann::json;
+using std::optional;
 using std::nullopt, std::format;
 using std::get, std::get_if;
-using shared::default_file_extensions;
 
 static lua_CompileOptions copts{.debugLevel = 1};
 lua_CompileOptions* shared::compile_options{&copts};
-
 
 static int lua_require(lua_State* L) {
     return dluau_require(L, luaL_checkstring(L, 1));

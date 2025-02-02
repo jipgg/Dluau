@@ -1,5 +1,8 @@
-#include "local.hpp"
+#include "dlimport.hpp"
 using std::optional, std::string_view;
+using dlimport::dlmodule;
+
+static std::unique_ptr<DCCallVM, decltype(&dcFree)> call_vm{dcNewCallVM(1024), dcFree};
 
 enum class param_type {
     int_v, void_v, float_v, string_v, double_v, long_v, short_v, longlong_v, pointer_v
@@ -11,7 +14,7 @@ struct param_binding {
 };
 static int call_binding(lua_State* L) {
     const param_binding& binding = *static_cast<param_binding*>(lua_touserdata(L, lua_upvalueindex(1)));
-    DCCallVM* vm = glob::call_vm.get();
+    DCCallVM* vm = call_vm.get();
     dcReset(vm);
     using pt = param_type;
     for (int i{1}; i < binding.types.size(); ++i) {
@@ -100,7 +103,7 @@ static optional<param_type> string_to_param_type(string_view str) {
     return std::nullopt;
 }
 int dlmodule::create_binding(lua_State* L) {
-    dlmodule* module = util::lua_tomodule(L, 1);
+    dlmodule* module = dlimport::lua_tomodule(L, 1);
     param_binding binding{};
     const int top = lua_gettop(L);
     string_view return_type = luaL_checkstring(L, 2);
@@ -108,7 +111,7 @@ int dlmodule::create_binding(lua_State* L) {
     if (not res) luaL_argerrorL(L, 2, "not a c type");
     binding.types.push_back(std::move(*res));
 
-    auto proc = util::find_proc_address(*module, luaL_checkstring(L, 3));
+    auto proc = dlimport::find_proc_address(*module, luaL_checkstring(L, 3));
     if (not proc) luaL_argerrorL(L, 3, "couldn't find address");
     binding.function_pointer = *proc;
 

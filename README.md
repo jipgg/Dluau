@@ -7,6 +7,11 @@ A minimal runtime that extends the [Luau](https://github.com/luau-lang/luau) lan
 ## Features
 It extends the Luau C API with a minimal set of utilities to standardize/synchronize userdata type tags
 and namecall stringatoms for more easily extending the environment with external C API that can be dynamically loaded with the builtin `dlimport` library.
+For this to work reliably the runtime consists of a shared dll named `dluaulib.dll` which other dll can link to or import symbols from.
+Also does it provide an abstraction layer for the windows executable host. As opposed to Linux, Windows differentiates between true console applications and windows applications,
+the latter allowing you to create GUI applications and the former behaving like your standard console app. Dluau always runs the environment as a Windows subsystem from the host
+and emulates the console behavior to behave functionally the same as it would work on Linux.
+What this means is that you can potentially run both gui apps and console apps from the same host application, like Linux.
 It also provides a couple of quality-of-life features like a `nameof` pseudo function and a `script` 'library' which get resolved to string literals before compilation.
 Also does it implement a `task` library that is essentially a port of Roblox's task library with some minor differences and features.
 ### DLL loading

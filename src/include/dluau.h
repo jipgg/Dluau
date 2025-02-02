@@ -74,3 +74,11 @@ DLUAU_API void dluauopen_print(lua_State* L);
 DLUAU_API void dluauopen_scan(lua_State* L);
 DLUAU_API void dluauopen_task(lua_State* L);
 DLUAU_API void dluauopen_os(lua_State* L);
+enum dluau_ctaskstatus {
+    DLUAU_CTASK_DONE,
+    DLUAU_CTASK_CONTINUE,
+    DLUAU_CTASK_ERROR,
+};
+typedef dluau_ctaskstatus(*dluau_ctask)(const char** errmsg);
+// Adds a c task to the dluau task scheduler.
+DLUAU_API void dluau_addctask(dluau_ctask step_callback);

@@ -20,7 +20,7 @@ variant<dlmodule_ref, error_trail> load_module(lua_State* L) {
     auto resolved = shared::resolve_require_path(L, name, dl_file_extensions);
     if (auto err = std::get_if<error_trail>(&resolved)) return err->propagate();
     auto p = std::get<string>(resolved);
-    return std::ref(init_module(p));
+    return init_module(p);
 }
 optional<fs::path> search_path(const fs::path& dlpath) {
     char buffer[MAX_PATH];
@@ -40,9 +40,51 @@ optional<fs::path> search_path(const fs::path& dlpath) {
     string path{buffer};
     return common::normalize_path(path);
 }
-dlmodule& init_module(const fs::path& path) {
+std::string get_last_error_as_string() {
+    DWORD errorMessageID = ::GetLastError();
+    if (errorMessageID == 0) {
+        return "No error"; // No error occurred
+    }
+
+    LPSTR messageBuffer = nullptr;
+
+    // Get the error message from the system
+    size_t size = FormatMessageA(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+        nullptr,
+        errorMessageID,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPSTR)&messageBuffer,
+        0,
+        nullptr
+    );
+
+    std::string message(messageBuffer, size);
+
+    // Free the buffer allocated by FormatMessage
+    LocalFree(messageBuffer);
+
+    return message;
+}
+variant<dlmodule_ref, error_trail> init_module(const fs::path& path) {
     if (auto it = dlmodules.find(path); it == dlmodules.end()) {
-        HMODULE hm = LoadLibrary(path.string().c_str());
+        auto cookie = AddDllDirectory(path.parent_path().c_str());
+        if (not cookie) return error_trail(format(
+            "failed to add dll directory '{}'\nmessage: {}",
+            path.parent_path().string(),
+            get_last_error_as_string()
+        ));
+        HMODULE hm = LoadLibraryEx(
+            path.string().c_str(),
+            nullptr,
+            LOAD_LIBRARY_SEARCH_USER_DIRS |
+            LOAD_LIBRARY_SEARCH_DEFAULT_DIRS
+        );
+        if (not hm) return error_trail(format(
+            "failed to load library '{}'\nmessage: {}",
+            path.string(),
+            get_last_error_as_string()
+        ));
         dlmodules.emplace(path, make_unique<dlmodule>(hm, path.stem().string(), path));
     }
     return *dlmodules.at(path);

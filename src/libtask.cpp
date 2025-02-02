@@ -44,15 +44,16 @@ struct waiter {
     int ref;
 };
 enum class job {
-    waiter, after
+    waiter, after, ctask
 };
 struct cleaning_instruction {
-    luathread state;
+    uintptr_t id;
     job job;
 };
 
 static flat_map<luathread, waiter> waiting;
 static flat_map<luathread, afterer> do_after;
+static vector<dluau_ctask> ctasks;
 static vector<deferrer> deferred;
 static vector<cleaning_instruction> janitor;
 
@@ -200,7 +201,12 @@ static int delay_until(lua_State* L) {
 
 namespace shared {
 bool tasks_in_progress() {
-    return not (waiting.empty() and deferred.empty() and do_after.empty());
+    return not (
+        waiting.empty()
+        and deferred.empty()
+        and do_after.empty()
+        and ctasks.empty()
+    );
 }
 optional<error_trail> task_step(lua_State* L) {
     const auto now = steady_clock::now();
@@ -215,7 +221,7 @@ optional<error_trail> task_step(lua_State* L) {
                 return error_trail(lua_tostring(state, -1));
             }
         }
-        janitor.emplace_back(state, job::after);
+        janitor.emplace_back(reinterpret_cast<uintptr_t>(state), job::after);
     }
     for (auto& d : deferred) {
         auto status = lua_resume(d.state, L, d.argn);
@@ -234,29 +240,56 @@ optional<error_trail> task_step(lua_State* L) {
             and waiter.start == old_start
         };
         if (status == LUA_OK or yielded_independently) {
-            janitor.emplace_back(state, job::waiter);
+            janitor.emplace_back(reinterpret_cast<uintptr_t>(state), job::waiter);
             continue;
         } else if (status != LUA_YIELD){
             return error_trail(lua_tostring(state, -1));
         }
     }
+    for (dluau_ctask& task : ctasks) {
+        const char* errmsg{nullptr};
+        dluau_ctaskstatus status = task(&errmsg);
+        switch (status) {
+            case DLUAU_CTASK_CONTINUE:
+                continue;
+            case DLUAU_CTASK_DONE:
+                janitor.emplace_back(reinterpret_cast<uintptr_t>(task), job::ctask);
+                continue;
+            case DLUAU_CTASK_ERROR:
+                return error_trail(errmsg ? errmsg : "external process failed");
+        }
+    }
     for (const auto& v : janitor) {
         switch (v.job) {
-            case job::waiter:
-                lua_unref(L, waiting.at(v.state).ref);
-                waiting.erase(v.state);
+            case job::waiter: {
+                auto state = reinterpret_cast<luathread>(v.id);
+                lua_unref(L, waiting.at(state).ref);
+                waiting.erase(state);
                 continue;
-            case job::after:
-                const auto& w = do_after.at(v.state);
+            } case job::after: {
+                auto state = reinterpret_cast<luathread>(v.id);
+                const auto& w = do_after.at(state);
                 lua_unref(L, w.after_this_ref);
                 lua_unref(L, w.ref);
-                do_after.erase(v.state);
+                do_after.erase(state);
                 continue;
+            } case job::ctask: {
+                auto task = reinterpret_cast<dluau_ctask>(v.id);
+                auto found = rngs::find(ctasks, task);
+                if (found == rngs::end(ctasks)) return error_trail(std::format("couldn't find ctask ({}) during the removal phase", v.id));
+                ctasks.erase(found);
+                continue;
+            }
+
         }
     }
     janitor.clear();
     return nullopt;
 }
+}
+
+DLUAU_API void dluau_addctask(dluau_ctask cb) {
+    ctasks.push_back(cb);
 }
 
 void dluauopen_task(lua_State* L) {

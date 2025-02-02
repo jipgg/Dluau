@@ -33,7 +33,7 @@ using dlmodule_map = boost::container::flat_map<std::filesystem::path, std::uniq
 const dlmodule_map& get_dlmodules();
 using dlmodule_ref = std::reference_wrapper<dlmodule>;
 dlmodule* find_module(const std::string& name);
-dlmodule& init_module(const std::filesystem::path& path);
+std::variant<dlmodule_ref, common::error_trail> init_module(const std::filesystem::path& path);
 std::variant<dlmodule_ref, common::error_trail> load_module(lua_State* L);
 std::optional<uintptr_t> find_proc_address(dlmodule& module, const std::string& symbol);
 dlmodule* lua_tomodule(lua_State* L, int idx);

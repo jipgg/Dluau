@@ -7,13 +7,18 @@ A minimal runtime that extends the [Luau](https://github.com/luau-lang/luau) lan
 ## Features
 It extends the Luau C API with a minimal set of utilities to standardize/synchronize userdata type tags
 and namecall stringatoms for more easily extending the environment with external C API that can be dynamically loaded with the builtin `dlimport` library.
-For this to work reliably the runtime consists of a shared dll named `dluaulib.dll` which other dll can link to or import symbols from.
+
+For this to work reliably the runtime consists of a shared dll named `dluaulib.dll` which other dlls can link to or import symbols from.
+
 Also does it provide an abstraction layer for the windows executable host. As opposed to Linux, Windows differentiates between true console applications and windows applications,
 the latter allowing you to create GUI applications and the former behaving like your standard console app. Dluau always runs the environment as a Windows subsystem from the host
 and emulates the console behavior to behave functionally the same as it would work on Linux.
-What this means is that you can potentially run both gui apps and console apps from the same host application, like Linux.
+What this means is that you can potentially run both gui apps and console apps from the same host application.
+
 It also provides a couple of quality-of-life features like a `nameof` pseudo function and a `script` 'library' which get resolved to string literals before compilation.
 Also does it implement a `task` library that is essentially a port of Roblox's task library with some minor differences and features.
+
+The `os` library features have been reverted to the vanilla lua version.
 ### DLL loading
 I've made a basic cmake [stub library](https://github.com/jipgg/dluaulib-stub) of the dluaulib.dll and Luau + dluau API that you can add as a
 subdirectory to your CMakeLists.txt for creating your own DLLs without having to build the whole source.
@@ -26,8 +31,20 @@ target_link_libraries(yourtarget PRIVATE dluaulib-stub)
 ```
 After building your own DLL you can then include it with `dlimport.require('mymodule')`.
 For this to work you need to export a `dlrequire` lua_CFunction from your dlmodule, this function will get invoked when called from luau.
+```luau
+type example = {
+    -- some api
+}
+local example = dlimport.require('@somewhere/somedll') :: example
+```
 You can also import specific lua_CFunctions by first loading the dlmodule and then calling the `importfunction` method.
 This again requires you to prefix your exported C function symbol with `dlexport_`*.
+```luau
+local dlexample: dlmodule = dlimport.load('@somewhere/somedll')
+local my_imported_function: (some_arg: string)->() = dlexample:importfunction('some_imported_function_symbol')
+-- note: actual exported dll symbol would be `dlexport_some_imported_function_symbol`
+my_imported_function("hello world!")
+```
 This convention serves as a safeguard because i didn't find a practical way to ensure an exported symbol is indeed of type lua_CFunction,
 since dlimport also supports creating bindings of 'true' c functions (currently only supports primitive c types as return type and parameters,
 but i plan on eventually support aggregate types (c structs) once i out a good way to register these dynamically in luau) this seemed like the best compromise to create a barrier between
@@ -55,7 +72,7 @@ to set up the LSP.
 At this point in time only Windows is being fully supported and mainly worked on out of personal development convenience,
 but the plan is to fully support Linux in the future once i've gotten the project to a relatively stable state.
 No plans for macOS support at the moment, however.
-## To build
+## Build from source
 ### Dependencies
 The external project dependencies are mostly self-contained in the project, but it currently does
 require you to resolve the CMake Boost.Container package on your own. I personally use vcpkg for this.

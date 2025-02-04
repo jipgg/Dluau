@@ -3,3 +3,4 @@ bin32/
 cmake32/
 clangd/
 cmake/
+build.ps1

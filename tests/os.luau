@@ -1,4 +1,5 @@
 local now = os.clock()
+local n = tonumber(v)
 local ex = os.execute("echo hello world > ech.txt")
 print(`exit code is {ex}`)
 assert(os.rename('ech.txt', 'echo.txt'))

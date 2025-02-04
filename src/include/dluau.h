@@ -82,3 +82,33 @@ enum dluau_ctaskstatus {
 typedef dluau_ctaskstatus(*dluau_ctask)(const char** errmsg);
 // Adds a c task to the dluau task scheduler.
 DLUAU_API void dluau_addctask(dluau_ctask step_callback);
+
+DLUAU_API void dluau_pushc_int(lua_State* L, int v);
+DLUAU_API void dluau_pushc_uint(lua_State* L, unsigned int v);
+DLUAU_API void dluau_pushc_short(lua_State* L, short v);
+DLUAU_API void dluau_pushc_ushort(lua_State* L, unsigned short v);
+DLUAU_API void dluau_pushc_long(lua_State* L, long v);
+DLUAU_API void dluau_pushc_ulong(lua_State* L, unsigned long v);
+DLUAU_API void dluau_pushc_char(lua_State* L, char v);
+DLUAU_API void dluau_pushc_uchar(lua_State* L, unsigned char v);
+DLUAU_API void dluau_pushc_float(lua_State* L, float v);
+
+DLUAU_API int dluau_toc_int(lua_State* L, int idx);
+DLUAU_API unsigned int dluau_toc_uint(lua_State* L, int idx);
+DLUAU_API short dluau_toc_short(lua_State* L, int idx);
+DLUAU_API unsigned short dluau_toc_ushort(lua_State* L, int idx);
+DLUAU_API long dluau_toc_long(lua_State* L, int idx);
+DLUAU_API unsigned long dluau_toc_ulong(lua_State* L, int idx);
+DLUAU_API char dluau_toc_char(lua_State* L, int idx);
+DLUAU_API unsigned char dluau_toc_uchar(lua_State* L, int idx);
+DLUAU_API float dluau_toc_float(lua_State* L, int idx);
+
+DLUAU_API int dluau_checkc_int(lua_State* L, int idx);
+DLUAU_API unsigned int dluau_checkc_uint(lua_State* L, int idx);
+DLUAU_API short dluau_checkc_short(lua_State* L, int idx);
+DLUAU_API unsigned short dluau_checkc_ushort(lua_State* L, int idx);
+DLUAU_API long dluau_checkc_long(lua_State* L, int idx);
+DLUAU_API unsigned long dluau_checkc_ulong(lua_State* L, int idx);
+DLUAU_API char dluau_checkc_char(lua_State* L, int idx);
+DLUAU_API unsigned char dluau_checkc_uchar(lua_State* L, int idx);
+DLUAU_API float dluau_checkc_float(lua_State* L, int idx);

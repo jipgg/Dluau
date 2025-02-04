@@ -74,6 +74,7 @@ static int loaded_modules(lua_State* L) {
 }
 void dluauopen_dlimport(lua_State* L) {
     dlmodule::init(L);
+    lua_newtable(L);
     const luaL_Reg lib[] = {
         {"require", require_module},
         {"load", load},
@@ -82,5 +83,8 @@ void dluauopen_dlimport(lua_State* L) {
         {"getmodules", loaded_modules},
         {nullptr, nullptr}
     };
-    luaL_register(L, "dlimport", lib);
+    luaL_register(L, nullptr, lib);
+    dlimport::push_c_types(L);
+    lua_setfield(L, -2, "c");
+    lua_setglobal(L, "dlimport");
 }

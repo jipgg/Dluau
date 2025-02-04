@@ -1,0 +1,29 @@
+type field = {
+    name: string,
+    type: ctype,
+    offset: number,
+    count: number?,
+}
+type aggr = <T, A...>(name: string, size: number, fields: {field}) -> (A...) -> T
+
+local register_struct_binding = (nil :: any) :: aggr;
+
+type Point = {
+    x: number,
+    y: number,
+}
+local Point: (Point) -> Point = register_struct_binding("Struct", 2, {
+    {
+        name = 'x',
+        type = 'int',
+        offset = 0,
+        count = 1,
+    },
+    {
+        name = 'y',
+        type = 'int',
+        offset = 4,
+        count = 1,
+    },
+})
+local my_point = Point{x = 100, y = 100}

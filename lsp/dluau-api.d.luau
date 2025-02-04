@@ -1,6 +1,5 @@
 declare collectgarbage: (("collect") -> ()) & (("count") -> number)
 declare nameof: <T>(v: T) -> string
-export type param = 'int' | 'string' | 'double' | 'float'| 'short' |'long' | 'long long'| 'pointer'
 declare class userdata end
 
 export type osdate = {day: number, month: number, year: number, min: number, sec: number, hour: number, wday: number, yday: number, isdst: boolean}
@@ -53,13 +52,48 @@ type scan = {
 }
 declare scan: typeof(setmetatable({} :: scan, {} :: callable)) & (()->string)
 
+export type c_type =
+    'boolean'|
+    'number'|
+    'string'|
+    'userdata'|
+    'c_uint'|
+    'c_ulong'|
+    'c_ushort'|
+    'c_char'|
+    'c_int'|
+    'c_float'|
+    'c_short'|
+    'c_long'|
+    'c_uchar'
+declare class c_int end
+declare class c_uint end
+declare class c_char end
+declare class c_uchar end
+declare class c_short end
+declare class c_ushort end
+declare class c_long end
+declare class c_ulong end
+declare class c_float end
+
 declare class dlmodule
     path: string
     name: string
-    rawcbinding: (<Return, Args...>(self: dlmodule, returns: param | 'void', func_name: string, ...param) -> ((Args...)->Return))
+    rawcbinding: (<Return, Args...>(self: dlmodule, returns: c_type | 'void', func_name: string, ...c_type) -> ((Args...)->Return))
     importfunction: <As..., Rs...>(module: dlmodule, symbol: string) -> ((As...)->(Rs...))
 end
 type dlimport = {
+    c: {
+        int: (number | string) -> c_int,
+        uint: (number | string) -> c_uint,
+        char: (number | string) -> c_char,
+        uchar: (number | string) -> c_uchar,
+        short: (number | string) -> c_short,
+        ushort: (number | string) -> c_ushort,
+        long: (number | string) -> c_long,
+        ulong: (number | string) -> c_ulong,
+        float: (number) -> c_float,
+    },
     require: (target: string) -> unknown,
     load: (target: string) -> dlmodule,
     pload: (target: string) -> (dlmodule?, string),

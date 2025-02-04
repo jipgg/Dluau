@@ -16,3 +16,18 @@ DLUAU_API int get_version_minor() {
 DLUAU_API int get_version_patch() {
     return DLUAU_VERSION_PATCH;
 }
+DLUAU_API unsigned int test_unsigned_int_return() {
+    return 0xfeu;
+}
+DLUAU_API int test_int_return() {
+    return 0xfe;
+}
+DLUAU_API unsigned int test_unsigned_int_arg(unsigned int e) {
+    return e;
+}
+DLUAU_API int test_int_arg(int e) {
+    return e;
+}
+DLUAU_API unsigned char test_unsigned_char_return() {
+    return 0xfeui8;
+}

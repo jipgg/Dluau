@@ -8,7 +8,7 @@ using std::string_view;
 using std::cout, std::format;
 using std::function, std::bind;
 using boost::container::flat_map;
-static std::string separator{", "};
+static std::string separator{"\t"};
 
 static string get_print_statement(lua_State* L, int offset = 0) {
     const int top = lua_gettop(L);

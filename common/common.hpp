@@ -84,7 +84,6 @@ inline std::variant<fs::path, error_trail> substitute_user_folder(const fs::path
 inline fs::path normalize_path(fs::path path, const fs::path& relative = "") {
     if (path.is_relative()) {
         const fs::path& base = relative.empty() ? fs::current_path() : relative;
-        std::cout << std::format(std::locale(), "PATH IS: {} PROX {}\n", (base / path).string(), fs::weakly_canonical(base / path).string());
         path = base / path;
     }
     path = fs::weakly_canonical(path);

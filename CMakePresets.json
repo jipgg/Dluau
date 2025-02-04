@@ -13,23 +13,11 @@
             }
         },
         {
-            "name": "default32",
-            "hidden": false,
-            "generator": "Visual Studio 17",
-            "architecture": "Win32",
-            "binaryDir": "${sourceDir}/cmake32",
-            "cacheVariables": {
-                "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/bin32",
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-                "VCPKG_TARGET_TRIPLET": "x86-windows-static"
-            }
-        },
-        {
             "name": "clangd",
             "inherits": "default",
             "hidden": false,
             "generator": "Ninja",
-            "description": "Clangd configuration for exporting compile commands for MSVC",
+            "description": "Clangd configuration for exporting compile commands when building with MSVC",
             "binaryDir": "${sourceDir}/clangd"
         }
     ],
@@ -44,21 +32,6 @@
         {
             "name": "cli",
             "configurePreset": "default",
-            "targets": [
-                "cli",
-                "windows_host"
-            ]
-        },
-        {
-            "name": "lib32",
-            "configurePreset": "default32",
-            "targets": [
-                "lib"
-            ]
-        },
-        {
-            "name": "cli32",
-            "configurePreset": "default32",
             "targets": [
                 "cli",
                 "windows_host"

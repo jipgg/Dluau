@@ -111,7 +111,6 @@ int dluau_run(const dluau_runoptions* opts) {
             std::cerr << format(errfmt, err->formatted());
             return -1;
         }
-        std::cout << "\033[0m";
     }
     while (shared::tasks_in_progress()) {
         if (auto err = shared::task_step(L)) {

@@ -62,8 +62,8 @@ the dluau api definition and documentation files for [luau-lsp](https://github.c
 ### vscode
 In VSCode you can then add these 2 files to your definition- and documentation files in the luau-lsp settings to get the autocompletion working.
 ### Neovim
-For Neovim users there is a basic LSP configuration script called `nvimlspsetup` in [lsp/](lsp/) for luau-lsp to resolve the aliases etc.
-You can either create an `.nvim.lua` rc file to set up the lsp (like this project does it) or put the script source inside you config somewhere.
+For Neovim users there is a basic LSP configuration script called `nvimlspsetup.lua` in [lsp/](lsp/) for luau-lsp to resolve the aliases etc.
+You can either create an `.nvim.lua` rc file, if you have this option enabled, to set up the lsp (like this project does it) or put the script source inside your neovim config somewhere.
 Afterwards call
 ```lua
 require('path.to.nvimlspsetup').setup({"path/to/definition/file.d.luau"}, {"path/to/docs/file.json"})

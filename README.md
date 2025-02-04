@@ -40,11 +40,11 @@ When loading a dll with dlimport it also adds the dll's directory as a location 
 So when your dll imports symbols from another DLL it will find that dependency even if it is not in the conventional places where the system
 searches in like PATH as long as a copy of the dll exists inside the dlmodule directory.
 ## Autocompletion/LSP
-[Definition file](lsp/dluau-api.d.json) and [documentation file](lsp/dluau-api-docs.json) for [luau-lsp](https://github.com/JohnnyMorganz/luau-lsp) are found in the lsp/ directory of the project.
+the dluau api definition and documentation files for [luau-lsp](https://github.com/JohnnyMorganz/luau-lsp) can be found [here](lsp/).
 ### vscode
 In VSCode you can then add these 2 files to your definition- and documentation files in the luau-lsp settings to get the autocompletion working.
 ### Neovim
-For Neovim users there is a basic [LSP configuration script](lsp/nvimlspsetup.lua) for luau-lsp to resolve the aliases etc.
+For Neovim users there is a basic LSP configuration script called `nvimlspsetup` in [lsp/](lsp/) for luau-lsp to resolve the aliases etc.
 You can either create an `.nvim.lua` rc file to set up the lsp (like this project does it) or put the script source inside you config somewhere.
 Afterwards call
 ```lua

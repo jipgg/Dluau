@@ -3,12 +3,11 @@
 #include <luacode.h>
 #include <ranges>
 #include <dluau.h>
-#include <optional>
 #include <format>
+#include "cli.hpp"
 #include <iostream>
-#include <variant>
 #include <common.hpp>
-#include "config_utils.hpp"
+namespace fs = std::filesystem;
 namespace rn = std::ranges;
 namespace rv = std::views;
 using std::cerr, std::format;
@@ -48,7 +47,7 @@ static void expand_source_file(string_view file, string& to) {
 }
 
 static void expand_source_directory(string_view dir, string& to) {
-    for (auto entry : filesystem::directory_iterator(dir)) {
+    for (auto entry : fs::directory_iterator(dir)) {
         if (not entry.is_regular_file()) continue;
         const auto file = entry.path();
         if (file.extension() != ".luau") continue;
@@ -77,33 +76,6 @@ static int without_command(span<char*> arg_span) {
     args.pop_back();
     return run(config, &args);
 }
-static int with_run_command(span<char*> arg_span) {
-    auto found_config_path = find_config();
-    if (not found_config_path) {
-        output_error("couldn't find configuration file");
-        return -1;
-    }
-    auto config_var = read_config(*found_config_path);
-    if (auto* err = std::get_if<error_trail>(&config_var)) {
-        output_error(err->formatted());
-        return -1;
-    }
-    const auto& config = std::get<configuration>(config_var);
-    auto found_arg_pos = rn::find_if(arg_span, [](char* e) -> bool {
-        using namespace std::string_view_literals;
-        return e == "--"sv;
-    });
-    if (found_arg_pos < rn::end(arg_span) - 1) {
-        string args;
-        while (++found_arg_pos != rn::end(arg_span)) {
-            args += *found_arg_pos;
-            args += ',';
-        }
-        args.pop_back();
-        return run(config, &args);
-    }
-    return run(config, nullptr);
-}
 int main(int argc, char** argv) {
     try {
         span<char*> arg_span{argv, static_cast<size_t>(argc)};
@@ -113,7 +85,6 @@ int main(int argc, char** argv) {
         }
         string_view first_arg{arg_span[1]};
         if (is_file_or_directory(first_arg)) return without_command(arg_span);
-        else if (first_arg == "run") return with_run_command(arg_span);
         cerr << format("\033[31mUnknown command '{}'.\033[0m\n", arg_span[1]);
         return -1;
     } catch (std::exception& e) {

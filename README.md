@@ -17,6 +17,8 @@ Also does it implement a `task` library that is essentially a port of Roblox's t
 ### DLL loading
 I've made a basic cmake [stub library](https://github.com/jipgg/dluaulib-stub) of the dluaulib.dll and Luau + dluau API that you can add as a
 subdirectory to your CMakeLists.txt for creating your own DLLs without having to build the whole source.
+Or a [cmake project example](https://github.com/jipgg/dluau-dlmodule-example) to clone/use as reference that
+already links the stub library and gives you a base project to start with.
 **To link the stub library with cmake:**
 ```cmake
 add_subdirectory(path/to/dluaulib-stub)
@@ -37,7 +39,6 @@ meaning that you can also use '@aliases' in this function.
 When loading a dll with dlimport it also adds the dll's directory as a location for the system to find other DLL dependencies.
 So when your dll imports symbols from another DLL it will find that dependency even if it is not in the conventional places where the system
 searches in like PATH as long as a copy of the dll exists inside the dlmodule directory.
-> still need to make an example project to put here as reference
 ## Platform support
 At this point in time only Windows is being fully supported and mainly worked on out of personal development convenience,
 but the plan is to fully support Linux in the future once i've gotten the project to a relatively stable state.
@@ -54,8 +55,24 @@ cmake --preset default
 cmake --build --preset cli --config Release
 cmake --build --preset lib --config Release
 ```
-## Working with the environment
-> not written yet
+## Using the CLI
+To run a luau file all you have to do is specify the file as an argument when running the CLI.
+This can be done multiple times.
+```sh
+dluau path/to/script.luau path/to/other_script.luau ...
+```
+Also does it support to run all the luau scripts inside a a specific folder by specifying the source as a folder with appending the argument with '/'.
+```sh
+dluau scripts/
+```
+To specify the optimization level when compiling the luau source you can specify `-O<number here>`.
+To specify the debug level the same applies but use `-D`.
+The order of where you specify these flags in the command does not matter.
+Default debug level is 1 and default optimization level is 0 when no flags are specified.
+**Example:**
+```
+dluau -O2 example.luau -D0
+```
 ## Ignore the tests folder
 The tests are mostly just for me to quickly mash up some scripts to test the environment and check if functionality stayed relatively the same.
 They are by no means formal tests that can ensure the stability of the build.

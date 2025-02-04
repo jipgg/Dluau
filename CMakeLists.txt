@@ -75,6 +75,9 @@ target_link_libraries(lib PUBLIC
 set(lib_NAME dluaulib)
 set_target_properties(lib PROPERTIES OUTPUT_NAME ${lib_NAME})
 
-target_link_libraries(cli PRIVATE lib)
+target_link_libraries(cli PRIVATE
+    lib
+)
 set_target_properties(cli PROPERTIES OUTPUT_NAME dluau)
+
 

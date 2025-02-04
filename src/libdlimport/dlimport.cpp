@@ -53,22 +53,15 @@ static int require_module(lua_State* L) {
     return 1;
 }
 static int protected_load(lua_State* L) {
-    /*
-    if (not has_permissions(L)) {
+    auto module = dlimport::load_module(L);
+    if (auto err = std::get_if<error_trail>(&module)) {
         lua_pushnil(L);
-        lua_pushstring(L, err_loading_perm);
+        lua_pushstring(L, err->formatted().c_str());
         return 2;
     }
-    auto module = util::find_module(luaL_checkstring(L, 1));
-    if (not module) {
-        lua_pushnil(L);
-        luaL_errorL(L, "couldn't find module '%s'.", luaL_checkstring(L, 1));
-        return 2;
-    }
-    util::lua_pushmodule(L, module);
+    dlmodule& m = std::get<dlmodule_ref>(module);
+    dlimport::lua_pushmodule(L, &m);
     return 1;
-    */
-    return 0;
 }
 static int loaded_modules(lua_State* L) {
     lua_newtable(L);

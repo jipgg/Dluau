@@ -4,3 +4,5 @@ cmake32/
 clangd/
 cmake/
 build.ps1
+run_tests.ps1
+run.ps1

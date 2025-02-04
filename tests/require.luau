@@ -1,3 +1,7 @@
+local result, errmsg = dlimport.pload("@time/time")
+print(`result for '@time/time' is {result}, errmsg is {errmsg}`)
+result, errmsg = dlimport.pload("fake directory")
+print(`result for 'fake directory' is {result}, errmsg is {errmsg}`)
 local dltime = dlimport.load("@time/time")
 print(`path for {nameof(dltime)} is {dltime.path}`)
 local module = require('dummy_module')

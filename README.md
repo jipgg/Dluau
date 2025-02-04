@@ -73,13 +73,15 @@ to set up the LSP.
 At this point in time only Windows is being fully supported and mainly worked on out of personal development convenience,
 but the plan is to fully support Linux in the future once i've gotten the project to a relatively stable state.
 No plans for macOS support at the moment, however.
-## Build from source
-### Dependencies
+## Installation
+You can download the latest binaries from [releases](https://github.com/jipgg/dluau/releases) or build from source.
+### Building from source
+#### Resolving dependencies
 The external project dependencies are mostly self-contained in the project, but it currently does
 require you to resolve the CMake Boost.Container package on your own. I personally use vcpkg for this.
 Eventually i will probably just add the dependency as a subdirectory to remove the hassle of needing to use
 external package managers/installations for building from source.
-### General build example:
+#### General build example:
 ```sh
 cmake --preset default
 cmake --build --preset cli --config Release

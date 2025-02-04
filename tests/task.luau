@@ -20,7 +20,6 @@ local yo = coroutine.create(function()
     end
 end)
 xpcall(task.cancel, function(e)  print("fail", e) end,  yo)
-task.cancel(task.this)
 task.spawn(function()
     task.waituntil(d)
     print('i waited')

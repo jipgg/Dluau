@@ -1,7 +1,5 @@
-#include "dlimport.hpp"
+#include "cinterop.hpp"
 using std::optional, std::string_view;
-using dlimport::dlmodule;
-using dlimport::c_type;
 
 static std::unique_ptr<DCCallVM, decltype(&dcFree)> call_vm{dcNewCallVM(1024), dcFree};
 
@@ -21,29 +19,34 @@ static int call_binding(lua_State* L) {
                 dcArgBool(vm, luaL_checkboolean(L, i));
                 break;
             case ct::c_int:
-                dcArgInt(vm, luaL_checkinteger(L, i));
+                dcArgInt(vm, dluau_checkc_int(L, i));
                 break;
             case ct::c_uint:
-                dcArgInt(vm, (unsigned int)luaL_checkinteger(L, i));
+                dcArgInt(vm, dluau_checkc_uint(L, i));
                 break;
             case ct::c_short:
+                dcArgShort(vm, dluau_checkc_short(L, i));
+                break;
             case ct::c_ushort:
-                dcArgShort(vm, luaL_checkinteger(L, i));
+                dcArgShort(vm, dluau_checkc_ushort(L, i));
                 break;
             case ct::c_char:
+                dcArgChar(vm, dluau_checkc_char(L, i));
+                break;
             case ct::c_uchar:
-                if (lua_isstring(L, i)) dcArgChar(vm, *lua_tostring(L, i));
-                else if (lua_isnumber(L, i)) dcArgChar(vm, lua_tointeger(L, i));
+                dcArgChar(vm, dluau_checkc_uchar(L, i));
                 break;
             case ct::c_long:
+                dcArgLong(vm, dluau_checkc_long(L, i));
+                break;
             case ct::c_ulong:
-                dcArgLong(vm, luaL_checkinteger(L, i));
+                dcArgLong(vm, dluau_checkc_ulong(L, i));
+                break;
+            case ct::c_float:
+                dcArgFloat(vm, dluau_checkc_float(L, i));
                 break;
             case ct::c_double:
                 dcArgDouble(vm, luaL_checknumber(L, i));
-                break;
-            case ct::c_float:
-                dcArgFloat(vm, static_cast<float>(luaL_checknumber(L, i)));
                 break;
             case ct::c_char_ptr:
                 dcArgPointer(vm, (DCpointer)luaL_checkstring(L, i));
@@ -61,34 +64,34 @@ static int call_binding(lua_State* L) {
             lua_pushboolean(L, dcCallBool(vm, fnptr));
             return 1;
         case ct::c_int:
-            lua_pushinteger(L, dcCallInt(vm, fnptr));
+            dluau_pushc_int(L, dcCallInt(vm, fnptr));
             return 1;
         case ct::c_uint:
-            lua_pushinteger(L, static_cast<unsigned int>(dcCallInt(vm, fnptr)));
+            dluau_pushc_uint(L, static_cast<unsigned int>(dcCallInt(vm, fnptr)));
             return 1;
         case ct::c_short:
-            lua_pushinteger(L, dcCallShort(vm, fnptr));
+            dluau_pushc_short(L, dcCallShort(vm, fnptr));
             return 1;
         case ct::c_ushort:
-            lua_pushinteger(L, (unsigned short)dcCallShort(vm, fnptr));
+            dluau_pushc_ushort(L, (unsigned short)dcCallShort(vm, fnptr));
             return 1;
         case ct::c_long:
-            lua_pushinteger(L, dcCallLong(vm, fnptr));
+            dluau_pushc_long(L, dcCallLong(vm, fnptr));
             return 1;
         case ct::c_ulong:
-            lua_pushinteger(L, (unsigned long)dcCallLong(vm, fnptr));
+            dluau_pushc_ulong(L, (unsigned long)dcCallLong(vm, fnptr));
             return 1;
         case ct::c_char:
-            lua_pushinteger(L, dcCallChar(vm, fnptr));
+            dluau_pushc_char(L, dcCallChar(vm, fnptr));
             return 1;
         case ct::c_uchar:
-            lua_pushinteger(L, (unsigned char)dcCallChar(vm, fnptr));
+            dluau_pushc_uchar(L, (unsigned char)dcCallChar(vm, fnptr));
             return 1;
         case ct::c_double:
             lua_pushnumber(L, dcCallDouble(vm, fnptr));
             return 1;
         case ct::c_float:
-            lua_pushnumber(L, dcCallFloat(vm, fnptr));
+            dluau_pushc_float(L, dcCallFloat(vm, fnptr));
             return 1;
         case ct::c_char_ptr:
             lua_pushstring(L, static_cast<char*>(dcCallPointer(vm, fnptr)));
@@ -102,26 +105,27 @@ static int call_binding(lua_State* L) {
     }
     luaL_errorL(L, "call error");
 }
-optional<c_type> dlimport::string_to_param_type(string_view str) {
+optional<c_type> string_to_param_type(string_view str) {
     using ct = c_type;
     static const boost::container::flat_map<string_view, c_type> map {
-        {"int", ct::c_int},
-        {"uint", ct::c_uint},
-        {"short", ct::c_short},
-        {"ushort", ct::c_ushort},
-        {"long", ct::c_short},
-        {"ulong", ct::c_ulong},
-        {"char", ct::c_char},
-        {"uchar", ct::c_uchar},
-        {"bool", ct::c_bool},
-        {"void*", ct::c_void_ptr},
+        {"c_int", ct::c_int},
+        {"c_uint", ct::c_uint},
+        {"c_short", ct::c_short},
+        {"c_ushort", ct::c_ushort},
+        {"c_long", ct::c_short},
+        {"c_ulong", ct::c_ulong},
+        {"c_char", ct::c_char},
+        {"c_uchar", ct::c_uchar},
+        {"boolean", ct::c_bool},
+        {"userdata", ct::c_void_ptr},
+        {"number", ct::c_double},
         {"void", ct::c_void},
-        {"char*", ct::c_char_ptr},
+        {"string", ct::c_char_ptr},
     };
     if (not map.contains(str)) return std::nullopt;
     return map.at(str);
 }
-int dlmodule::create_binding(lua_State* L) {
+int cinterop::new_function_binding(lua_State* L) {
     dlmodule* module = dlimport::lua_tomodule(L, 1);
     c_function_binding binding{};
     const int top = lua_gettop(L);

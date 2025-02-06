@@ -79,11 +79,15 @@ declare class c_float end
 declare class dlmodule
     path: string
     name: string
-    rawcbinding: (<Return, Args...>(self: dlmodule, returns: c_type | 'void', func_name: string, ...c_type) -> ((Args...)->Return))
-    importfunction: <As..., Rs...>(module: dlmodule, symbol: string) -> ((As...)->(Rs...))
+    import: <As..., Rs...>(self: dlmodule, symbol: string) -> ((As...)->(Rs...))
 end
-type dlimport = {
-    c: {
+type cinterop_struct_field_description = {
+    name: string,
+    type: c_type,
+    offset: number,
+}
+type cinterop = {
+    native_type: {
         int: (number | string) -> c_int,
         uint: (number | string) -> c_uint,
         char: (number | string) -> c_char,
@@ -94,11 +98,16 @@ type dlimport = {
         ulong: (number | string) -> c_ulong,
         float: (number) -> c_float,
     },
+    new_function_binding: (<Return, Args...>(module: dlmodule, returns: c_type | 'void', func_name: string, ...c_type) -> ((Args...)->Return)),
+    new_struct_description: <T>() -> T, 
+}
+type dlimport = {
     require: (target: string) -> unknown,
     load: (target: string) -> dlmodule,
     pload: (target: string) -> (dlmodule?, string),
     searchpath: (dlname: string) -> string?,
     getmodules: () -> {dlmodule},
+    cinterop: cinterop,
 }
 declare dlimport: dlimport 
 

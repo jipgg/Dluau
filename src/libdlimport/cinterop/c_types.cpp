@@ -1,4 +1,4 @@
-#include "dlimport.hpp"
+#include "cinterop.hpp"
 #include <dluau.h>
 #include <string>
 using uint = unsigned int;
@@ -137,8 +137,7 @@ float dluau_checkc_float(lua_State* L, int idx) {
     return check<float>(c_float, L, idx);
 }
 
-namespace dlimport {
-void push_c_types(lua_State *L) {
+void cinterop::push_c_types(lua_State *L) {
     // pre-register type tags
     get_tag<int>(c_int);
     get_tag<uint>(c_uint);
@@ -201,9 +200,12 @@ void push_c_types(lua_State *L) {
             else luaL_typeerrorL(L, 1, "string | number");
             return 1;
         }},
+        {"float", [](lua_State* L) -> int {
+            dluau_pushc_float(L, luaL_checknumber(L, 1));
+            return 1;
+        }},
         {nullptr, nullptr}
     };
     lua_newtable(L);
     luaL_register(L, nullptr, ctors);
-}
 }

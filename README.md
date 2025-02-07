@@ -24,9 +24,9 @@ Also does it implement a `task` library that is essentially a port of Roblox's t
 The `os` library features have been reverted to the vanilla lua version.
 `os.execute`, `os.getenv`, `os.remove` and `os.rename` have been re-enabled.
 ### DLL loading
-I've made a basic cmake [stub library](https://github.com/jipgg/dluaulib-stub) of the dluaulib.dll and Luau + dluau API that you can add as a
+I've made a basic cmake [stub library (outdated)](https://github.com/jipgg/dluaulib-stub) of the dluaulib.dll and Luau + dluau API that you can add as a
 subdirectory to your CMakeLists.txt for creating your own DLLs without having to build the whole source.
-Or a [cmake project example](https://github.com/jipgg/dluau-dlmodule-example) to clone/use as reference that
+Or a [cmake project example (outdated)](https://github.com/jipgg/dluau-dlmodule-example) to clone/use as reference that
 already links the stub library and gives you a base project to start with.
 **To link the stub library with cmake:**
 ```cmake

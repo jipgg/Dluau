@@ -1,5 +1,5 @@
-local dll = dlimport.load(assert(dlimport.searchpath("dluaulib")))
-local print_test_info = cinterop.bindfunction(dll, 'void', 'print_test_info')
+--local dll = dlimport.load(assert(dlimport.searchpath("dluaulib")))
+--local print_test_info = cinterop.bindfunction(dll, 'void', 'print_test_info')
 local TEST_SI
 export type Test = {
     a: c_int,
@@ -84,4 +84,4 @@ print(`size of pointer: {cinterop.sizeof('userdata')}`)
 test.flt *= 2.1
 print(test.flt)
 print(test.num)
-print_test_info()
+--print_test_info()

@@ -88,10 +88,10 @@ local point_metatable = {
     __index = function(data: userdata, key: string)
         return cinterop.struct.getfield(point_info, data, key)
     end,
-    __newindex = function(data: userdata, key: string, val: unknown)
-        cinterop.struct.setfield(point_info, data, key, val)
+    __newindex = function(data: userdata, key: string, newval: c_int)
+        cinterop.struct.setfield(point_info, data, key, newval)
     end,
-    __type = 'point',
+    __type = 'point', -- this metemethod works for `typeof()` since the instance itself is raw userdata
 }
 point_info = cinterop.struct.newinfo(point_memsize, point_fields_info, point_metatable)
 ```

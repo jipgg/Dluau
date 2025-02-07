@@ -1,5 +1,5 @@
 #include "cinterop.hpp"
-constexpr const char* tname{"c_struct_info"};
+constexpr const char* tname{"c_structinfo"};
 static const int tag = dluau_registertypetagged(tname);
 namespace bc = boost::container;
 
@@ -9,11 +9,11 @@ static struct_info::field_info to_field_info(lua_State* L, int idx) {
     auto type_opt = string_to_param_type(lua_tostring(L, -1));
     if (not type_opt) luaL_errorL(L, "not a c_type");
     lua_pop(L, 1);
-    lua_rawgetfield(L, idx, "memory_offset");
+    lua_rawgetfield(L, idx, "memoffset");
     if (not lua_isnumber(L, -1)) luaL_errorL(L, "memory_offset must be a number");
     const int offset = lua_tointeger(L, -1);
     lua_pop(L, 1);
-    lua_rawgetfield(L, idx, "array_size");
+    lua_rawgetfield(L, idx, "arrsize");
     int arr_size{};
     if (lua_isnil(L, -1)) arr_size = 1; 
     else arr_size = lua_tointeger(L, -1);

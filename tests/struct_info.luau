@@ -5,8 +5,8 @@ local dll = dlimport.load(assert(dlimport.searchpath("dluaulib")))
 local get_version = dc.bindfunction(dll, 'string', 'get_version')
 print(`version {get_version()}`)
 local POINT_INFO = struct.newinfo(8, {
-    ['x'] = {type = 'c_int', memory_offset = 0},
-    ['y'] = {type = 'c_int', memory_offset = 4},
+    ['x'] = {type = 'c_int', memoffset = 0},
+    ['y'] = {type = 'c_int', memoffset = 4},
 })
 local buf = buffer.create(8)
 struct.setfield(POINT_INFO, buf, 'x', native.int(20))

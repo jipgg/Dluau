@@ -30,8 +30,19 @@ T check(const char* tname, lua_State* L, int idx) {
     if (lua_userdatatag(L, idx) != tag) luaL_typeerrorL(L, idx, tname);
     return *static_cast<T*>(lua_touserdatatagged(L, idx, tag));
 }
+
+template <class T>
+static T resolve_type(lua_State* L, int idx, int tag) {
+    if (lua_isnumber(L, idx)) {
+        return static_cast<T>(lua_tonumber(L, idx));
+    } else if (lua_userdatatag(L, idx) == tag) {
+        return *static_cast<T*>(lua_touserdatatagged(L, idx, tag));
+    } else luaL_argerrorL(L, idx, "invalid type");
+}
+
 template <class T>
 void create(lua_State* L, T v, const char* tname) {
+    static const char* s_tname = tname;
     static const int tag = get_tag<T>(tname);
     T* ud = static_cast<T*>(lua_newuserdatatagged(L, sizeof(T), tag));
     *ud = v;
@@ -40,6 +51,71 @@ void create(lua_State* L, T v, const char* tname) {
             {"__tostring", [](lua_State* L) -> int {
                 T value = *static_cast<T*>(lua_touserdatatagged(L, 1, tag));
                 lua_pushstring(L, std::to_string(value).c_str());
+                return 1;
+            }},
+            {"__add", [](lua_State* L) -> int {
+                T a = resolve_type<T>(L, 1, tag);
+                T b = resolve_type<T>(L, 2, tag);
+                create(L, a + b, s_tname);
+                return 1;
+            }},
+            {"__sub", [](lua_State* L) -> int {
+                T a = resolve_type<T>(L, 1, tag);
+                T b = resolve_type<T>(L, 2, tag);
+                create(L, a - b, s_tname);
+                return 1;
+            }},
+            {"__div", [](lua_State* L) -> int {
+                T a = resolve_type<T>(L, 1, tag);
+                T b = resolve_type<T>(L, 2, tag);
+                create(L, a / b, s_tname);
+                return 1;
+            }},
+            {"__idiv", [](lua_State* L) -> int {
+                T a = resolve_type<T>(L, 1, tag);
+                T b = resolve_type<T>(L, 2, tag);
+                create(L, int(a) / int(b), s_tname);
+                return 1;
+            }},
+            {"__mul", [](lua_State* L) -> int {
+                T a = resolve_type<T>(L, 1, tag);
+                T b = resolve_type<T>(L, 2, tag);
+                create(L, a * b, s_tname);
+                return 1;
+            }},
+            {"__pow", [](lua_State* L) -> int {
+                T a = resolve_type<T>(L, 1, tag);
+                T b = resolve_type<T>(L, 2, tag);
+                create(L, static_cast<T>(std::pow(double(a), double(b))), s_tname);
+                return 1;
+            }},
+            {"__mod", [](lua_State* L) -> int {
+                T a = resolve_type<T>(L, 1, tag);
+                T b = resolve_type<T>(L, 2, tag);
+                create(L, int(a) % int(b), s_tname);
+                return 1;
+            }},
+            {"__eq", [](lua_State* L) -> int {
+                T a = resolve_type<T>(L, 1, tag);
+                T b = resolve_type<T>(L, 2, tag);
+                lua_pushboolean(L, a == b);
+                return 1;
+            }},
+            {"__lt", [](lua_State* L) -> int {
+                T a = resolve_type<T>(L, 1, tag);
+                T b = resolve_type<T>(L, 2, tag);
+                lua_pushboolean(L, a < b);
+                return 1;
+            }},
+            {"__le", [](lua_State* L) -> int {
+                T a = resolve_type<T>(L, 1, tag);
+                T b = resolve_type<T>(L, 2, tag);
+                lua_pushboolean(L, a <= b);
+                return 1;
+            }},
+            {"__unm", [](lua_State* L) -> int {
+                T a = resolve_type<T>(L, 1, tag);
+                create(L, -a, s_tname);
                 return 1;
             }},
             {nullptr, nullptr}
@@ -135,6 +211,43 @@ unsigned char dluau_checkc_uchar(lua_State* L, int idx) {
 }
 float dluau_checkc_float(lua_State* L, int idx) {
     return check<float>(c_float, L, idx);
+}
+
+int cinterop::c_type_sizeof(lua_State *L) {
+    auto type_opt = string_to_param_type(luaL_checkstring(L, 1));
+    if (not type_opt) luaL_argerrorL(L, 1, "not a c_type");
+    switch(*type_opt) {
+        case c_type::c_float:
+            lua_pushinteger(L, sizeof(float));
+            return 1;
+        case c_type::c_char:
+        case c_type::c_uchar:
+        case c_type::c_bool:
+            lua_pushinteger(L, sizeof(char));
+            return 1;
+        case c_type::c_int:
+        case c_type::c_uint:
+            lua_pushinteger(L, sizeof(int));
+            return 1;
+        case c_type::c_short:
+        case c_type::c_ushort:
+            lua_pushinteger(L, sizeof(short));
+            return 1;
+        case c_type::c_long:
+        case c_type::c_ulong:
+            lua_pushinteger(L, sizeof(long));
+            return 1;
+        case c_type::c_double:
+            lua_pushinteger(L, sizeof(double));
+            return 1;
+        case c_type::c_void_ptr:
+        case c_type::c_string:
+            lua_pushinteger(L, sizeof(void*));
+            return 1;
+        default:
+            break;
+    }
+    luaL_argerrorL(L, 1, "not a c_type");
 }
 
 void cinterop::push_c_types(lua_State *L) {

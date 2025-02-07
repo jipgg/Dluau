@@ -40,6 +40,7 @@ int new_struct_instance(lua_State* L);
 bool is_struct_info(lua_State* L, int idx);
 void push_c_types(lua_State* L);
 int new_function_binding(lua_State* L);
+int c_type_sizeof(lua_State* L);
 int create_struct_info(lua_State* L);
 int get_struct_field(lua_State* L);
 int set_struct_field(lua_State* L);

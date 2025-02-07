@@ -1,7 +1,7 @@
-local Struct = dlimport.cinterop.struct
-
+local struct = dlimport.c.struct
+local sizeof = dlimport.c.sizeof
 local dll = dlimport.load(assert(dlimport.searchpath("dluaulib")))
-local print_test_info = dlimport.cinterop.bindfunction(dll, 'void', 'print_test_info')
+local print_test_info = dlimport.c.bindfunction(dll, 'void', 'print_test_info')
 local TEST_SI
 export type Test = {
     a: c_int,
@@ -15,14 +15,14 @@ local Test = {
     __type = "Test",
 }
 function Test.new(): Test
-    return Struct.newinstance(TEST_SI)
+    return struct.newinstance(TEST_SI)
 end
 function Test:__index(name: string, arrindex: number?)
     if (name == 'abc') then
         local function tochar(index: number)
             return string.char(
                 tonumber(
-                    tostring(Struct.getfield(TEST_SI, self, name, index)))
+                    tostring(struct.getfield(TEST_SI, self, name, index)))
                 :: number
             )
         end
@@ -32,21 +32,21 @@ function Test:__index(name: string, arrindex: number?)
         str ..= tochar(2)
         return str
     end
-    return Struct.getfield(TEST_SI, self, name, arrindex)
+    return struct.getfield(TEST_SI, self, name, arrindex)
 end
 function Test:__newindex(name: string, val: unknown, arrindex: number?)
     if (name == 'abc') then
         if typeof(val) == 'string' then
-            local char = dlimport.cinterop.native.char
-            Struct.setfield(TEST_SI, self, name, char(string.sub(val, 1, 2)), 0)
-            Struct.setfield(TEST_SI, self, name, char(string.sub(val, 2, 3)), 1)
-            Struct.setfield(TEST_SI, self, name, char(string.sub(val, 3, 4)), 2)
+            local char = dlimport.c.native.char
+            struct.setfield(TEST_SI, self, name, char(string.sub(val, 1, 2)), 0)
+            struct.setfield(TEST_SI, self, name, char(string.sub(val, 2, 3)), 1)
+            struct.setfield(TEST_SI, self, name, char(string.sub(val, 3, 4)), 2)
             return
         end
     end
-    Struct.setfield(TEST_SI, self, name, val, arrindex)
+    struct.setfield(TEST_SI, self, name, val, arrindex)
 end
-TEST_SI = dlimport.cinterop.struct.newinfo(32, {
+TEST_SI = struct.newinfo(32, {
     ['a'] = {
         type = 'c_int',
         memoffset = 0,
@@ -77,4 +77,13 @@ local test = Test.new()
 print(test.abc)
 test.abc = 'abc'
 print(test.abc)
+test.num = 0.1032
+test.flt += 190
+test.flt -= 5.134
+print(`size of long: {sizeof('c_long')}`)
+print(`size of int: {sizeof('c_int')}`)
+print(`size of pointer: {sizeof('userdata')}`)
+test.flt *= 2.1
+print(test.flt)
+print(test.num)
 print_test_info()

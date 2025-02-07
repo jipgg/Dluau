@@ -130,7 +130,7 @@ optional<c_type> string_to_param_type(string_view str) {
         {"c_uint", ct::c_uint},
         {"c_short", ct::c_short},
         {"c_ushort", ct::c_ushort},
-        {"c_long", ct::c_short},
+        {"c_long", ct::c_long},
         {"c_ulong", ct::c_ulong},
         {"c_char", ct::c_char},
         {"c_uchar", ct::c_uchar},

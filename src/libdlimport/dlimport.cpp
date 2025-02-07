@@ -85,6 +85,6 @@ void dluauopen_dlimport(lua_State* L) {
     };
     luaL_register(L, nullptr, lib);
     dlimport::push_cinterop(L);
-    lua_setfield(L, -2, "cinterop");
+    lua_setfield(L, -2, "c");
     lua_setglobal(L, "dlimport");
 }

@@ -10,6 +10,7 @@ void dlimport::push_cinterop(lua_State *L) {
     };
     const luaL_Reg lib[] = {
         {"bindfunction", cinterop::new_function_binding},
+        {"sizeof", cinterop::c_type_sizeof},
         {nullptr, nullptr}
     };
     lua_newtable(L);

@@ -66,15 +66,108 @@ export type c_type =
     'c_short'|
     'c_long'|
     'c_uchar'
-declare class c_int end
-declare class c_uint end
-declare class c_char end
-declare class c_uchar end
-declare class c_short end
-declare class c_ushort end
-declare class c_long end
-declare class c_ulong end
-declare class c_float end
+declare class c_int
+    function __add(self, other: c_int | number): c_int
+    function __sub(self, other: c_int | number): c_int
+    function __mod(self, other: c_int | number): c_int
+    function __div(self, other: c_int | number): c_int
+    function __idiv(self, other: c_int | number): c_int
+    function __mul(self, other: c_int | number): c_int
+    function __pow(self, other: c_int | number): c_int
+    function __eq(self, other: c_int): boolean
+    function __lt(self, other: c_int): boolean
+    function __le(self, other: c_int): boolean
+    function __unm(self): c_int
+    function __len(self): number
+end
+declare class c_uint
+    function __add(self, other: c_uint | number): c_uint
+    function __sub(self, other: c_uint | number): c_uint
+    function __mod(self, other: c_uint | number): c_uint
+    function __div(self, other: c_uint | number): c_uint
+    function __mul(self, other: c_uint | number): c_uint
+    function __idiv(self, other: c_uint | number): c_uint
+    function __pow(self, other: c_uint | number): c_uint
+    function __eq(self, other: c_uint): boolean
+    function __lt(self, other: c_uint): boolean
+    function __le(self, other: c_uint): boolean
+    function __unm(self): c_uint
+    function __len(self): number
+end
+declare class c_char
+end
+declare class c_uchar
+end
+declare class c_short
+    function __add(self, other: c_short | number): c_short
+    function __sub(self, other: c_short | number): c_short
+    function __mod(self, other: c_short | number): c_short
+    function __div(self, other: c_short | number): c_short
+    function __mul(self, other: c_short | number): c_short
+    function __idiv(self, other: c_short | number): c_short
+    function __pow(self, other: c_short | number): c_short
+    function __eq(self, other: c_short): boolean
+    function __lt(self, other: c_short): boolean
+    function __le(self, other: c_short): boolean
+    function __unm(self): c_short
+    function __len(self): number
+end
+declare class c_ushort
+    function __add(self, other: c_ushort | number): c_ushort
+    function __sub(self, other: c_ushort | number): c_ushort
+    function __mod(self, other: c_ushort | number): c_ushort
+    function __div(self, other: c_ushort | number): c_ushort
+    function __mul(self, other: c_ushort | number): c_ushort
+    function __idiv(self, other: c_ushort | number): c_ushort
+    function __pow(self, other: c_ushort | number): c_ushort
+    function __eq(self, other: c_ushort): boolean
+    function __lt(self, other: c_ushort): boolean
+    function __le(self, other: c_ushort): boolean
+    function __unm(self): c_ushort
+    function __len(self): number
+end
+declare class c_long
+    function __add(self, other: c_long | number): c_long
+    function __sub(self, other: c_long | number): c_long
+    function __mod(self, other: c_long | number): c_long
+    function __div(self, other: c_long | number): c_long
+    function __mul(self, other: c_long | number): c_long
+    function __idiv(self, other: c_long | number): c_long
+    function __pow(self, other: c_long | number): c_long
+    function __eq(self, other: c_long): boolean
+    function __lt(self, other: c_long): boolean
+    function __le(self, other: c_long): boolean
+    function __unm(self): c_long
+    function __len(self): number
+end
+declare class c_ulong
+    function __add(self, other: c_ulong | number): c_ulong
+    function __sub(self, other: c_ulong | number): c_ulong
+    function __mod(self, other: c_ulong | number): c_ulong
+    function __div(self, other: c_ulong | number): c_ulong
+    function __mul(self, other: c_ulong | number): c_ulong
+    function __idiv(self, other: c_ulong | number): c_ulong
+    function __pow(self, other: c_ulong | number): c_ulong
+    function __eq(self, other: c_ulong): boolean
+    function __lt(self, other: c_ulong): boolean
+    function __le(self, other: c_ulong): boolean
+    function __unm(self): c_ulong
+    function __len(self): number
+end
+declare class c_float
+    function __add(self, other: c_float | number): c_float
+    function __sub(self, other: c_float | number): c_float
+    function __mod(self, other: c_float | number): c_float
+    function __div(self, other: c_float | number): c_float
+    function __mul(self, other: c_float | number): c_float
+    function __idiv(self, other: c_float | number): c_float
+    function __pow(self, other: c_float | number): c_float
+    function __eq(self, other: c_float): boolean
+    function __lt(self, other: c_float): boolean
+    function __le(self, other: c_float): boolean
+    function __unm(self): c_float
+    function __len(self): number
+end
 
 declare class dlmodule
     path: string
@@ -99,6 +192,7 @@ type cinterop = {
         ulong: (number | string) -> c_ulong,
         float: (number) -> c_float,
     },
+    sizeof: (t: c_type) -> number,
     bindfunction: (<Return, Args...>(module: dlmodule, returns: c_type | 'void' | structinfo, func_name: string, ...c_type|structinfo) -> ((Args...)->Return)),
     struct: {
         newinfo: (memsize: number, fieldsinfo: {[string]: cinterop_fieldinfo}, metatable: any?) -> structinfo,
@@ -113,7 +207,7 @@ type dlimport = {
     pload: (target: string) -> (dlmodule?, string),
     searchpath: (dlname: string) -> string?,
     getmodules: () -> {dlmodule},
-    cinterop: cinterop,
+    c: cinterop,
 }
 declare dlimport: dlimport 
 

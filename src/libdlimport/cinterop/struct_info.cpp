@@ -155,6 +155,12 @@ std::shared_ptr<struct_info>& cinterop::check_struct_info(lua_State* L, int idx)
     if (lua_userdatatag(L, idx) != tag) luaL_typeerrorL(L, idx, tname);
     return *static_cast<std::shared_ptr<struct_info>*>(lua_touserdatatagged(L, idx, tag));
 }
+bool cinterop::is_struct_info(lua_State* L, int idx) {
+    return lua_userdatatag(L, idx) == tag;
+}
+std::shared_ptr<struct_info>& cinterop::to_struct_info(lua_State* L, int idx) {
+    return *static_cast<std::shared_ptr<struct_info>*>(lua_touserdatatagged(L, idx, tag));
+}
 int cinterop::get_struct_field(lua_State* L) {
     auto& info = cinterop::check_struct_info(L, 1);
     size_t len;
@@ -196,6 +202,10 @@ int cinterop::create_struct_info(lua_State* L) {
         .aggr{dcNewAggr(max_field_count, memory_size), dcFreeAggr},
     });
     register_fields(*si);
+    dcCloseAggr(si->aggr.get());
+    for (auto& [key, v] : si->fields) {
+        std::cout << std::format("FIELD [{}]: {{type: {}, offset: {}, array_size: {}}}\n", key, int(v.type), v.memory_offset, v.array_size);
+    }
     lua_newstructinfo(L, std::move(si));
     return 1;
 };

@@ -1,4 +1,5 @@
 #include "dluau.h"
+#include <iostream>
 #include <string>
 using std::string;
 #include <format>
@@ -33,7 +34,12 @@ struct point {
     int y;
 };
 DLUAU_API point test_point(int x, int y) {
+    std::cout << std::format("X: {}, Y: {}\n", x, y);
+    std::cout << std::format("SIZE: {}, XOFF: {}, YOFF {}\n", sizeof(point), offsetof(point, x), offsetof(point, y));
     return point{.x = x, .y = y};
+}
+DLUAU_API void print_point(point point) {
+    std::cout << std::format("point: {{x: {}, y: {}}}\n", point.x, point.y);
 }
 DLUAU_API unsigned char test_unsigned_char_return() {
     return 0xfeui8;

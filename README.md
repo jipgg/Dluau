@@ -58,7 +58,7 @@ since lua_CFunctions are always the same type (`int(*)(lua_State*)`).
 The project has partial support for C POD structs. Currently it does not allow for you to nest struct types inside eachother, but this is a planned feature.
 To create a struct description you can use the `cinterop.struct` library.
 
-**A basic example for mapping a c `point` struct:**
+**A basic example for mapping a c `point` struct:** (we are assuming the struct has no padding for this example)
 ```c
 // the struct we are going to map:
 struct point {int x, y;};

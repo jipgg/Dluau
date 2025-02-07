@@ -6,7 +6,10 @@ and does not ensure stability of implemented features.
 A minimal runtime that extends the [Luau](https://github.com/luau-lang/luau) language and turns it into a more flexible, general purpose and dynamically extensible scripting environment.
 ## Features
 It extends the Luau C API with a minimal set of utilities to standardize/synchronize userdata type tags
-and namecall stringatoms for more easily extending the environment with external C API that can be dynamically loaded with the builtin `dlimport` library.
+and namecall stringatoms for more easily extending the environment with external Luau C API that can be dynamically loaded with the builtin `dlimport` library.
+
+A `cinterop` library with support for creating raw C bindings for exported C functions as well as partial support for mapping usable POD C struct wrappers (`structinfo`)
+that can be used to interpret c struct values.
 
 For this to work reliably the runtime consists of a shared dll named `dluaulib.dll` which other dlls can link to or import symbols from.
 
@@ -47,16 +50,69 @@ local my_imported_function: (some_arg: string)->() = dlexample:importfunction('s
 my_imported_function("hello world!")
 ```
 This convention serves as a safeguard because i didn't find a practical way to ensure an exported symbol is indeed of type lua_CFunction,
-since dlimport also supports creating bindings of 'true' c functions (currently only supports primitive c types as return type and parameters,
-but i plan on eventually support aggregate types (c structs) once i out a good way to register these dynamically in luau) this seemed like the best compromise to create a barrier between
+since dlimport also supports creating bindings of 'true' C functions. This seemed like the best compromise to create a barrier between
 safe luau c functions and UB territory that can happen when loading functions with different parameters and return types,
 since lua_CFunctions are always the same type (`int(*)(lua_State*)`).  
 
+#### Dynamic C API bindings
+The project has partial support for C POD structs. Currently it does not allow for you to nest struct types inside eachother, but this is a planned feature.
+To create a struct description you can use the `cinterop.struct` library.
+
+**A basic example for mapping a c `point` struct:**
+```c
+// the struct we are going to map:
+struct point {int x, y;};
+```
+```luau
+type point = {x: c_int, y: c_int}
+local point_fields_info = {
+    ["x"] = {
+        type = 'c_int',
+        memoffset = 0,
+    },
+    ["y"] = {
+        type = 'c_int',
+        memoffset = cinterop.sizeof('c_int'),
+    },
+}
+local point_memsize = cinterop.sizeof('c_int') * 2
+-- create a new `structinfo` object
+local point_info: structinfo = cinterop.struct.newinfo(point_memsize, point_fields_info)
+```
+Optionally you can register a metatable for making accessing fields more ergonomic.
+This metatable will automattically be set to the userdata when instantiating an instance of `structinfo`.
+```luau
+local point_info: structinfo
+...
+local point_metatable = {
+    __index = function(data: userdata, key: string)
+        return cinterop.struct.getfield(point_info, data, key)
+    end,
+    __newindex = function(data: userdata, key: string, val: unknown)
+        cinterop.struct.setfield(point_info, data, key, val)
+    end,
+    __type = 'point',
+}
+point_info = cinterop.struct.newinfo(point_memsize, point_fields_info, point_metatable)
+```
+Then you can pass the `structinfo` object as a parameter specifier in `cinterop.bindfunction`
+```luau
+...
+local some_dll: dlmodule = dlimport.load("some_dll")
+local c_function_returning_point: () -> point = cinterop.bindfunction(some_dll, point_info, 'c_function_returning_point')
+-- using the binding after
+local my_point = c_function_returning_point()
+```
+***Creating C API bindings dynamically is slower and gives you less control than creating the bindings directly with the
+Luau C API, but the former does allow you to interop with C without the need for recompiling any source code.***
+### searching DLLs
 The searching algorithm for finding the DLL behaves the same as with regular the `require('someluaumodule')`
 meaning that you can also use '@aliases' in this function.
 When loading a dll with dlimport it also adds the dll's directory as a location for the system to find other DLL dependencies.
 So when your dll imports symbols from another DLL it will find that dependency even if it is not in the conventional places where the system
 searches in like PATH as long as a copy of the dll exists inside the dlmodule directory.
+
+Use `dlimport.searchpath` when you want to search for the absolute path of a DLL in the system.
 ## Autocompletion/LSP
 the dluau api definition and documentation files for [luau-lsp](https://github.com/JohnnyMorganz/luau-lsp) can be found [here](lsp/).
 ### vscode
@@ -76,6 +132,10 @@ No plans for macOS support at the moment, however.
 ## Installation
 You can download the latest binaries from [releases](https://github.com/jipgg/dluau/releases) or build from source.
 ### Building from source
+#### Dependencies
+- [dyncall] (https://dyncall.org/) for dynamically calling C functions and creating struct mappings.
+- [nlohman::json] (https://github.com/nlohmann/json) for json parsing
+- [Boost.Container] (https://github.com/boostorg/container) for a C++20 `flat_map` and `flat_set` implementation.
 #### Resolving dependencies
 The external project dependencies are mostly self-contained in the project, but it currently does
 require you to resolve the CMake Boost.Container package on your own. I personally use vcpkg for this.

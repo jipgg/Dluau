@@ -78,7 +78,6 @@ declare class c_int
     function __lt(self, other: c_int): boolean
     function __le(self, other: c_int): boolean
     function __unm(self): c_int
-    function __len(self): number
 end
 declare class c_uint
     function __add(self, other: c_uint | number): c_uint
@@ -92,7 +91,6 @@ declare class c_uint
     function __lt(self, other: c_uint): boolean
     function __le(self, other: c_uint): boolean
     function __unm(self): c_uint
-    function __len(self): number
 end
 declare class c_char
 end
@@ -110,7 +108,6 @@ declare class c_short
     function __lt(self, other: c_short): boolean
     function __le(self, other: c_short): boolean
     function __unm(self): c_short
-    function __len(self): number
 end
 declare class c_ushort
     function __add(self, other: c_ushort | number): c_ushort
@@ -124,7 +121,6 @@ declare class c_ushort
     function __lt(self, other: c_ushort): boolean
     function __le(self, other: c_ushort): boolean
     function __unm(self): c_ushort
-    function __len(self): number
 end
 declare class c_long
     function __add(self, other: c_long | number): c_long
@@ -138,7 +134,6 @@ declare class c_long
     function __lt(self, other: c_long): boolean
     function __le(self, other: c_long): boolean
     function __unm(self): c_long
-    function __len(self): number
 end
 declare class c_ulong
     function __add(self, other: c_ulong | number): c_ulong
@@ -152,7 +147,6 @@ declare class c_ulong
     function __lt(self, other: c_ulong): boolean
     function __le(self, other: c_ulong): boolean
     function __unm(self): c_ulong
-    function __len(self): number
 end
 declare class c_float
     function __add(self, other: c_float | number): c_float
@@ -166,7 +160,6 @@ declare class c_float
     function __lt(self, other: c_float): boolean
     function __le(self, other: c_float): boolean
     function __unm(self): c_float
-    function __len(self): number
 end
 
 declare class dlmodule

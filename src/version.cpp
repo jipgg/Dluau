@@ -17,6 +17,7 @@ DLUAU_API int get_version_minor() {
 DLUAU_API int get_version_patch() {
     return DLUAU_VERSION_PATCH;
 }
+#ifndef NDEBUG
 DLUAU_API unsigned int test_unsigned_int_return() {
     return 0xfeu;
 }
@@ -61,3 +62,4 @@ DLUAU_API void print_point(point point) {
 DLUAU_API unsigned char test_unsigned_char_return() {
     return 0xfeui8;
 }
+#endif

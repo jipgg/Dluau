@@ -23,31 +23,31 @@ static int call_binding(lua_State* L) {
                     dcArgBool(vm, luaL_checkboolean(L, i));
                     break;
                 case ct::c_int:
-                    dcArgInt(vm, dluau_checkc_int(L, i));
+                    dcArgInt(vm, dluauC_checkint(L, i));
                     break;
                 case ct::c_uint:
-                    dcArgInt(vm, dluau_checkc_uint(L, i));
+                    dcArgInt(vm, dluauC_checkuint(L, i));
                     break;
                 case ct::c_short:
-                    dcArgShort(vm, dluau_checkc_short(L, i));
+                    dcArgShort(vm, dluauC_checkshort(L, i));
                     break;
                 case ct::c_ushort:
-                    dcArgShort(vm, dluau_checkc_ushort(L, i));
+                    dcArgShort(vm, dluauC_checkushort(L, i));
                     break;
                 case ct::c_char:
-                    dcArgChar(vm, dluau_checkc_char(L, i));
+                    dcArgChar(vm, dluauC_checkchar(L, i));
                     break;
                 case ct::c_uchar:
-                    dcArgChar(vm, dluau_checkc_uchar(L, i));
+                    dcArgChar(vm, dluauC_checkuchar(L, i));
                     break;
                 case ct::c_long:
-                    dcArgLong(vm, dluau_checkc_long(L, i));
+                    dcArgLong(vm, dluauC_checklong(L, i));
                     break;
                 case ct::c_ulong:
-                    dcArgLong(vm, dluau_checkc_ulong(L, i));
+                    dcArgLong(vm, dluauC_checkulong(L, i));
                     break;
                 case ct::c_float:
-                    dcArgFloat(vm, dluau_checkc_float(L, i));
+                    dcArgFloat(vm, dluauC_checkfloat(L, i));
                     break;
                 case ct::c_double:
                     dcArgDouble(vm, luaL_checknumber(L, i));
@@ -75,34 +75,34 @@ static int call_binding(lua_State* L) {
                 lua_pushboolean(L, dcCallBool(vm, fnptr));
                 return 1;
             case ct::c_int:
-                dluau_pushc_int(L, dcCallInt(vm, fnptr));
+                dluauC_pushint(L, dcCallInt(vm, fnptr));
                 return 1;
             case ct::c_uint:
-                dluau_pushc_uint(L, static_cast<unsigned int>(dcCallInt(vm, fnptr)));
+                dluauC_pushuint(L, static_cast<unsigned int>(dcCallInt(vm, fnptr)));
                 return 1;
             case ct::c_short:
-                dluau_pushc_short(L, dcCallShort(vm, fnptr));
+                dluauC_pushshort(L, dcCallShort(vm, fnptr));
                 return 1;
             case ct::c_ushort:
-                dluau_pushc_ushort(L, (unsigned short)dcCallShort(vm, fnptr));
+                dluauC_pushushort(L, (unsigned short)dcCallShort(vm, fnptr));
                 return 1;
             case ct::c_long:
-                dluau_pushc_long(L, dcCallLong(vm, fnptr));
+                dluauC_pushlong(L, dcCallLong(vm, fnptr));
                 return 1;
             case ct::c_ulong:
-                dluau_pushc_ulong(L, (unsigned long)dcCallLong(vm, fnptr));
+                dluauC_pushulong(L, (unsigned long)dcCallLong(vm, fnptr));
                 return 1;
             case ct::c_char:
-                dluau_pushc_char(L, dcCallChar(vm, fnptr));
+                dluauC_pushchar(L, dcCallChar(vm, fnptr));
                 return 1;
             case ct::c_uchar:
-                dluau_pushc_uchar(L, (unsigned char)dcCallChar(vm, fnptr));
+                dluauC_pushuchar(L, (unsigned char)dcCallChar(vm, fnptr));
                 return 1;
             case ct::c_double:
                 lua_pushnumber(L, dcCallDouble(vm, fnptr));
                 return 1;
             case ct::c_float:
-                dluau_pushc_float(L, dcCallFloat(vm, fnptr));
+                dluauC_pushfloat(L, dcCallFloat(vm, fnptr));
                 return 1;
             case ct::c_string:
                 lua_pushstring(L, static_cast<char*>(dcCallPointer(vm, fnptr)));

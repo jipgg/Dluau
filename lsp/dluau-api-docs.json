@@ -29,6 +29,60 @@
     "@roblox/global/dlimport": {
         "documentation": "The dlimport library for importing dlmodules and dll/so function symbols."
     },
+    "@roblox/global/cinterop": {
+        "documentation": "The C interop library for working with raw C API."
+    },
+    "@roblox/global/cinterop.native": {
+        "documentation": "native C types for compatibility."
+    },
+    "@roblox/global/cinterop.native.int": {
+        "documentation": "creates a C native `int` value"
+    },
+    "@roblox/global/cinterop.native.uint": {
+        "documentation": "creates a C native `unsigned int` value"
+    },
+    "@roblox/global/cinterop.native.char": {
+        "documentation": "creates a C native `char` value"
+    },
+    "@roblox/global/cinterop.native.uchar": {
+        "documentation": "creates a C native `unsigned char` value"
+    },
+    "@roblox/global/cinterop.native.short": {
+        "documentation": "creates a C native `short` value"
+    },
+    "@roblox/global/cinterop.native.ushort": {
+        "documentation": "creates a C native `unsigned short` value"
+    },
+    "@roblox/global/cinterop.native.long": {
+        "documentation": "creates a C native `long` value"
+    },
+    "@roblox/global/cinterop.native.ulong": {
+        "documentation": "creates a C native `unsigned long` value"
+    },
+    "@roblox/global/cinterop.native.float": {
+        "documentation": "creates a C native `float` value"
+    },
+    "@roblox/global/cinterop.sizeof": {
+        "documentation": "Returns the size in bytes of the specified C type."
+    },
+    "@roblox/global/cinterop.bindfunction": {
+        "documentation": "Creates a C function binding for calling them from luau."
+    },
+    "@roblox/global/cinterop.struct": {
+        "documentation": "Struct library for creating usable C POD structs in C function bindings."
+    },
+    "@roblox/global/cinterop.struct.newinfo": {
+        "documentation": "Creates a new `structinfo` object"
+    },
+    "@roblox/global/cinterop.struct.newinstance": {
+        "documentation": "Creates a new instance/object based on the passed `structinfo`."
+    },
+    "@roblox/global/cinterop.struct.getfield": {
+        "documentation": "Getter for retrieving values of registered fields of the userdata."
+    },
+    "@roblox/global/cinterop.struct.setfield": {
+        "documentation": "Setter for modifying values of registered fields of the userdata."
+    },
     "@roblox/global/dlimport.require": {
         "documentation": "Imports a dlmodule instantly. This requires for the 'dlrequire' lua_CFunction to be exported"
     },
@@ -52,9 +106,6 @@
     },
     "@roblox/globaltype/dlmodule.importfunction": {
         "documentation": "imports a `lua_CFunction` (C API) and returns it as a function. Symbol is prefixed with 'dlmodule_' internally as a way to distinguish between dlmodule lua_CFunctions and true c functions."
-    },
-    "@roblox/globaltype/dlmodule.rawcbinding": {
-        "documentation": "Creates a function closure for a true C function signature. Currently only c primitives are supported. Aggregate (struct) types are coming eventually.\nCaution: this is fundamentally memory unsafe, be certain about the exact export function return types and parameters before using."
     },
     "@roblox/global/print": {
         "documentation": "Prints all the arguments to the console. `tostring` implicitly gets called on all arguments.\n`.separator`: The global separator `print` uses.\n`.noline`: Identical to print, but does not write a new line at the end."

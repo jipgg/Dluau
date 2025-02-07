@@ -71,6 +71,7 @@ void dluau_openlibs(lua_State *L) {
     dluauopen_dlimport(L);
     dluauopen_task(L);
     dluauopen_os(L);
+    dluauopen_cinterop(L);
 }
 int dluau_newuserdatatag() {
     static int curr_type_tag = 1;

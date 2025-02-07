@@ -52,31 +52,31 @@ static void set_field(lua_State* L, const struct_info::field_info& fi, void* dat
             *(static_cast<bool*>(off) + n) = luaL_checkboolean(L, idx);
             break;
         case c_type::c_char:
-            *(static_cast<char*>(off) + n) = dluau_checkc_char(L, idx);
+            *(static_cast<char*>(off) + n) = dluauC_checkchar(L, idx);
             break;
         case c_type::c_uchar:
-            *(static_cast<unsigned char*>(off) + n) = dluau_checkc_uchar(L, idx);
+            *(static_cast<unsigned char*>(off) + n) = dluauC_checkuchar(L, idx);
             break;
         case c_type::c_short:
-            *(static_cast<short*>(off) + n) = dluau_checkc_short(L, idx);
+            *(static_cast<short*>(off) + n) = dluauC_checkshort(L, idx);
             break;
         case c_type::c_ushort:
-            *(static_cast<unsigned short*>(off) + n) = dluau_checkc_ushort(L, idx);
+            *(static_cast<unsigned short*>(off) + n) = dluauC_checkushort(L, idx);
             break;
         case c_type::c_long:
-            *(static_cast<long*>(off) + n) = dluau_checkc_long(L, idx);
+            *(static_cast<long*>(off) + n) = dluauC_checklong(L, idx);
             break;
         case c_type::c_ulong:
-            *(static_cast<unsigned long*>(off) + n) = dluau_checkc_ulong(L, idx);
+            *(static_cast<unsigned long*>(off) + n) = dluauC_checkulong(L, idx);
             break;
         case c_type::c_int:
-            *(static_cast<int*>(off) + n) = dluau_checkc_int(L, idx);
+            *(static_cast<int*>(off) + n) = dluauC_checkint(L, idx);
             break;
         case c_type::c_uint:
-            *(static_cast<unsigned int*>(off) + n) = dluau_checkc_uint(L, idx);
+            *(static_cast<unsigned int*>(off) + n) = dluauC_checkuint(L, idx);
             break;
         case c_type::c_float:
-            *(static_cast<float*>(off) + n) = dluau_checkc_float(L, idx);
+            *(static_cast<float*>(off) + n) = dluauC_checkfloat(L, idx);
             break;
         case c_type::c_double:
             *(static_cast<double*>(off) + n) = luaL_checknumber(L, idx);
@@ -101,31 +101,31 @@ static void push_field(lua_State* L, const struct_info::field_info& fi, void* da
             lua_pushboolean(L, *(static_cast<bool*>(off) + n));
             break;
         case c_type::c_char:
-            dluau_pushc_char(L, *(static_cast<char*>(off) + n));
+            dluauC_pushchar(L, *(static_cast<char*>(off) + n));
             break;
         case c_type::c_uchar:
-            dluau_pushc_uchar(L, *(static_cast<unsigned char*>(off) + n));
+            dluauC_pushuchar(L, *(static_cast<unsigned char*>(off) + n));
             break;
         case c_type::c_short:
-            dluau_pushc_short(L, *(static_cast<short*>(off) + n));
+            dluauC_pushshort(L, *(static_cast<short*>(off) + n));
             break;
         case c_type::c_ushort:
-            dluau_pushc_ushort(L, *(static_cast<unsigned short*>(off) + n));
+            dluauC_pushushort(L, *(static_cast<unsigned short*>(off) + n));
             break;
         case c_type::c_long:
-            dluau_pushc_long(L, *(static_cast<long*>(off) + n));
+            dluauC_pushlong(L, *(static_cast<long*>(off) + n));
             break;
         case c_type::c_ulong:
-            dluau_pushc_ulong(L, *(static_cast<unsigned long*>(off) + n));
+            dluauC_pushulong(L, *(static_cast<unsigned long*>(off) + n));
             break;
         case c_type::c_int:
-            dluau_pushc_int(L, *(static_cast<int*>(off) + n));
+            dluauC_pushint(L, *(static_cast<int*>(off) + n));
             break;
         case c_type::c_uint:
-            dluau_pushc_uint(L, *(static_cast<unsigned int*>(off) + n));
+            dluauC_pushuint(L, *(static_cast<unsigned int*>(off) + n));
             break;
         case c_type::c_float:
-            dluau_pushc_float(L, *(static_cast<float*>(off) + n));
+            dluauC_pushfloat(L, *(static_cast<float*>(off) + n));
             break;
         case c_type::c_double:
             lua_pushnumber(L, *(static_cast<double*>(off) + n));
@@ -140,8 +140,6 @@ static void push_field(lua_State* L, const struct_info::field_info& fi, void* da
             lua_pushstring(L, *(static_cast<const char**>(off) + n));
             break;
     }
-}
-static int metamethod_index(lua_State* L) {
 }
 
 static void lua_newstructinfo(lua_State* L, std::shared_ptr<struct_info>&& si) {

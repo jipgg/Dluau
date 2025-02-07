@@ -127,89 +127,89 @@ void create(lua_State* L, T v, const char* tname) {
     lua_setmetatable(L, -2);
 }
 
-void dluau_pushc_int(lua_State* L, int v) {
+void dluauC_pushint(lua_State* L, int v) {
     create(L, v, c_int);
 }
-void dluau_pushc_uint(lua_State* L, unsigned int v) {
+void dluauC_pushuint(lua_State* L, unsigned int v) {
     create(L, v, c_uint);
 }
-void dluau_pushc_short(lua_State* L, short v) {
+void dluauC_pushshort(lua_State* L, short v) {
     create(L, v, c_short);
 }
-void dluau_pushc_ushort(lua_State* L, unsigned short v) {
+void dluauC_pushushort(lua_State* L, unsigned short v) {
     create(L, v, c_ushort);
 }
-void dluau_pushc_long(lua_State* L, long v) {
+void dluauC_pushlong(lua_State* L, long v) {
     create(L, v, c_long);
 }
-void dluau_pushc_ulong(lua_State* L, unsigned long v) {
+void dluauC_pushulong(lua_State* L, unsigned long v) {
     create(L, v, c_ulong);
 }
-void dluau_pushc_char(lua_State* L, char v) {
+void dluauC_pushchar(lua_State* L, char v) {
     create(L, v, c_char);
 }
-void dluau_pushc_uchar(lua_State* L, unsigned char v) {
+void dluauC_pushuchar(lua_State* L, unsigned char v) {
     create(L, v, c_uchar);
 }
-void dluau_pushc_float(lua_State* L, float v) {
+void dluauC_pushfloat(lua_State* L, float v) {
     create(L, v, c_float);
 }
 
-int dluau_toc_int(lua_State* L, int idx) {
+int dluauC_toint(lua_State* L, int idx) {
     return to<int>(c_int, L, idx);
 }
-unsigned int dluau_toc_uint(lua_State* L, int idx) {
+unsigned int dluauC_touint(lua_State* L, int idx) {
     return to<uint>(c_uint, L, idx);
 }
-short dluau_toc_short(lua_State* L, int idx) {
+short dluauC_toshort(lua_State* L, int idx) {
     return to<short>(c_short, L, idx);
 }
-unsigned short dluau_toc_ushort(lua_State* L, int idx) {
+unsigned short dluauC_toushort(lua_State* L, int idx) {
     return to<ushort>(c_ushort, L, idx);
 }
-long dluau_toc_long(lua_State* L, int idx) {
+long dluauC_tolong(lua_State* L, int idx) {
     return to<long>(c_long, L, idx);
 }
-unsigned long dluau_toc_ulong(lua_State* L, int idx) {
+unsigned long dluauC_toulong(lua_State* L, int idx) {
     return to<ulong>(c_ulong, L, idx);
 }
-char dluau_toc_char(lua_State* L, int idx) {
+char dluauC_tochar(lua_State* L, int idx) {
     return to<char>(c_char, L, idx);
 }
-unsigned char dluau_toc_uchar(lua_State* L, int idx) {
+unsigned char dluauC_touchar(lua_State* L, int idx) {
     return to<uchar>(c_uchar, L, idx);
 }
-float dluau_toc_float(lua_State* L, int idx) {
+float dluauC_tofloat(lua_State* L, int idx) {
     return to<float>(c_float, L, idx);
 }
 
-int dluau_checkc_int(lua_State* L, int idx) {
+int dluauC_checkint(lua_State* L, int idx) {
     return check<int>(c_int, L, idx);
 }
-unsigned int dluau_checkc_uint(lua_State* L, int idx) {
+unsigned int dluauC_checkuint(lua_State* L, int idx) {
     return check<uint>(c_uint, L, idx);
 }
-short dluau_checkc_short(lua_State* L, int idx) {
+short dluauC_checkshort(lua_State* L, int idx) {
     return check<short>(c_short, L, idx);
 
 }
-unsigned short dluau_checkc_ushort(lua_State* L, int idx) {
+unsigned short dluauC_checkushort(lua_State* L, int idx) {
     return check<ushort>(c_ushort, L, idx);
 
 }
-long dluau_checkc_long(lua_State* L, int idx) {
+long dluauC_checklong(lua_State* L, int idx) {
     return check<long>(c_long, L, idx);
 }
-unsigned long dluau_checkc_ulong(lua_State* L, int idx) {
+unsigned long dluauC_checkulong(lua_State* L, int idx) {
     return check<ulong>(c_ulong, L, idx);
 }
-char dluau_checkc_char(lua_State* L, int idx) {
+char dluauC_checkchar(lua_State* L, int idx) {
     return check<char>(c_char, L, idx);
 }
-unsigned char dluau_checkc_uchar(lua_State* L, int idx) {
+unsigned char dluauC_checkuchar(lua_State* L, int idx) {
     return check<uchar>(c_uchar, L, idx);
 }
-float dluau_checkc_float(lua_State* L, int idx) {
+float dluauC_checkfloat(lua_State* L, int idx) {
     return check<float>(c_float, L, idx);
 }
 
@@ -264,57 +264,57 @@ void cinterop::push_c_types(lua_State *L) {
     constexpr luaL_Reg ctors[] = {
         {"int", [](lua_State* L) -> int{
             const int v = lua_isstring(L, 1) ? std::stoi(lua_tostring(L, 1)) : luaL_checkinteger(L, 1);
-            if (lua_isstring(L, 1)) dluau_pushc_int(L, std::stoi(lua_tostring(L, 1)));
-            else if (lua_isnumber(L, 1)) dluau_pushc_int(L, lua_tointeger(L, 1));
+            if (lua_isstring(L, 1)) dluauC_pushint(L, std::stoi(lua_tostring(L, 1)));
+            else if (lua_isnumber(L, 1)) dluauC_pushint(L, lua_tointeger(L, 1));
             else luaL_typeerrorL(L, 1, "string | number");
             return 1;
         }},
         {"uint", [](lua_State* L) -> int {
             try {
-            if (lua_isstring(L, 1)) dluau_pushc_uint(L, std::stoul(lua_tostring(L, 1)));
-            else if (lua_isnumber(L, 1)) dluau_pushc_uint(L, lua_tointeger(L, 1));
+            if (lua_isstring(L, 1)) dluauC_pushuint(L, std::stoul(lua_tostring(L, 1)));
+            else if (lua_isnumber(L, 1)) dluauC_pushuint(L, lua_tointeger(L, 1));
             else luaL_typeerrorL(L, 1, "string | number");
             return 1;
             } catch (std::exception& e) {luaL_errorL(L, e.what());}
         }},
         {"short", [](lua_State* L) -> int {
-            if (lua_isstring(L, 1)) dluau_pushc_short(L, std::stoi(lua_tostring(L, 1)));
-            else if (lua_isnumber(L, 1)) dluau_pushc_short(L, lua_tointeger(L, 1));
+            if (lua_isstring(L, 1)) dluauC_pushshort(L, std::stoi(lua_tostring(L, 1)));
+            else if (lua_isnumber(L, 1)) dluauC_pushshort(L, lua_tointeger(L, 1));
             else luaL_typeerrorL(L, 1, "string | number");
             return 1;
         }},
         {"ushort", [](lua_State* L) -> int {
-            if (lua_isstring(L, 1)) dluau_pushc_ushort(L, std::stoul(lua_tostring(L, 1)));
-            else if (lua_isnumber(L, 1)) dluau_pushc_ushort(L, static_cast<ushort>(lua_tointeger(L, 1)));
+            if (lua_isstring(L, 1)) dluauC_pushushort(L, std::stoul(lua_tostring(L, 1)));
+            else if (lua_isnumber(L, 1)) dluauC_pushushort(L, static_cast<ushort>(lua_tointeger(L, 1)));
             else luaL_typeerrorL(L, 1, "string | number");
             return 1;
         }},
         {"long", [](lua_State* L) -> int {
-            if (lua_isstring(L, 1)) dluau_pushc_long(L, std::stol(lua_tostring(L, 1)));
-            else if (lua_isnumber(L, 1)) dluau_pushc_long(L, lua_tointeger(L, 1));
+            if (lua_isstring(L, 1)) dluauC_pushlong(L, std::stol(lua_tostring(L, 1)));
+            else if (lua_isnumber(L, 1)) dluauC_pushlong(L, lua_tointeger(L, 1));
             else luaL_typeerrorL(L, 1, "string | number");
             return 1;
         }},
         {"ulong", [](lua_State* L) -> int {
-            if (lua_isstring(L, 1)) dluau_pushc_ulong(L, std::stoul(lua_tostring(L, 1)));
-            else if (lua_isnumber(L, 1)) dluau_pushc_ulong(L, lua_tointeger(L, 1));
+            if (lua_isstring(L, 1)) dluauC_pushulong(L, std::stoul(lua_tostring(L, 1)));
+            else if (lua_isnumber(L, 1)) dluauC_pushulong(L, lua_tointeger(L, 1));
             else luaL_typeerrorL(L, 1, "string | number");
             return 1;
         }},
         {"char", [](lua_State* L) -> int {
-            if (lua_isstring(L, 1)) dluau_pushc_char(L, *lua_tostring(L, 1));
-            else if (lua_isnumber(L, 1)) dluau_pushc_char(L, static_cast<char>(lua_tointeger(L, 1)));
+            if (lua_isstring(L, 1)) dluauC_pushchar(L, *lua_tostring(L, 1));
+            else if (lua_isnumber(L, 1)) dluauC_pushchar(L, static_cast<char>(lua_tointeger(L, 1)));
             else luaL_typeerrorL(L, 1, "string | number");
             return 1;
         }},
         {"uchar", [](lua_State* L) -> int {
-            if (lua_isstring(L, 1)) dluau_pushc_uchar(L, *lua_tostring(L, 1));
-            else if (lua_isnumber(L, 1)) dluau_pushc_uchar(L, static_cast<uchar>(lua_tointeger(L, 1)));
+            if (lua_isstring(L, 1)) dluauC_pushuchar(L, *lua_tostring(L, 1));
+            else if (lua_isnumber(L, 1)) dluauC_pushuchar(L, static_cast<uchar>(lua_tointeger(L, 1)));
             else luaL_typeerrorL(L, 1, "string | number");
             return 1;
         }},
         {"float", [](lua_State* L) -> int {
-            dluau_pushc_float(L, luaL_checknumber(L, 1));
+            dluauC_pushfloat(L, luaL_checknumber(L, 1));
             return 1;
         }},
         {nullptr, nullptr}

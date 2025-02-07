@@ -32,7 +32,6 @@ struct dlmodule {
 using dlmodule_map = boost::container::flat_map<std::filesystem::path, std::unique_ptr<dlmodule>>;
 const dlmodule_map& get_dlmodules();
 using dlmodule_ref = std::reference_wrapper<dlmodule>;
-void push_cinterop(lua_State* L);
 dlmodule* find_module(const std::string& name);
 std::variant<dlmodule_ref, common::error_trail> init_module(const std::filesystem::path& path);
 std::variant<dlmodule_ref, common::error_trail> load_module(lua_State* L);

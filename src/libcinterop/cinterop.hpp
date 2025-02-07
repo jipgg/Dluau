@@ -1,5 +1,5 @@
 #pragma once
-#include "../dlimport.hpp"
+#include "../libdlimport/dlimport.hpp"
 #include <dyncall_callback.h>
 #include <any>
 using namespace dlimport;

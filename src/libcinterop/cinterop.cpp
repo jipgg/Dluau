@@ -1,6 +1,7 @@
 #include "cinterop.hpp"
+#include <dluau.h>
 
-void dlimport::push_cinterop(lua_State *L) {
+void dluauopen_cinterop(lua_State *L) {
     const luaL_Reg structlib[] = {
         {"newinfo", cinterop::create_struct_info},
         {"getfield", cinterop::get_struct_field},
@@ -20,4 +21,5 @@ void dlimport::push_cinterop(lua_State *L) {
     lua_setfield(L, -2, "struct");
     cinterop::push_c_types(L);
     lua_setfield(L, -2, "native");
+    lua_setglobal(L, "cinterop");
 }

@@ -174,11 +174,6 @@ declare class dlmodule
     name: string
     import: <As..., Rs...>(self: dlmodule, symbol: string) -> ((As...)->(Rs...))
 end
-export type cinterop_fieldinfo = {
-    type: c_type,
-    memoffset: number,
-    arrsize: number?
-}
 declare class structinfo end
 type cinterop = {
     native: {
@@ -195,7 +190,7 @@ type cinterop = {
     sizeof: (t: c_type) -> number,
     bindfunction: (<Return, Args...>(module: dlmodule, returns: c_type | 'void' | structinfo, func_name: string, ...c_type|structinfo) -> ((Args...)->Return)),
     struct: {
-        newinfo: (memsize: number, fieldsinfo: {[string]: cinterop_fieldinfo}, metatable: any?) -> structinfo,
+            newinfo: (memsize: number, fieldsinfo: {[string]: {type: c_type, memoffset: number, arrsize: number?}}, metatable: any?) -> structinfo,
         newinstance: <T>(si: structinfo) -> T,
         getfield: <T>(s: structinfo, data: userdata, key: string, arrindex: number?) -> T,
         setfield: <T>(s: structinfo, data: userdata, key: string, newval: T, arrindex: number?) -> T,
@@ -207,7 +202,7 @@ type dlimport = {
     pload: (target: string) -> (dlmodule?, string),
     searchpath: (dlname: string) -> string?,
     getmodules: () -> {dlmodule},
-    c: cinterop,
 }
+declare cinterop: cinterop
 declare dlimport: dlimport 
 

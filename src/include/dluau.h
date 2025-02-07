@@ -74,6 +74,7 @@ DLUAU_API void dluauopen_print(lua_State* L);
 DLUAU_API void dluauopen_scan(lua_State* L);
 DLUAU_API void dluauopen_task(lua_State* L);
 DLUAU_API void dluauopen_os(lua_State* L);
+DLUAU_API void dluauopen_cinterop(lua_State* L);
 enum dluau_ctaskstatus {
     DLUAU_CTASK_DONE,
     DLUAU_CTASK_CONTINUE,
@@ -83,32 +84,32 @@ typedef dluau_ctaskstatus(*dluau_ctask)(const char** errmsg);
 // Adds a c task to the dluau task scheduler.
 DLUAU_API void dluau_addctask(dluau_ctask step_callback);
 
-DLUAU_API void dluau_pushc_int(lua_State* L, int v);
-DLUAU_API void dluau_pushc_uint(lua_State* L, unsigned int v);
-DLUAU_API void dluau_pushc_short(lua_State* L, short v);
-DLUAU_API void dluau_pushc_ushort(lua_State* L, unsigned short v);
-DLUAU_API void dluau_pushc_long(lua_State* L, long v);
-DLUAU_API void dluau_pushc_ulong(lua_State* L, unsigned long v);
-DLUAU_API void dluau_pushc_char(lua_State* L, char v);
-DLUAU_API void dluau_pushc_uchar(lua_State* L, unsigned char v);
-DLUAU_API void dluau_pushc_float(lua_State* L, float v);
+DLUAU_API void dluauC_pushint(lua_State* L, int v);
+DLUAU_API void dluauC_pushuint(lua_State* L, unsigned int v);
+DLUAU_API void dluauC_pushshort(lua_State* L, short v);
+DLUAU_API void dluauC_pushushort(lua_State* L, unsigned short v);
+DLUAU_API void dluauC_pushlong(lua_State* L, long v);
+DLUAU_API void dluauC_pushulong(lua_State* L, unsigned long v);
+DLUAU_API void dluauC_pushchar(lua_State* L, char v);
+DLUAU_API void dluauC_pushuchar(lua_State* L, unsigned char v);
+DLUAU_API void dluauC_pushfloat(lua_State* L, float v);
 
-DLUAU_API int dluau_toc_int(lua_State* L, int idx);
-DLUAU_API unsigned int dluau_toc_uint(lua_State* L, int idx);
-DLUAU_API short dluau_toc_short(lua_State* L, int idx);
-DLUAU_API unsigned short dluau_toc_ushort(lua_State* L, int idx);
-DLUAU_API long dluau_toc_long(lua_State* L, int idx);
-DLUAU_API unsigned long dluau_toc_ulong(lua_State* L, int idx);
-DLUAU_API char dluau_toc_char(lua_State* L, int idx);
-DLUAU_API unsigned char dluau_toc_uchar(lua_State* L, int idx);
-DLUAU_API float dluau_toc_float(lua_State* L, int idx);
+DLUAU_API int dluauC_toint(lua_State* L, int idx);
+DLUAU_API unsigned int dluauC_touint(lua_State* L, int idx);
+DLUAU_API short dluauC_toshort(lua_State* L, int idx);
+DLUAU_API unsigned short dluauC_toushort(lua_State* L, int idx);
+DLUAU_API long dluauC_tolong(lua_State* L, int idx);
+DLUAU_API unsigned long dluauC_toulong(lua_State* L, int idx);
+DLUAU_API char dluauC_tochar(lua_State* L, int idx);
+DLUAU_API unsigned char dluauC_touchar(lua_State* L, int idx);
+DLUAU_API float dluauC_tofloat(lua_State* L, int idx);
 
-DLUAU_API int dluau_checkc_int(lua_State* L, int idx);
-DLUAU_API unsigned int dluau_checkc_uint(lua_State* L, int idx);
-DLUAU_API short dluau_checkc_short(lua_State* L, int idx);
-DLUAU_API unsigned short dluau_checkc_ushort(lua_State* L, int idx);
-DLUAU_API long dluau_checkc_long(lua_State* L, int idx);
-DLUAU_API unsigned long dluau_checkc_ulong(lua_State* L, int idx);
-DLUAU_API char dluau_checkc_char(lua_State* L, int idx);
-DLUAU_API unsigned char dluau_checkc_uchar(lua_State* L, int idx);
-DLUAU_API float dluau_checkc_float(lua_State* L, int idx);
+DLUAU_API int dluauC_checkint(lua_State* L, int idx);
+DLUAU_API unsigned int dluauC_checkuint(lua_State* L, int idx);
+DLUAU_API short dluauC_checkshort(lua_State* L, int idx);
+DLUAU_API unsigned short dluauC_checkushort(lua_State* L, int idx);
+DLUAU_API long dluauC_checklong(lua_State* L, int idx);
+DLUAU_API unsigned long dluauC_checkulong(lua_State* L, int idx);
+DLUAU_API char dluauC_checkchar(lua_State* L, int idx);
+DLUAU_API unsigned char dluauC_checkuchar(lua_State* L, int idx);
+DLUAU_API float dluauC_checkfloat(lua_State* L, int idx);

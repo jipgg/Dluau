@@ -36,6 +36,7 @@ std::optional<c_type> string_to_param_type(std::string_view str);
 namespace cinterop {
 std::shared_ptr<struct_info>& check_struct_info(lua_State* L, int idx);
 std::shared_ptr<struct_info>& to_struct_info(lua_State* L, int idx);
+int new_struct_instance(lua_State* L);
 bool is_struct_info(lua_State* L, int idx);
 void push_c_types(lua_State* L);
 int new_function_binding(lua_State* L);

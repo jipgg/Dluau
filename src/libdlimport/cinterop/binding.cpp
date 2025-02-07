@@ -134,6 +134,7 @@ optional<c_type> string_to_param_type(string_view str) {
         {"c_ulong", ct::c_ulong},
         {"c_char", ct::c_char},
         {"c_uchar", ct::c_uchar},
+        {"c_float", ct::c_float},
         {"boolean", ct::c_bool},
         {"userdata", ct::c_void_ptr},
         {"number", ct::c_double},

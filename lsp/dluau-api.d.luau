@@ -102,8 +102,9 @@ type cinterop = {
     bindfunction: (<Return, Args...>(module: dlmodule, returns: c_type | 'void' | structinfo, func_name: string, ...c_type|structinfo) -> ((Args...)->Return)),
     struct: {
         newinfo: (memsize: number, fieldsinfo: {[string]: cinterop_fieldinfo}, metatable: any?) -> structinfo,
-        getfield: <T>(s: structinfo, data: buffer | userdata, key: string) -> T,
-        setfield: <T>(s: structinfo, data: buffer | userdata, key: string, newval: T) -> T,
+        newinstance: <T>(si: structinfo) -> T,
+        getfield: <T>(s: structinfo, data: userdata, key: string, arrindex: number?) -> T,
+        setfield: <T>(s: structinfo, data: userdata, key: string, newval: T, arrindex: number?) -> T,
     },
 }
 type dlimport = {

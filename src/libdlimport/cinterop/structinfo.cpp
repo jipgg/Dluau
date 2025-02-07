@@ -7,7 +7,7 @@ static struct_info::field_info to_field_info(lua_State* L, int idx) {
     lua_rawgetfield(L, idx, "type");
     if (not lua_isstring(L, -1)) luaL_errorL(L, "type must be a string");
     auto type_opt = string_to_param_type(lua_tostring(L, -1));
-    if (not type_opt) luaL_errorL(L, "not a c_type");
+    if (not type_opt) luaL_errorL(L, "not a c_type '%s'", lua_tostring(L, -1));
     lua_pop(L, 1);
     lua_rawgetfield(L, idx, "memoffset");
     if (not lua_isnumber(L, -1)) luaL_errorL(L, "memory_offset must be a number");
@@ -44,44 +44,45 @@ void* struct_info::newinstance(lua_State* L) {
     return ud;
 }
 
-static void set_field(lua_State* L, const struct_info::field_info& fi, void* data, int idx) {
+static void set_field(lua_State* L, const struct_info::field_info& fi, void* data, int idx, int n = 0) {
     void* off = static_cast<int8_t*>(data) + fi.memory_offset;
+    if (n >= fi.array_size) luaL_errorL(L, "out of range");
     switch(fi.type) {
         case c_type::c_bool:
-            *static_cast<bool*>(off) = luaL_checkboolean(L, idx);
+            *(static_cast<bool*>(off) + n) = luaL_checkboolean(L, idx);
             break;
         case c_type::c_char:
-            *static_cast<char*>(off) = dluau_checkc_char(L, idx);
+            *(static_cast<char*>(off) + n) = dluau_checkc_char(L, idx);
             break;
         case c_type::c_uchar:
-            *static_cast<unsigned char*>(off) = dluau_checkc_uchar(L, idx);
+            *(static_cast<unsigned char*>(off) + n) = dluau_checkc_uchar(L, idx);
             break;
         case c_type::c_short:
-            *static_cast<short*>(off) = dluau_checkc_short(L, idx);
+            *(static_cast<short*>(off) + n) = dluau_checkc_short(L, idx);
             break;
         case c_type::c_ushort:
-            *static_cast<unsigned short*>(off) = dluau_checkc_ushort(L, idx);
+            *(static_cast<unsigned short*>(off) + n) = dluau_checkc_ushort(L, idx);
             break;
         case c_type::c_long:
-            *static_cast<long*>(off) = dluau_checkc_long(L, idx);
+            *(static_cast<long*>(off) + n) = dluau_checkc_long(L, idx);
             break;
         case c_type::c_ulong:
-            *static_cast<unsigned long*>(off) = dluau_checkc_ulong(L, idx);
+            *(static_cast<unsigned long*>(off) + n) = dluau_checkc_ulong(L, idx);
             break;
         case c_type::c_int:
-            *static_cast<int*>(off) = dluau_checkc_int(L, idx);
+            *(static_cast<int*>(off) + n) = dluau_checkc_int(L, idx);
             break;
         case c_type::c_uint:
-            *static_cast<unsigned int*>(off) = dluau_checkc_uint(L, idx);
+            *(static_cast<unsigned int*>(off) + n) = dluau_checkc_uint(L, idx);
             break;
         case c_type::c_float:
-            *static_cast<float*>(off) = dluau_checkc_float(L, idx);
+            *(static_cast<float*>(off) + n) = dluau_checkc_float(L, idx);
             break;
         case c_type::c_double:
-            *static_cast<double*>(off) = luaL_checknumber(L, idx);
+            *(static_cast<double*>(off) + n) = luaL_checknumber(L, idx);
             break;
         case c_type::c_void_ptr:
-            *static_cast<void**>(off) = lua_tolightuserdata(L, idx);
+            *(static_cast<void**>(off) + n) = lua_tolightuserdata(L, idx);
             break;
         case c_type::c_void:
             luaL_errorL(L, "cannot set void");
@@ -92,50 +93,51 @@ static void set_field(lua_State* L, const struct_info::field_info& fi, void* dat
     }
 }
 
-static void push_field(lua_State* L, const struct_info::field_info& fi, void* data) {
+static void push_field(lua_State* L, const struct_info::field_info& fi, void* data, int n = 0) {
     void* off = static_cast<int8_t*>(data) + fi.memory_offset;
+    if (n >= fi.array_size) luaL_errorL(L, "out of range");
     switch(fi.type) {
         case c_type::c_bool:
-            lua_pushboolean(L, *static_cast<bool*>(off));
+            lua_pushboolean(L, *(static_cast<bool*>(off) + n));
             break;
         case c_type::c_char:
-            dluau_pushc_char(L, *static_cast<char*>(off));
+            dluau_pushc_char(L, *(static_cast<char*>(off) + n));
             break;
         case c_type::c_uchar:
-            dluau_pushc_uchar(L, *static_cast<unsigned char*>(off));
+            dluau_pushc_uchar(L, *(static_cast<unsigned char*>(off) + n));
             break;
         case c_type::c_short:
-            dluau_pushc_short(L, *static_cast<short*>(off));
+            dluau_pushc_short(L, *(static_cast<short*>(off) + n));
             break;
         case c_type::c_ushort:
-            dluau_pushc_ushort(L, *static_cast<unsigned short*>(off));
+            dluau_pushc_ushort(L, *(static_cast<unsigned short*>(off) + n));
             break;
         case c_type::c_long:
-            dluau_pushc_long(L, *static_cast<long*>(off));
+            dluau_pushc_long(L, *(static_cast<long*>(off) + n));
             break;
         case c_type::c_ulong:
-            dluau_pushc_ulong(L, *static_cast<unsigned long*>(off));
+            dluau_pushc_ulong(L, *(static_cast<unsigned long*>(off) + n));
             break;
         case c_type::c_int:
-            dluau_pushc_int(L, *static_cast<int*>(off));
+            dluau_pushc_int(L, *(static_cast<int*>(off) + n));
             break;
         case c_type::c_uint:
-            dluau_pushc_uint(L, *static_cast<unsigned int*>(off));
+            dluau_pushc_uint(L, *(static_cast<unsigned int*>(off) + n));
             break;
         case c_type::c_float:
-            dluau_pushc_float(L, *static_cast<float*>(off));
+            dluau_pushc_float(L, *(static_cast<float*>(off) + n));
             break;
         case c_type::c_double:
-            lua_pushnumber(L, *static_cast<double*>(off));
+            lua_pushnumber(L, *(static_cast<double*>(off) + n));
             break;
         case c_type::c_void_ptr:
-            lua_pushlightuserdata(L, off);
+            lua_pushlightuserdata(L, *(static_cast<void**>(off) + n));
             break;
         case c_type::c_void:
             lua_pushnil(L);
             break;
         case c_type::c_string:
-            lua_pushstring(L, static_cast<const char*>(off));
+            lua_pushstring(L, *(static_cast<const char**>(off) + n));
             break;
     }
 }
@@ -168,35 +170,27 @@ std::shared_ptr<struct_info>& cinterop::to_struct_info(lua_State* L, int idx) {
 }
 int cinterop::get_struct_field(lua_State* L) {
     auto& info = cinterop::check_struct_info(L, 1);
-    void* data{};
-    if (lua_isbuffer(L, 2)) {
-        size_t len;
-        data = luaL_checkbuffer(L, 2, &len);
-        if (len < info->memory_size) luaL_errorL(L, "buffer too small");
-    } else {
-        data = lua_touserdata(L, 2);
-    }
+    void* data = lua_touserdata(L, 2);
     const char* key = luaL_checkstring(L, 3);
+    const int arrindex = luaL_optinteger(L, 4, 0);
     if (not info->fields.contains(key)) luaL_errorL(L, "invalid field key");
-    push_field(L, info->fields.at(key), data);
+    push_field(L, info->fields.at(key), data, arrindex);
     return 1;
 }
 int cinterop::set_struct_field(lua_State* L) {
     auto& info = cinterop::check_struct_info(L, 1);
-    void* data{};
-    if (lua_isbuffer(L, 2)) {
-        size_t len;
-        data = luaL_checkbuffer(L, 2, &len);
-        if (len < info->memory_size) luaL_errorL(L, "buffer too small");
-    } else {
-        data = lua_touserdata(L, 2);
-    }
+    void* data = lua_touserdata(L, 2);
     const char* key = luaL_checkstring(L, 3);
+    const int arrindex = luaL_optinteger(L, 5, 0);
     if (not info->fields.contains(key)) luaL_errorL(L, "invalid field key");
-    set_field(L, info->fields[key], data, 4);
+    set_field(L, info->fields[key], data, 4, arrindex);
     return 0;
 }
-
+int cinterop::new_struct_instance(lua_State* L) {
+    auto& info = cinterop::check_struct_info(L, 1);
+    info->newinstance(L);
+    return 1;
+}
 
 int cinterop::create_struct_info(lua_State* L) {
     const int memory_size = luaL_checkinteger(L, 1);
@@ -215,7 +209,6 @@ int cinterop::create_struct_info(lua_State* L) {
         lua_unref(M, *ref);
     }};
     if (lua_istable(L, 3)) {
-        std::cout << std::format("IS TABLE\n");
         metatable.reset(new int(lua_ref(L, 3)));
     }
     std::shared_ptr<struct_info> si = std::make_shared<struct_info>(struct_info{
@@ -226,9 +219,6 @@ int cinterop::create_struct_info(lua_State* L) {
     });
     register_fields(*si);
     dcCloseAggr(si->aggr.get());
-    for (auto& [key, v] : si->fields) {
-        std::cout << std::format("FIELD [{}]: {{type: {}, offset: {}, array_size: {}}}\n", key, int(v.type), v.memory_offset, v.array_size);
-    }
     lua_newstructinfo(L, std::move(si));
     return 1;
 };

@@ -33,6 +33,23 @@ struct point {
     int x;
     int y;
 };
+struct test {
+    int a;
+    char abc[3];
+    bool yes;
+    float flt;
+    double num;
+    unsigned char uch;
+};
+DLUAU_API void print_test_info() {
+    std::cout << std::format("[size] {}\n", sizeof(test));
+    std::cout << std::format("[field] a: {}\n", offsetof(test, a));
+    std::cout << std::format("[field] abc: {}\n", offsetof(test, abc));
+    std::cout << std::format("[field] yes: {}\n", offsetof(test, yes));
+    std::cout << std::format("[field] flt: {}\n", offsetof(test, flt));
+    std::cout << std::format("[field] num: {}\n", offsetof(test, num));
+    std::cout << std::format("[field] uch: {}\n", offsetof(test, uch));
+}
 DLUAU_API point test_point(int x, int y) {
     std::cout << std::format("X: {}, Y: {}\n", x, y);
     std::cout << std::format("SIZE: {}, XOFF: {}, YOFF {}\n", sizeof(point), offsetof(point, x), offsetof(point, y));

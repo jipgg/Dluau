@@ -5,6 +5,7 @@ void dlimport::push_cinterop(lua_State *L) {
         {"newinfo", cinterop::create_struct_info},
         {"getfield", cinterop::get_struct_field},
         {"setfield", cinterop::set_struct_field},
+        {"newinstance", cinterop::new_struct_instance},
         {nullptr, nullptr}
     };
     const luaL_Reg lib[] = {

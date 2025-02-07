@@ -1,5 +1,9 @@
 #pragma once
-#include ".dluau_api.h"
+#ifdef DLUAU_LIB_EXPORT
+#define DLUAU_API extern "C" __declspec(dllexport)
+#else
+#define DLUAU_API extern "C" __declspec(dllimport)
+#endif
 #include <luacode.h>
 #include <lualib.h>
 #include <stdint.h>

@@ -30,6 +30,8 @@ struct struct_info {
     };
     boost::container::flat_map<std::string, field_info> fields;
     std::unique_ptr<DCaggr, decltype(&dcFreeAggr)> aggr;
+    std::unique_ptr<int, std::function<void(int*)>> metatable;
+    void* newinstance(lua_State* L);
 };
 std::optional<c_type> string_to_param_type(std::string_view str);
 namespace cinterop {

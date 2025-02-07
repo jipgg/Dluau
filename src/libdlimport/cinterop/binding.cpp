@@ -118,11 +118,9 @@ static int call_binding(lua_State* L) {
         }
     } else {
         auto& si = std::get<sp_struct_info>(binding.types[0]);
-        void* buf = lua_newbuffer(L, si->memory_size);
-            for (auto& [key, v] : si->fields) {
-                std::cout << std::format("FIELD [{}]: {{type: {}, offset: {}, array_size: {}}}\n", key, int(v.type), v.memory_offset, v.array_size);
-            }
-        dcCallAggr(vm, fnptr, si->aggr.get(), buf);
+        //void* buf = lua_newbuffer(L, si->memory_size);
+        void* instance = si->newinstance(L);
+        dcCallAggr(vm, fnptr, si->aggr.get(), instance);
         return 1;
     }
     luaL_errorL(L, "call error");

@@ -34,6 +34,15 @@ static void register_fields(struct_info& si) {
         );
     } 
 }
+void* struct_info::newinstance(lua_State* L) {
+    void* ud = lua_newuserdata(L, memory_size);
+    memset(ud, 0, memory_size);
+    if (metatable != nullptr) {
+        lua_getref(L, *metatable);
+        lua_setmetatable(L, -2);
+    }
+    return ud;
+}
 
 static void set_field(lua_State* L, const struct_info::field_info& fi, void* data, int idx) {
     void* off = static_cast<int8_t*>(data) + fi.memory_offset;
@@ -136,6 +145,8 @@ static void push_field(lua_State* L, const struct_info::field_info& fi, void* da
             break;
     }
 }
+static int metamethod_index(lua_State* L) {
+}
 
 static void lua_newstructinfo(lua_State* L, std::shared_ptr<struct_info>&& si) {
     using sp_si = std::shared_ptr<struct_info>;
@@ -163,22 +174,32 @@ std::shared_ptr<struct_info>& cinterop::to_struct_info(lua_State* L, int idx) {
 }
 int cinterop::get_struct_field(lua_State* L) {
     auto& info = cinterop::check_struct_info(L, 1);
-    size_t len;
-    void* buf = luaL_checkbuffer(L, 2, &len);
+    void* data{};
+    if (lua_isbuffer(L, 2)) {
+        size_t len;
+        data = luaL_checkbuffer(L, 2, &len);
+        if (len < info->memory_size) luaL_errorL(L, "buffer too small");
+    } else {
+        data = lua_touserdata(L, 2);
+    }
     const char* key = luaL_checkstring(L, 3);
-    if (len < info->memory_size) luaL_errorL(L, "buffer too small");
     if (not info->fields.contains(key)) luaL_errorL(L, "invalid field key");
-    push_field(L, info->fields.at(key), buf);
+    push_field(L, info->fields.at(key), data);
     return 1;
 }
 int cinterop::set_struct_field(lua_State* L) {
     auto& info = cinterop::check_struct_info(L, 1);
-    size_t len;
-    void* buf = luaL_checkbuffer(L, 2, &len);
+    void* data{};
+    if (lua_isbuffer(L, 2)) {
+        size_t len;
+        data = luaL_checkbuffer(L, 2, &len);
+        if (len < info->memory_size) luaL_errorL(L, "buffer too small");
+    } else {
+        data = lua_touserdata(L, 2);
+    }
     const char* key = luaL_checkstring(L, 3);
-    if (len < info->memory_size) luaL_errorL(L, "buffer too small");
     if (not info->fields.contains(key)) luaL_errorL(L, "invalid field key");
-    set_field(L, info->fields[key], buf, 4);
+    set_field(L, info->fields[key], data, 4);
     return 0;
 }
 
@@ -196,10 +217,18 @@ int cinterop::create_struct_info(lua_State* L) {
         lua_pop(L, 1);
     }
     const int max_field_count = fields.size();
+    std::unique_ptr<int, std::function<void(int*)>> metatable{nullptr, [M = lua_mainthread(L)](int* ref) {
+        lua_unref(M, *ref);
+    }};
+    if (lua_istable(L, 3)) {
+        std::cout << std::format("IS TABLE\n");
+        metatable.reset(new int(lua_ref(L, 3)));
+    }
     std::shared_ptr<struct_info> si = std::make_shared<struct_info>(struct_info{
         .memory_size = memory_size,
         .fields = std::move(fields),
         .aggr{dcNewAggr(max_field_count, memory_size), dcFreeAggr},
+        .metatable = std::move(metatable),
     });
     register_fields(*si);
     dcCloseAggr(si->aggr.get());

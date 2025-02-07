@@ -168,3 +168,4 @@ dluau -O2 example.luau -D0
 ## Ignore the tests folder
 The tests are mostly just for me to quickly mash up some scripts to test the environment and check if functionality stayed relatively the same.
 They are by no means formal tests that can ensure the stability of the build.
+Also are the not all up-to-date with the latest build.

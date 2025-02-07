@@ -1,5 +1,5 @@
 #include "cinterop.hpp"
-constexpr const char* tname{"c_structinfo"};
+constexpr const char* tname{"structinfo"};
 static const int tag = dluau_registertypetagged(tname);
 namespace bc = boost::container;
 
@@ -86,11 +86,8 @@ static void set_field(lua_State* L, const struct_info::field_info& fi, void* dat
         case c_type::c_void:
             luaL_errorL(L, "cannot set void");
             break;
-        case c_type::c_char_ptr:
+        case c_type::c_string:
             luaL_errorL(L, "cannot set string");
-            break;
-        case c_type::c_aggregate:
-            luaL_errorL(L, "cannot set aggr");
             break;
     }
 }
@@ -137,11 +134,8 @@ static void push_field(lua_State* L, const struct_info::field_info& fi, void* da
         case c_type::c_void:
             lua_pushnil(L);
             break;
-        case c_type::c_char_ptr:
+        case c_type::c_string:
             lua_pushstring(L, static_cast<const char*>(off));
-            break;
-        case c_type::c_aggregate:
-            lua_pushnil(L);
             break;
     }
 }

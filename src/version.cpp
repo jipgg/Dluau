@@ -39,7 +39,7 @@ DLUAU_API point test_point(int x, int y) {
     return point{.x = x, .y = y};
 }
 DLUAU_API void print_point(point point) {
-    std::cout << std::format("point: {{x: {}, y: {}}}\n", point.x, point.y);
+    std::cout << std::format("POINT: {{X: {}, Y: {}}}\n", point.x, point.y);
 }
 DLUAU_API unsigned char test_unsigned_char_return() {
     return 0xfeui8;

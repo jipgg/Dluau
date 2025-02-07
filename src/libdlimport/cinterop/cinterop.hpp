@@ -5,7 +5,6 @@
 using namespace dlimport;
 
 enum class c_type {
-    c_aggregate = DC_SIGCHAR_AGGREGATE,
     c_int = DC_SIGCHAR_INT,
     c_uint = DC_SIGCHAR_UINT,
     c_ulong = DC_SIGCHAR_ULONG,
@@ -18,7 +17,7 @@ enum class c_type {
     c_float = DC_SIGCHAR_FLOAT,
     c_double = DC_SIGCHAR_DOUBLE,
     c_void_ptr = DC_SIGCHAR_POINTER,
-    c_char_ptr,
+    c_string,
     c_bool = DC_SIGCHAR_BOOL,
 };
 struct struct_info {

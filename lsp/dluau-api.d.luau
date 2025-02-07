@@ -81,12 +81,12 @@ declare class dlmodule
     name: string
     import: <As..., Rs...>(self: dlmodule, symbol: string) -> ((As...)->(Rs...))
 end
-export type c_fieldinfo = {
+export type cinterop_fieldinfo = {
     type: c_type,
     memoffset: number,
-    arrsize: number?,
+    arrsize: number?
 }
-declare class c_structinfo end
+declare class structinfo end
 type cinterop = {
     native: {
         int: (number | string) -> c_int,
@@ -99,11 +99,11 @@ type cinterop = {
         ulong: (number | string) -> c_ulong,
         float: (number) -> c_float,
     },
-    bindfunction: (<Return, Args...>(module: dlmodule, returns: c_type | 'void' | c_structinfo, func_name: string, ...c_type|c_structinfo) -> ((Args...)->Return)),
+    bindfunction: (<Return, Args...>(module: dlmodule, returns: c_type | 'void' | structinfo, func_name: string, ...c_type|structinfo) -> ((Args...)->Return)),
     struct: {
-        newinfo: (memsize: number, field_info: {[string]: c_fieldinfo}, metatable: {}?) -> c_structinfo,
-        getfield: <T>(s: c_structinfo, data: buffer | userdata, key: string) -> T,
-        setfield: <T>(s: c_structinfo, data: buffer | userdata, key: string, newval: T) -> T,
+        newinfo: (memsize: number, fieldsinfo: {[string]: cinterop_fieldinfo}, metatable: any?) -> structinfo,
+        getfield: <T>(s: structinfo, data: buffer | userdata, key: string) -> T,
+        setfield: <T>(s: structinfo, data: buffer | userdata, key: string, newval: T) -> T,
     },
 }
 type dlimport = {

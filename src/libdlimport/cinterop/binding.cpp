@@ -52,7 +52,7 @@ static int call_binding(lua_State* L) {
                 case ct::c_double:
                     dcArgDouble(vm, luaL_checknumber(L, i));
                     break;
-                case ct::c_char_ptr:
+                case ct::c_string:
                     dcArgPointer(vm, (DCpointer)luaL_checkstring(L, i));
                     break;
                 case ct::c_void_ptr:
@@ -64,10 +64,8 @@ static int call_binding(lua_State* L) {
             }
         } else {
             auto& si = std::get<sp_struct_info>(binding.types[i]);
-            size_t len;
-            void* buf = luaL_checkbuffer(L, i, &len);
-            if (len < si->memory_size) luaL_argerrorL(L, i, "buffer too small");
-            dcArgAggr(vm, si->aggr.get(), buf);
+            void* data = lua_touserdata(L, i);
+            dcArgAggr(vm, si->aggr.get(), data);
         }
     }
     DCpointer fnptr = reinterpret_cast<DCpointer>(binding.function_pointer);
@@ -106,7 +104,7 @@ static int call_binding(lua_State* L) {
             case ct::c_float:
                 dluau_pushc_float(L, dcCallFloat(vm, fnptr));
                 return 1;
-            case ct::c_char_ptr:
+            case ct::c_string:
                 lua_pushstring(L, static_cast<char*>(dcCallPointer(vm, fnptr)));
                 return 1;
             case ct::c_void_ptr:
@@ -140,8 +138,7 @@ optional<c_type> string_to_param_type(string_view str) {
         {"userdata", ct::c_void_ptr},
         {"number", ct::c_double},
         {"void", ct::c_void},
-        {"string", ct::c_char_ptr},
-        {"c_aggregate", ct::c_aggregate},
+        {"string", ct::c_string},
     };
     if (not map.contains(str)) return std::nullopt;
     return map.at(str);

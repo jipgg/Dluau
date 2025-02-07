@@ -32,8 +32,20 @@ struct struct_info {
     std::unique_ptr<DCaggr, decltype(&dcFreeAggr)> aggr;
 };
 struct struct_object {
+    struct_object(const struct_object&) = delete; 
+    struct_object& operator=(const struct_object&) = delete; 
+    struct_object(struct_object&&) noexcept = default; 
+    struct_object& operator=(struct_object&&) noexcept = default; 
+    struct_object(const std::shared_ptr<struct_info>& info): info(info) {
+        data = malloc(info->memory_size);
+        memset(data, 0, info->memory_size);
+    }
+    ~struct_object() {
+        free(data);
+        data = nullptr;
+    }
     std::shared_ptr<struct_info> info;
-    std::any data;
+    void* data;
 };
 class aggregate {
 public:
@@ -74,4 +86,7 @@ void push_c_types(lua_State* L);
 int new_function_binding(lua_State* L);
 int new_aggregate(lua_State* L);
 int create_struct_info(lua_State* L);
+int get_struct_field(lua_State* L);
+int set_struct_field(lua_State* L);
+int create_object(lua_State* L);
 }

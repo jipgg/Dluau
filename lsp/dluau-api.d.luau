@@ -115,6 +115,9 @@ type cinterop = {
     new_function_binding: (<Return, Args...>(module: dlmodule, returns: c_type | 'void' | c_aggregate, func_name: string, ...c_type|c_aggregate) -> ((Args...)->Return)),
     new_aggregate: (size: number, fields: {cinterop_aggregate_field}) -> c_aggregate, 
     create_struct_info: (memory_size: number, fields_info: {[string]: c_field_info}) -> c_struct_info,
+    create_object: <T>(si: c_struct_info) -> T,
+    get_struct_field: <T>(si: c_struct_info, ud: buffer, key: string) -> T,
+    set_struct_field: <T>(si: c_struct_info, ud: buffer, key: string, value: T) -> T,
 }
 type dlimport = {
     require: (target: string) -> unknown,

@@ -5,6 +5,8 @@ void dlimport::push_cinterop(lua_State *L) {
         {"new_function_binding", cinterop::new_function_binding},
         //{"new_aggregate", cinterop::new_aggregate},
         {"create_struct_info", cinterop::create_struct_info},
+        {"get_struct_field", cinterop::get_struct_field},
+        {"set_struct_field", cinterop::set_struct_field},
         {nullptr, nullptr}
     };
     lua_newtable(L);

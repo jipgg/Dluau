@@ -3,6 +3,8 @@
 void dlimport::push_cinterop(lua_State *L) {
     const luaL_Reg lib[] = {
         {"new_function_binding", cinterop::new_function_binding},
+        //{"new_aggregate", cinterop::new_aggregate},
+        {"create_struct_info", cinterop::create_struct_info},
         {nullptr, nullptr}
     };
     lua_newtable(L);

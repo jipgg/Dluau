@@ -86,6 +86,20 @@ type cinterop_struct_field_description = {
     type: c_type,
     offset: number,
 }
+declare class c_aggregate
+end
+type cinterop_aggregate_field = {
+    name: string,
+    type: c_type,
+    memory_offset: number,
+    array_size: number,
+}
+type c_field_info = {
+    type: c_type,
+    memory_offset: number,
+    array_size: number?,
+}
+declare class c_struct_info end
 type cinterop = {
     native_type: {
         int: (number | string) -> c_int,
@@ -98,8 +112,9 @@ type cinterop = {
         ulong: (number | string) -> c_ulong,
         float: (number) -> c_float,
     },
-    new_function_binding: (<Return, Args...>(module: dlmodule, returns: c_type | 'void', func_name: string, ...c_type) -> ((Args...)->Return)),
-    new_struct_description: <T>() -> T, 
+    new_function_binding: (<Return, Args...>(module: dlmodule, returns: c_type | 'void' | c_aggregate, func_name: string, ...c_type|c_aggregate) -> ((Args...)->Return)),
+    new_aggregate: (size: number, fields: {cinterop_aggregate_field}) -> c_aggregate, 
+    create_struct_info: (memory_size: number, fields_info: {[string]: c_field_info}) -> c_struct_info,
 }
 type dlimport = {
     require: (target: string) -> unknown,

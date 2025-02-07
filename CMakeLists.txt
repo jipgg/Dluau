@@ -62,7 +62,7 @@ target_compile_definitions(lib PRIVATE
     DLUAU_VERSION_MINOR=${version_MINOR}
     DLUAU_VERSION_PATCH=${version_PATCH}
 )
-target_include_directories(lib PRIVATE ${lib_DIR} ${DynCall_DIR})
+target_include_directories(lib PRIVATE ${lib_DIR} ${DynCall_DIR} ${DynCallback_DIR})
 target_include_directories(lib PUBLIC ${lib_DIR}/include)
 target_link_libraries(lib PUBLIC
     Luau.VM
@@ -71,6 +71,7 @@ target_link_libraries(lib PUBLIC
     common
     Boost::container
     dyncall_s
+    dyncallback_s
     nlohmann_json::nlohmann_json
 )
 set(lib_NAME dluaulib)

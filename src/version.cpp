@@ -28,6 +28,13 @@ DLUAU_API unsigned int test_unsigned_int_arg(unsigned int e) {
 DLUAU_API int test_int_arg(int e) {
     return e;
 }
+struct point {
+    int x;
+    int y;
+};
+DLUAU_API point test_point(int x, int y) {
+    return point{.x = x, .y = y};
+}
 DLUAU_API unsigned char test_unsigned_char_return() {
     return 0xfeui8;
 }

@@ -4,6 +4,8 @@ using std::optional, std::string_view;
 static std::unique_ptr<DCCallVM, decltype(&dcFree)> call_vm{dcNewCallVM(1024), dcFree};
 
 struct c_function_binding {
+    aggregate_sp return_aggr;
+    std::vector<aggregate_sp> aggregates;
     std::vector<c_type> types;
     c_type get_return_type() const {return types[0];}
     uintptr_t function_pointer;
@@ -13,6 +15,10 @@ static int call_binding(lua_State* L) {
     DCCallVM* vm = call_vm.get();
     dcReset(vm);
     using ct = c_type;
+    int curr_aggr{};
+    auto next_aggr = [&curr_aggr, &ags = binding.aggregates] {
+        return ags.at(curr_aggr++)->get();
+    };
     for (int i{1}; i < binding.types.size(); ++i) {
         switch(binding.types.at(i)) {
             case ct::c_bool:
@@ -54,7 +60,13 @@ static int call_binding(lua_State* L) {
             case ct::c_void_ptr:
                 if (not lua_islightuserdata(L, i)) luaL_typeerrorL(L, i, "not light userdata.");
                 dcArgPointer(vm, lua_tolightuserdata(L, i));
-            case ct::c_void:
+                break;
+            case ct::c_aggregate: {
+                size_t len;
+                //should error handle bufgfer size
+                dcArgAggr(vm, next_aggr(), luaL_checkbuffer(L, i, &len));
+                break;
+            } case ct::c_void:
                 break;
         }
     }
@@ -102,6 +114,11 @@ static int call_binding(lua_State* L) {
         case ct::c_void:
             dcCallVoid(vm, fnptr);
             return 0;
+        case ct::c_aggregate: {
+            auto& aggr = *binding.return_aggr;
+            void* buf = lua_newbuffer(L, aggr.size());
+            dcCallAggr(vm, fnptr, aggr.get(), buf);
+        }
     }
     luaL_errorL(L, "call error");
 }
@@ -121,6 +138,7 @@ optional<c_type> string_to_param_type(string_view str) {
         {"number", ct::c_double},
         {"void", ct::c_void},
         {"string", ct::c_char_ptr},
+        {"c_aggregate", ct::c_aggregate},
     };
     if (not map.contains(str)) return std::nullopt;
     return map.at(str);
@@ -129,17 +147,25 @@ int cinterop::new_function_binding(lua_State* L) {
     dlmodule* module = dlimport::lua_tomodule(L, 1);
     c_function_binding binding{};
     const int top = lua_gettop(L);
-    string_view return_type = luaL_checkstring(L, 2);
-    auto res = string_to_param_type(return_type);
-    if (not res) luaL_argerrorL(L, 2, "not a c type");
-    binding.types.push_back(std::move(*res));
-
+    if (lua_userdatatag(L, 2) == aggregate_tag) {
+        binding.return_aggr = *static_cast<aggregate_sp*>(lua_touserdatatagged(L, 2, aggregate_tag));
+        binding.types.push_back(c_type::c_aggregate);
+    } else {
+        string_view return_type = luaL_checkstring(L, 2);
+        auto res = string_to_param_type(return_type);
+        if (not res) luaL_argerrorL(L, 2, "not a c type");
+        binding.types.push_back(std::move(*res));
+    }
     auto proc = dlimport::find_proc_address(*module, luaL_checkstring(L, 3));
     if (not proc) luaL_argerrorL(L, 3, "couldn't find address");
     binding.function_pointer = *proc;
-
     if (top > 3) {
         for (int i{4}; i <= top; ++i) {
+            if (lua_userdatatag(L, i) == aggregate_tag) {
+                binding.aggregates.push_back(*static_cast<aggregate_sp*>(lua_touserdatatagged(L, i, aggregate_tag)));
+                binding.types.push_back(c_type::c_aggregate);
+                continue;
+            }
             auto res = string_to_param_type(luaL_checkstring(L, i));
             if (not res) luaL_argerrorL(L, i, "not a c type");
             else if (*res == c_type::c_void) luaL_argerrorL(L, i, "an argument type cannot be void.");

@@ -6,6 +6,22 @@ local get_version_major = nfb(dll, 'c_int', 'get_version_major')
 local get_version_minor = nfb(dll, 'c_int', 'get_version_minor')
 local v: c_int = get_version_minor()
 local n = tonumber(tostring(v))
+-- local point_aggr = dlimport.cinterop.new_aggregate(8, {
+--     {
+--         name = 'x',
+--         type = 'c_int',
+--         memory_offset = 0,
+--         array_size = 1,
+--     },
+--     {
+--         name = 'y',
+--         type = 'c_int',
+--         memory_offset = 4,
+--         array_size = 1,
+--     }
+-- })
+-- print(`aggr {point_aggr}`)
+--local test_point: (c_int, c_int) -> buffer = nfb(dll, point_aggr, 'test_point', 'c_int', 'c_int')
 print(n, v)
 print(`version {get_version()}`)
 print(`version major: {get_version_major()}`)

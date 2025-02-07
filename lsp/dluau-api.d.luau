@@ -81,19 +81,6 @@ declare class dlmodule
     name: string
     import: <As..., Rs...>(self: dlmodule, symbol: string) -> ((As...)->(Rs...))
 end
-type cinterop_struct_field_description = {
-    name: string,
-    type: c_type,
-    offset: number,
-}
-declare class c_aggregate
-end
-type cinterop_aggregate_field = {
-    name: string,
-    type: c_type,
-    memory_offset: number,
-    array_size: number,
-}
 type c_field_info = {
     type: c_type,
     memory_offset: number,
@@ -101,7 +88,7 @@ type c_field_info = {
 }
 declare class c_struct_info end
 type cinterop = {
-    native_type: {
+    native: {
         int: (number | string) -> c_int,
         uint: (number | string) -> c_uint,
         char: (number | string) -> c_char,
@@ -112,11 +99,12 @@ type cinterop = {
         ulong: (number | string) -> c_ulong,
         float: (number) -> c_float,
     },
-    new_function_binding: (<Return, Args...>(module: dlmodule, returns: c_type | 'void' | c_struct_info, func_name: string, ...c_type|c_struct_info) -> ((Args...)->Return)),
-    create_struct_info: (memory_size: number, fields_info: {[string]: c_field_info}) -> c_struct_info,
-    create_object: <T>(si: c_struct_info) -> T,
-    get_struct_field: <T>(si: c_struct_info, ud: buffer, key: string) -> T,
-    set_struct_field: <T>(si: c_struct_info, ud: buffer, key: string, value: T) -> T,
+    bindfunction: (<Return, Args...>(module: dlmodule, returns: c_type | 'void' | c_struct_info, func_name: string, ...c_type|c_struct_info) -> ((Args...)->Return)),
+    struct: {
+        newinfo: (mem_size: number, field_info: {[string]: c_field_info}) -> c_struct_info,
+        getfield: <T>(s: c_struct_info, data: buffer, key: string) -> T,
+        setfield: <T>(s: c_struct_info, data: buffer, key: string, newval: T) -> T,
+    },
 }
 type dlimport = {
     require: (target: string) -> unknown,

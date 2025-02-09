@@ -48,6 +48,7 @@ DLUAU_API int dluau_stringatom(lua_State* L, const char* key);
 DLUAU_API int dluau_lstringatom(lua_State* L, const char* key, size_t len);
 // the dluau require function implementation
 DLUAU_API int dluau_require(lua_State* L, const char* name);
+DLUAU_API int dluau_lazyrequire(lua_State* L, const char* name);
 // Precompiles the source for precompiled features like `nameof()`
 // Returns nullptr on failure.
 DLUAU_API char* dluau_precompile(const char* src, size_t src_size, size_t* outsize);

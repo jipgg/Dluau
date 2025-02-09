@@ -1,5 +1,6 @@
 declare collectgarbage: (("collect") -> ()) & (("count") -> number)
 declare nameof: <T>(v: T) -> string
+declare lazyrequire: <T>(modulename: string) -> T
 declare class userdata end
 
 export type osdate = {day: number, month: number, year: number, min: number, sec: number, hour: number, wday: number, yday: number, isdst: boolean}

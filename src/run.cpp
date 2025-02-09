@@ -25,6 +25,9 @@ lua_CompileOptions* shared::compile_options{&copts};
 static int lua_require(lua_State* L) {
     return dluau_require(L, luaL_checkstring(L, 1));
 }
+static int lua_lazyrequire(lua_State* L) {
+    return dluau_lazyrequire(L, luaL_checkstring(L, 1));
+}
 static int lua_loadstring(lua_State* L) {
     size_t l = 0;
     const char* s = luaL_checklstring(L, 1, &l);
@@ -40,7 +43,7 @@ static int lua_loadstring(lua_State* L) {
     lua_insert(L, -2);
     return 2;
 }
-int lua_collectgarbage(lua_State* L) {
+static int lua_collectgarbage(lua_State* L) {
     string_view option = luaL_optstring(L, 1, "collect");
     if (option == "collect") {
         lua_gc(L, LUA_GCCOLLECT, 0);
@@ -58,6 +61,7 @@ void dluau_registerglobals(lua_State *L) {
         {"loadstring", lua_loadstring},
         {"collectgarbage", lua_collectgarbage},
         {"require", lua_require},
+        {"lazyrequire", lua_lazyrequire},
         {nullptr, nullptr}
     };
     lua_pushvalue(L, LUA_GLOBALSINDEX);

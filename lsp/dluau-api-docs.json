@@ -1,4 +1,7 @@
 {
+    "@roblox/global/lazyrequire": {
+        "documentation": "Creates a dummy table and only `require`s the actual module upon first usage of the module.\nOnly works on modules that return a table.\nThe type of the module is not automatically inferred like with `require`.\n**Workaround to get the inferred type:**\n```lua\ntype module = typeof(require('@module'))\nlocal module = lazyrequire('@module') :: module\n```"
+    },
     "@roblox/global/nameof": {
         "documentation": "Returns the variable name as a `string`. This is a precompiled function, meaning it is substited as a string literal at runtime."
     },

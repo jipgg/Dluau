@@ -93,6 +93,30 @@ static optional<error_trail> substitute_alias(string& str) {
     str.replace(sm.position(), sm.length(), aliases[alias]);
     return nullopt;
 }
+static int lazyrequire_handler(lua_State* L) {
+    const string name = lua_tostring(L, lua_upvalueindex(1));
+    dluau_require(L, name.c_str());
+    lua_getmetatable(L, 1);
+    lua_pushvalue(L, -2);
+    lua_setfield(L, -2, "__index");
+    lua_pop(L, 1);
+    if (lua_istable(L, -1)) {
+        lua_pushvalue(L, 2);
+        lua_gettable(L, -2);
+        lua_remove(L, -2);
+    }
+    return 1;
+}
+int dluau_lazyrequire(lua_State* L, const char* name) {
+    lua_newtable(L);
+    lua_newtable(L);
+    lua_pushstring(L, "__index");
+    lua_pushstring(L, name);
+    lua_pushcclosure(L, lazyrequire_handler, "lazyrequire_handler", 1);
+    lua_settable(L, -3);
+    lua_setmetatable(L, -2);
+    return 1;
+}
 int dluau_require(lua_State* L, const char* name) {
     auto result = shared::resolve_require_path(L, name);
     if (auto* err = get_if<error_trail>(&result)) {

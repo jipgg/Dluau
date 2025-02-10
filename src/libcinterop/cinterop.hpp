@@ -2,7 +2,7 @@
 #include "../libdlimport/dlimport.hpp"
 using namespace dlimport;
 
-enum class c_type {
+enum class C_type {
     c_int = DC_SIGCHAR_INT,
     c_uint = DC_SIGCHAR_UINT,
     c_ulong = DC_SIGCHAR_ULONG,
@@ -18,28 +18,28 @@ enum class c_type {
     c_string,
     c_bool = DC_SIGCHAR_BOOL,
 };
-struct struct_info {
+struct Struct_info {
     int memory_size;
-    struct field_info {
-        c_type type;
+    struct Field_info {
+        C_type type;
         int memory_offset;
         int array_size;
     };
-    boost::container::flat_map<std::string, field_info> fields;
-    std::unique_ptr<DCaggr, decltype(&dcFreeAggr)> aggr;
-    std::unique_ptr<int, std::function<void(int*)>> metatable;
-    void* newinstance(lua_State* L);
+    Flat_map<String, Field_info> fields;
+    Unique<DCaggr, decltype(&dcFreeAggr)> aggr;
+    Unique<int, Func<void(int*)>> metatable;
+    void* newinstance(Lstate L);
 };
-std::optional<c_type> string_to_param_type(std::string_view str);
+Opt<C_type> string_to_param_type(Str_view str);
 namespace cinterop {
-std::shared_ptr<struct_info>& check_struct_info(lua_State* L, int idx);
-std::shared_ptr<struct_info>& to_struct_info(lua_State* L, int idx);
-int new_struct_instance(lua_State* L);
-bool is_struct_info(lua_State* L, int idx);
-void push_c_types(lua_State* L);
-int new_function_binding(lua_State* L);
-int c_type_sizeof(lua_State* L);
-int create_struct_info(lua_State* L);
-int get_struct_field(lua_State* L);
-int set_struct_field(lua_State* L);
+Shared<Struct_info>& check_struct_info(Lstate L, int idx);
+Shared<Struct_info>& to_struct_info(Lstate L, int idx);
+int new_struct_instance(Lstate L);
+bool is_struct_info(Lstate L, int idx);
+void push_c_types(Lstate L);
+int new_function_binding(Lstate L);
+int c_type_sizeof(Lstate L);
+int create_struct_info(Lstate L);
+int get_struct_field(Lstate L);
+int set_struct_field(Lstate L);
 }

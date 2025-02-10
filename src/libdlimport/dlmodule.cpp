@@ -5,13 +5,11 @@
 #include <filesystem>
 constexpr int unintialized{-1};
 static int importfunction_sa{unintialized};
-using std::string_view, std::string;
-using common::error_trail;
-using dlimport::dlmodule;
+using dlimport::Dlmodule;
 
-static int index(lua_State* L) {
-    dlmodule* module = dlimport::lua_tomodule(L, 1);
-    const string_view key = luaL_checkstring(L, 2);
+static int index(Lstate L) {
+    Dlmodule* module = dlimport::lua_tomodule(L, 1);
+    const Str_view key = luaL_checkstring(L, 2);
     if (key == "path") {
         lua_pushstring(L, module->path.string().c_str());
         return 1;
@@ -22,27 +20,27 @@ static int index(lua_State* L) {
     luaL_argerrorL(L, 2, "index was null");
 }
 
-static int import_function(lua_State* L) {
-    const string proc_key = string("dlexport_") + luaL_checkstring(L, 2);
+static int import_function(Lstate L) {
+    const String proc_key = String("dlexport_") + luaL_checkstring(L, 2);
     auto opt = dlimport::find_proc_address(*dlimport::lua_tomodule(L, 1), proc_key);
     if (not opt) luaL_errorL(L, "lua_CFunction '%s' was not found ", proc_key.c_str());
     const auto fmt = std::format("dlimported:{}", proc_key);
     lua_pushcfunction(L, reinterpret_cast<lua_CFunction>(*opt), fmt.c_str());
     return 1;
 }
-static int namecall(lua_State* L) {
-    dlmodule& module = *dlimport::lua_tomodule(L, 1);
+static int namecall(Lstate L) {
+    Dlmodule& module = *dlimport::lua_tomodule(L, 1);
     int atom;
     lua_namecallatom(L, &atom);
     if (atom == importfunction_sa) return import_function(L);
-    luaL_errorL(L, error_trail{std::format("invalid namecall '{}'", atom) }.formatted().c_str());
+    dluau::error(L, "invalid namecall '{}'", atom);
 }
 
-void dlmodule::init(lua_State* L) {
-    if (luaL_newmetatable(L, dlmodule::tname)) {
+void Dlmodule::init(Lstate L) {
+    if (luaL_newmetatable(L, Dlmodule::tname)) {
         importfunction_sa = dluau_stringatom(L, "import");
-        lua_setlightuserdataname(L, dlmodule::tag, dlmodule::tname);
-        const luaL_Reg meta[] = {
+        lua_setlightuserdataname(L, Dlmodule::tag, Dlmodule::tname);
+        const Lreg meta[] = {
             {"__index", index},
             {"__namecall", namecall},
             {nullptr, nullptr}

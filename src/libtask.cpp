@@ -1,5 +1,4 @@
-#include "dluau.h"
-#include "shared.hpp"
+#include "dluau.hpp"
 #include <common.hpp>
 #include <chrono>
 #include <queue>
@@ -9,53 +8,46 @@
 #include <utility>
 #include <ranges>
 #include <algorithm>
+using namespace dluau::type_aliases; 
 using namespace std::chrono_literals;
-namespace chr = std::chrono;
-namespace rngs = std::ranges;
-using chr::steady_clock;
-using stime_point = steady_clock::time_point;
-using chr::milliseconds, chr::duration;
-using std::variant, std::queue;
-using std::optional, std::nullopt;
-using std::vector, std::tuple;
-using boost::container::flat_map;
-using boost::container::flat_set;
-using common::error_trail, common::raii;
-using std::string_view;
-using luathread = lua_State*;
+using Steady_clock = chrono::steady_clock;
+using Stime_point = Steady_clock::time_point;
+template <class Key>
+using Flat_set = boost::container::flat_set<Key>;
+using Raii = common::raii;
 
-struct deferrer {
+struct Deferrer {
     lua_State* state;
     int ref;
     int argn;
 };
 
-struct afterer {
+struct Afterer {
     lua_State* after_this;
     int after_this_ref;
     int ref;
     int argn;
 };
 
-struct waiter {
-    stime_point start;
-    duration<double> length;
+struct Waiter {
+    Stime_point start;
+    Duration<double> length;
     int argn;
     int ref;
 };
-enum class job {
+enum class Job {
     waiter, after, ctask
 };
-struct cleaning_instruction {
+struct Cleaning_instruction {
     uintptr_t id;
-    job job;
+    Job job;
 };
 
-static flat_map<luathread, waiter> waiting;
-static flat_map<luathread, afterer> do_after;
-static vector<dluau_ctask> ctasks;
-static vector<deferrer> deferred;
-static vector<cleaning_instruction> janitor;
+static Flat_map<Lthread, Waiter> waiting;
+static Flat_map<Lthread, Afterer> do_after;
+static Vector<dluau_ctask> ctasks;
+static Vector<Deferrer> deferred;
+static Vector<Cleaning_instruction> janitor;
 
 static bool is_finished(lua_State* L, int ref) {
     lua_getglobal(L, "coroutine");
@@ -67,7 +59,7 @@ static bool is_finished(lua_State* L, int ref) {
     lua_pop(L, 1);
     return finished;
 }
-static optional<error_trail> close_thread(lua_State* L, lua_State* co) {
+static Expected<void> close_thread(lua_State* L, lua_State* co) {
     lua_getglobal(L, "coroutine");
     lua_getfield(L, -1, "close");
     lua_remove(L, -2);
@@ -76,9 +68,9 @@ static optional<error_trail> close_thread(lua_State* L, lua_State* co) {
     if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
         std::string errmsg = lua_tostring(L, -1);
         lua_pop(L, 1);
-        return error_trail(std::move(errmsg));
+        return Unexpected(std::move(errmsg));
     }
-    return nullopt;
+    return Expected<void>();
 }
 
 static bool has_errored(lua_State* state) {
@@ -91,8 +83,8 @@ static bool has_errored(int status) {
 
 static int wait(lua_State* L) {
     if (not lua_isyieldable(L)) luaL_errorL(L, "current context is not yieldable");
-    const auto now = steady_clock::now(); 
-    const auto sec = duration<double>(luaL_optnumber(L, 1, 0));
+    const auto now = Steady_clock::now(); 
+    const auto sec = Duration<double>(luaL_optnumber(L, 1, 0));
     if (waiting.contains(L)) {
         waiting[L].start = now;
         waiting[L].length = sec;
@@ -100,7 +92,7 @@ static int wait(lua_State* L) {
     }
     lua_pushthread(L);
     int ref = lua_ref(L, -1);
-    waiting.emplace(L, waiter{
+    waiting.emplace(L, Waiter{
         .start = now,
         .length = sec,
         .argn = 0,
@@ -108,8 +100,8 @@ static int wait(lua_State* L) {
     });
     return lua_yield(L, 0);
 }
-static tuple<lua_State*, int> resolve_task_argument(lua_State* L, int idx) {
-    lua_State* state = nullptr;
+static Tuple<Lstate, int> resolve_task_argument(Lstate L, int idx) {
+    Lstate state = nullptr;
     const int top = lua_gettop(L);
     if (lua_isfunction(L, idx)) {
         state = lua_newthread(L);
@@ -137,11 +129,11 @@ static int spawn(lua_State* L) {
     return 1;
 }
 static int delay(lua_State* L) {
-    const auto now = steady_clock::now();
-    const auto sec = duration<double>(luaL_optnumber(L, 1, 0));
+    const auto now = Steady_clock::now();
+    const auto sec = Duration<double>(luaL_optnumber(L, 1, 0));
     auto [state, argn] = resolve_task_argument(L, 2);
     if (not state) luaL_typeerrorL(L, 1, "function or thread");
-    waiting.emplace(state, waiter{
+    waiting.emplace(state, Waiter{
         .start = now,
         .length = sec,
         .argn = argn,
@@ -152,7 +144,7 @@ static int delay(lua_State* L) {
 static int defer(lua_State* L) {
     auto [state, argn] = resolve_task_argument(L, 1);
     if (not state) luaL_typeerrorL(L, 1, "function or thread");
-    deferred.push_back(deferrer{
+    deferred.push_back(Deferrer{
         .state = state,
         .ref = lua_ref(L, -1),
         .argn = argn,
@@ -162,17 +154,16 @@ static int defer(lua_State* L) {
 static int cancel(lua_State* L) {
     if (not lua_isthread(L, 1)) luaL_typeerrorL(L, 1, "thread");
     lua_State* state = lua_tothread(L, 1);
-    auto err = close_thread(L, state);
-    if (err) luaL_errorL(L, err->formatted().c_str());
+    if (auto success = close_thread(L, state); !success) dluau::error(L, success.error());
     if (waiting.contains(state)) {
         lua_unref(L, waiting[state].ref);
         waiting.erase(state);
         return 0;
     }
-    auto in_deferred = rngs::find_if(deferred, [&state](deferrer& e) {
+    auto in_deferred = ranges::find_if(deferred, [&state](Deferrer& e) {
         return e.state == state;
     });
-    if (in_deferred != rngs::end(deferred)) {
+    if (in_deferred != ranges::end(deferred)) {
         lua_unref(L, in_deferred->ref);
         deferred.erase(in_deferred);
         return 0;
@@ -180,7 +171,7 @@ static int cancel(lua_State* L) {
     return 0;
 }
 static int index(lua_State* L) {
-    string_view key = luaL_checkstring(L, 2);
+    Str_view key = luaL_checkstring(L, 2);
     if (key == "this") {
         lua_pushthread(L);
         return 1;
@@ -193,7 +184,7 @@ static int wait_util(lua_State* L) {
     const int waiting_for_ref = lua_ref(L, 1);
     lua_pushthread(L);
     const int ref = lua_ref(L, -1);
-    do_after.emplace(L, afterer{
+    do_after.emplace(L, Afterer{
         .after_this = thread,
         .after_this_ref = waiting_for_ref,
         .ref = lua_ref(L, -1),
@@ -206,7 +197,7 @@ static int delay_until(lua_State* L) {
     const int waiting_for_ref = lua_ref(L, 1);
     auto [state, argn] = resolve_task_argument(L, 2);
     if (not state) luaL_typeerrorL(L, 2, "function or thread");
-    do_after.emplace(state, afterer{
+    do_after.emplace(state, Afterer{
         .after_this = thread,
         .after_this_ref = waiting_for_ref,
         .ref = lua_ref(L, -1),
@@ -215,7 +206,7 @@ static int delay_until(lua_State* L) {
     return 1;
 }
 
-namespace shared {
+namespace dluau {
 bool tasks_in_progress() {
     return not (
         waiting.empty()
@@ -224,8 +215,8 @@ bool tasks_in_progress() {
         and ctasks.empty()
     );
 }
-std::expected<void, error_trail> task_step(lua_State* L) {
-    const auto now = steady_clock::now();
+Expected<void> task_step(lua_State* L) {
+    const auto now = Steady_clock::now();
     for (auto& [state, w] : do_after) {
         const int wf_top = lua_gettop(w.after_this);
         const int wf_status = lua_status(w.after_this);
@@ -234,16 +225,16 @@ std::expected<void, error_trail> task_step(lua_State* L) {
         if (wf_status == LUA_OK) {
             const int status = lua_resume(state, L, w.argn);
             if (has_errored(status)) {
-                return std::unexpected(error_trail(lua_tostring(state, -1)));
+                return Unexpected(lua_tostring(state, -1));
             }
         }
-        janitor.emplace_back(reinterpret_cast<uintptr_t>(state), job::after);
+        janitor.emplace_back(reinterpret_cast<uintptr_t>(state), Job::after);
     }
     for (auto& d : deferred) {
         auto status = lua_resume(d.state, L, d.argn);
         lua_unref(L, d.ref);
         if (has_errored(status)) {
-            return std::unexpected(error_trail(lua_tostring(d.state, -1)));
+            return Unexpected(lua_tostring(d.state, -1));
         }
     }
     deferred.clear();
@@ -256,10 +247,10 @@ std::expected<void, error_trail> task_step(lua_State* L) {
             and waiter.start == old_start
         };
         if (status == LUA_OK or yielded_independently) {
-            janitor.emplace_back(reinterpret_cast<uintptr_t>(state), job::waiter);
+            janitor.emplace_back(reinterpret_cast<uintptr_t>(state), Job::waiter);
             continue;
         } else if (status != LUA_YIELD){
-            return std::unexpected(error_trail(lua_tostring(state, -1)));
+            return Unexpected(lua_tostring(state, -1));
         }
     }
     for (dluau_ctask& task : ctasks) {
@@ -269,30 +260,30 @@ std::expected<void, error_trail> task_step(lua_State* L) {
             case DLUAU_CTASK_CONTINUE:
                 continue;
             case DLUAU_CTASK_DONE:
-                janitor.emplace_back(reinterpret_cast<uintptr_t>(task), job::ctask);
+                janitor.emplace_back(reinterpret_cast<uintptr_t>(task), Job::ctask);
                 continue;
             case DLUAU_CTASK_ERROR:
-                return std::unexpected(error_trail(errmsg ? errmsg : "external process failed"));
+                return Unexpected(errmsg ? errmsg : "external process failed");
         }
     }
     for (const auto& v : janitor) {
         switch (v.job) {
-            case job::waiter: {
-                auto state = reinterpret_cast<luathread>(v.id);
+            case Job::waiter: {
+                auto state = reinterpret_cast<Lthread>(v.id);
                 lua_unref(L, waiting.at(state).ref);
                 waiting.erase(state);
                 continue;
-            } case job::after: {
-                auto state = reinterpret_cast<luathread>(v.id);
+            } case Job::after: {
+                auto state = reinterpret_cast<Lthread>(v.id);
                 const auto& w = do_after.at(state);
                 lua_unref(L, w.after_this_ref);
                 lua_unref(L, w.ref);
                 do_after.erase(state);
                 continue;
-            } case job::ctask: {
+            } case Job::ctask: {
                 auto task = reinterpret_cast<dluau_ctask>(v.id);
-                auto found = rngs::find(ctasks, task);
-                if (found == rngs::end(ctasks)) return std::unexpected(error_trail(std::format("couldn't find ctask ({}) during the removal phase", v.id)));
+                auto found = ranges::find(ctasks, task);
+                if (found == ranges::end(ctasks)) return Unexpected(std::format("couldn't find ctask ({}) during the removal phase", v.id));
                 ctasks.erase(found);
                 continue;
             }
@@ -300,7 +291,7 @@ std::expected<void, error_trail> task_step(lua_State* L) {
         }
     }
     janitor.clear();
-    return std::expected<void, error_trail>();
+    return Expected<void>();
 }
 }
 

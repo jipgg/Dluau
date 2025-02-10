@@ -10,33 +10,33 @@
 #include <variant>
 #include <common/error_trail.hpp>
 #include <optional>
-#include <dluau.h>
+#include <dluau.hpp>
+using namespace dluau::type_aliases;
 
 namespace dlimport {
-struct dlmodule {
-    using alias = HMODULE;
-    alias handle;
-    std::string name;
-    std::filesystem::path path;
-    dlmodule(alias handle, std::string name, std::filesystem::path path):
+struct Dlmodule {
+    using Handle = HMODULE;
+    Handle handle;
+    String name;
+    Path path;
+    Dlmodule(Handle handle, String name, Path path):
         handle(handle),
         name(std::move(name)),
         path(std::move(path)) {}
-    ~dlmodule() {if (handle) FreeLibrary(handle);}
-    boost::container::flat_map<std::string, uintptr_t> cached{};
+    ~Dlmodule() {if (handle) FreeLibrary(handle);}
+    Flat_map<String, uintptr_t> cached{};
     inline static const int tag{dluau_newlightuserdatatag()};
     constexpr static const char* tname{"dlmodule"};
-    static void init(lua_State* L);
+    static void init(Lstate L);
 };
 
-using dlmodule_map = boost::container::flat_map<std::filesystem::path, std::unique_ptr<dlmodule>>;
-const dlmodule_map& get_dlmodules();
-using dlmodule_ref = std::reference_wrapper<dlmodule>;
-dlmodule* find_module(const std::string& name);
-std::variant<dlmodule_ref, common::error_trail> init_module(const std::filesystem::path& path);
-std::variant<dlmodule_ref, common::error_trail> load_module(lua_State* L);
-std::optional<uintptr_t> find_proc_address(dlmodule& module, const std::string& symbol);
-dlmodule* lua_tomodule(lua_State* L, int idx);
-dlmodule* lua_pushmodule(lua_State* L, dlmodule* module);
-std::optional<std::filesystem::path> search_path(const std::filesystem::path& dlpath);
+using Dlmodule_map = Flat_map<Path, Unique<Dlmodule>>;
+const Dlmodule_map& get_dlmodules();
+Dlmodule* find_module(const String& name);
+Expected<Ref<Dlmodule>> init_module(const Path& path);
+Expected<Ref<Dlmodule>> load_module(Lstate L);
+Opt<uintptr_t> find_proc_address(Dlmodule& module, const String& symbol);
+Dlmodule* lua_tomodule(Lstate L, int idx);
+Dlmodule* lua_pushmodule(Lstate L, Dlmodule* module);
+Opt<Path> search_path(const Path& dlpath);
 }

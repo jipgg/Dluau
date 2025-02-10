@@ -1,4 +1,4 @@
-#include "dluau.h"
+#include <dluau.hpp>
 #include <fstream>
 #include <format>
 #include "luacode.h"
@@ -9,27 +9,26 @@
 #include <boost/container/flat_map.hpp>
 #include <nlohmann/json.hpp>
 #include <print>
-#include "shared.hpp"
-using common::error_trail;
-using nlohmann::json;
+using namespace dluau::type_aliases;
+using Json = nlohmann::json;
 
 static lua_CompileOptions copts{.debugLevel = 1};
-lua_CompileOptions* shared::compile_options{&copts};
+lua_CompileOptions* dluau::compile_options{&copts};
 
-static int lua_require(lua_State* L) {
+static int lua_require(Lstate L) {
     return dluau_require(L, luaL_checkstring(L, 1));
 }
-static int lua_lazyrequire(lua_State* L) {
+static int lua_lazyrequire(Lstate L) {
     return dluau_lazyrequire(L, luaL_checkstring(L, 1));
 }
-static int lua_loadstring(lua_State* L) {
+static int lua_loadstring(Lstate L) {
     size_t l = 0;
     const char* s = luaL_checklstring(L, 1, &l);
     const char* chunkname = luaL_optstring(L, 2, s);
     lua_setsafeenv(L, LUA_ENVIRONINDEX, false);
     size_t outsize;
-    char* bc = luau_compile(s, l, shared::compile_options, &outsize);
-    std::string bytecode(s, outsize);
+    char* bc = luau_compile(s, l, dluau::compile_options, &outsize);
+    String bytecode(s, outsize);
     std::free(bc);
     if (luau_load(L, chunkname, bytecode.data(), bytecode.size(), 0) == 0)
         return 1;
@@ -38,7 +37,7 @@ static int lua_loadstring(lua_State* L) {
     return 2;
 }
 static int lua_collectgarbage(lua_State* L) {
-    std::string_view option = luaL_optstring(L, 1, "collect");
+    Str_view option = luaL_optstring(L, 1, "collect");
     if (option == "collect") {
         lua_gc(L, LUA_GCCOLLECT, 0);
         return 0;
@@ -48,7 +47,7 @@ static int lua_collectgarbage(lua_State* L) {
         lua_pushnumber(L, c);
         return 1;
     }
-    luaL_error(L, "collectgarbage must be called with 'count' or 'collect'");
+    dluau::error(L, "collectgarbage must be called with 'count' or 'collect'");
 }
 void dluau_registerglobals(lua_State *L) {
     const luaL_Reg global_functions[] = {
@@ -81,14 +80,14 @@ int dluau_newlightuserdatatag() {
 }
 lua_State* dluau_newstate() {
     lua_State* L = luaL_newstate();
-    lua_callbacks(L)->useratom = shared::default_useratom;
+    lua_callbacks(L)->useratom = dluau::default_useratom;
     dluau_registerglobals(L);
     return L;
 }
 int dluau_run(const dluau_runoptions* opts) {
-    shared::compile_options->debugLevel = 3;
-    shared::compile_options->optimizationLevel = opts->optimization_level;
-    if (opts->args) shared::args = opts->args;
+    dluau::compile_options->debugLevel = 3;
+    dluau::compile_options->optimizationLevel = opts->optimization_level;
+    if (opts->args) dluau::args = opts->args;
     std::unique_ptr<lua_State, decltype(&lua_close)> state{dluau_newstate(), lua_close}; 
     lua_State* L = state.get();
     dluau_openlibs(L);
@@ -103,17 +102,16 @@ int dluau_run(const dluau_runoptions* opts) {
         std::println(std::cerr, errfmt, "no sources given");
         return -1;
     }
-    using std::views::split;
-    for (auto sr : split(std::string_view(opts->scripts), shared::arg_separator)) {
-        std::string_view script{sr.data(), sr.size()};
-        if (auto result = shared::run_file(L, script); !result) {
-            std::println(std::cerr, errfmt, result.error().formatted());
+    for (auto sr : views::split(Str_view(opts->scripts), dluau::arg_separator)) {
+        Str_view script{sr.data(), sr.size()};
+        if (auto result = dluau::run_file(L, script); !result) {
+            std::println(std::cerr, errfmt, result.error());
             return -1;
         }
     }
-    while (shared::tasks_in_progress()) {
-        if (auto result = shared::task_step(L); !result) {
-            std::println(std::cerr, errfmt, result.error().formatted());
+    while (dluau::tasks_in_progress()) {
+        if (auto result = dluau::task_step(L); !result) {
+            std::println(std::cerr, errfmt, result.error());
             return -1;
         }
     }
@@ -121,22 +119,21 @@ int dluau_run(const dluau_runoptions* opts) {
     return 0;
 }
 
-namespace shared {
+namespace dluau {
 bool has_permissions(lua_State* L) {
     lua_Debug ar;
     if (not lua_getinfo(L, 1, "s", &ar)) return false;
     if (ar.source[0] == '@' or ar.source[0] == '=') return true;
     return false;
 }
-std::expected<void, error_trail> run_file(lua_State* L, string_view script_path) {
-    auto r = load_file(L, script_path);
-    if (not r) return std::unexpected(r.error().propagate());
-
+Expected<void> run_file(lua_State* L, Str_view script_path) {
+    auto r = ::dluau::load_file(L, script_path);
+    if (not r) return Unexpected(r.error());
     auto* co = *r;
     int status = lua_resume(co, L, 0);
     if (status != LUA_OK and status != LUA_YIELD) {
-        return std::unexpected<error_trail>(luaL_checkstring(co, -1));
+        return Unexpected(luaL_checkstring(co, -1));
     }
-    return std::expected<void, error_trail>();
+    return Expected<void>();
 }
 }

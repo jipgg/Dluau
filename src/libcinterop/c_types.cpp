@@ -217,31 +217,31 @@ int cinterop::c_type_sizeof(lua_State *L) {
     auto type_opt = string_to_param_type(luaL_checkstring(L, 1));
     if (not type_opt) luaL_argerrorL(L, 1, "not a c_type");
     switch(*type_opt) {
-        case c_type::c_float:
+        case C_type::c_float:
             lua_pushinteger(L, sizeof(float));
             return 1;
-        case c_type::c_char:
-        case c_type::c_uchar:
-        case c_type::c_bool:
+        case C_type::c_char:
+        case C_type::c_uchar:
+        case C_type::c_bool:
             lua_pushinteger(L, sizeof(char));
             return 1;
-        case c_type::c_int:
-        case c_type::c_uint:
+        case C_type::c_int:
+        case C_type::c_uint:
             lua_pushinteger(L, sizeof(int));
             return 1;
-        case c_type::c_short:
-        case c_type::c_ushort:
+        case C_type::c_short:
+        case C_type::c_ushort:
             lua_pushinteger(L, sizeof(short));
             return 1;
-        case c_type::c_long:
-        case c_type::c_ulong:
+        case C_type::c_long:
+        case C_type::c_ulong:
             lua_pushinteger(L, sizeof(long));
             return 1;
-        case c_type::c_double:
+        case C_type::c_double:
             lua_pushinteger(L, sizeof(double));
             return 1;
-        case c_type::c_void_ptr:
-        case c_type::c_string:
+        case C_type::c_void_ptr:
+        case C_type::c_string:
             lua_pushinteger(L, sizeof(void*));
             return 1;
         default:

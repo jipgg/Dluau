@@ -7,44 +7,36 @@
 #include <Windows.h>
 #include <cassert>
 #include <boost/container/flat_map.hpp>
-#include <shared.hpp>
+#include <dluau.hpp>
 #include <filesystem>
 #include <dyncall.h>
 #include <array>
 #include "dlimport.hpp"
-#include <shared.hpp>
 #include <variant>
-using shared::has_permissions;
+using namespace dluau::type_aliases;
+using dluau::has_permissions;
 using common::error_trail;
-using std::string, std::string_view;
-using std::variant, std::reference_wrapper;
-using dlimport::dlmodule;
-using dlimport::dlmodule_ref;
+using dlimport::Dlmodule;
 
 
-static int search_path(lua_State* L) {
+static int search_path(Lstate L) {
     if (auto path = dlimport::search_path(luaL_checkstring(L, 1))) {
         lua_pushstring(L, path->string().c_str());
         return 1;
     }
     return 0;
 }
-static int load(lua_State* L) {
+static int load(Lstate L) {
     auto module = dlimport::load_module(L);
-    if (auto err = std::get_if<error_trail>(&module)) {
-        luaL_errorL(L, err->formatted().c_str());
-    }
-    dlmodule& m = std::get<dlmodule_ref>(module);
-    dlimport::lua_pushmodule(L, &m);
+    if (not module) dluau::error(L, module.error());
+    dlimport::lua_pushmodule(L, &module->get());
     return 1;
 }
-static int require_module(lua_State* L) {
-    const string name = luaL_checkstring(L, 1);
+static int require_module(Lstate L) {
+    const String name = luaL_checkstring(L, 1);
     auto result = dlimport::load_module(L);
-    if (auto err = std::get_if<error_trail>(&result)) {
-        luaL_errorL(L, err->formatted().c_str());
-    }
-    dlmodule& module = std::get<reference_wrapper<dlmodule>>(result);
+    if (!result) dluau::error(L, result.error());
+    Dlmodule& module = *result;
     constexpr const char* function_signature = "dlrequire";
     auto proc = dlimport::find_proc_address(module, function_signature);
     if (not proc) luaL_errorL(L, "module '%s' does not export a symbol '%s'.", name.c_str(), function_signature);
@@ -52,18 +44,18 @@ static int require_module(lua_State* L) {
     lua_call(L, 0, 1);
     return 1;
 }
-static int protected_load(lua_State* L) {
+static int protected_load(Lstate L) {
     auto module = dlimport::load_module(L);
-    if (auto err = std::get_if<error_trail>(&module)) {
+    if (!module) {
         lua_pushnil(L);
-        lua_pushstring(L, err->formatted().c_str());
+        dluau::push(L, module.error());
         return 2;
     }
-    dlmodule& m = std::get<dlmodule_ref>(module);
+    Dlmodule& m = *module;
     dlimport::lua_pushmodule(L, &m);
     return 1;
 }
-static int loaded_modules(lua_State* L) {
+static int loaded_modules(Lstate L) {
     lua_newtable(L);
     int i{1};
     for (const auto& [path, module] : dlimport::get_dlmodules()) {
@@ -72,10 +64,10 @@ static int loaded_modules(lua_State* L) {
     }
     return 1;
 }
-void dluauopen_dlimport(lua_State* L) {
-    dlmodule::init(L);
+void dluauopen_dlimport(Lstate L) {
+    Dlmodule::init(L);
     lua_newtable(L);
-    const luaL_Reg lib[] = {
+    const Lreg lib[] = {
         {"require", require_module},
         {"load", load},
         {"pload", protected_load},

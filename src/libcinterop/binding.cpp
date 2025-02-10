@@ -1,23 +1,20 @@
 #include "cinterop.hpp"
-using std::optional, std::string_view;
-using std::variant;
-using sp_struct_info = std::shared_ptr<struct_info>;
 
-static std::unique_ptr<DCCallVM, decltype(&dcFree)> call_vm{dcNewCallVM(1024), dcFree};
+static Unique<DCCallVM, decltype(&dcFree)> call_vm{dcNewCallVM(1024), dcFree};
 
-struct c_function_binding {
-    std::vector<variant<c_type, sp_struct_info>> types;
-    variant<c_type, sp_struct_info> get_return_type() const {return types[0];}
+struct C_func_binding {
+    Vector<Variant<C_type, Shared<Struct_info>>> types;
+    Variant<C_type, Shared<Struct_info>> get_return_type() const {return types[0];}
     uintptr_t function_pointer;
 };
 static int call_binding(lua_State* L) {
-    const auto& binding = *static_cast<c_function_binding*>(lua_touserdata(L, lua_upvalueindex(1)));
+    const auto& binding = *static_cast<C_func_binding*>(lua_touserdata(L, lua_upvalueindex(1)));
     DCCallVM* vm = call_vm.get();
     dcReset(vm);
-    using ct = c_type;
+    using ct = C_type;
     int curr_aggr{};
     for (int i{1}; i < binding.types.size(); ++i) {
-        if (auto* type = std::get_if<c_type>(&binding.types[i])) {
+        if (auto* type = std::get_if<C_type>(&binding.types[i])) {
             switch(*type) {
                 case ct::c_bool:
                     dcArgBool(vm, luaL_checkboolean(L, i));
@@ -63,13 +60,13 @@ static int call_binding(lua_State* L) {
                     break;
             }
         } else {
-            auto& si = std::get<sp_struct_info>(binding.types[i]);
+            auto& si = std::get<Shared<Struct_info>>(binding.types[i]);
             void* data = lua_touserdata(L, i);
             dcArgAggr(vm, si->aggr.get(), data);
         }
     }
     DCpointer fnptr = reinterpret_cast<DCpointer>(binding.function_pointer);
-    if (auto* type = std::get_if<c_type>(&binding.types.at(0))) {
+    if (auto* type = std::get_if<C_type>(&binding.types.at(0))) {
         switch(*type) {
             case ct::c_bool:
                 lua_pushboolean(L, dcCallBool(vm, fnptr));
@@ -115,7 +112,7 @@ static int call_binding(lua_State* L) {
                 return 0;
         }
     } else {
-        auto& si = std::get<sp_struct_info>(binding.types[0]);
+        auto& si = std::get<Shared<Struct_info>>(binding.types[0]);
         //void* buf = lua_newbuffer(L, si->memory_size);
         void* instance = si->newinstance(L);
         dcCallAggr(vm, fnptr, si->aggr.get(), instance);
@@ -123,9 +120,9 @@ static int call_binding(lua_State* L) {
     }
     luaL_errorL(L, "call error");
 }
-optional<c_type> string_to_param_type(string_view str) {
-    using ct = c_type;
-    static const boost::container::flat_map<string_view, c_type> map {
+Opt<C_type> string_to_param_type(Str_view str) {
+    using ct = C_type;
+    static const Flat_map<Str_view, C_type> map {
         {"c_int", ct::c_int},
         {"c_uint", ct::c_uint},
         {"c_short", ct::c_short},
@@ -145,14 +142,14 @@ optional<c_type> string_to_param_type(string_view str) {
     return map.at(str);
 }
 int cinterop::new_function_binding(lua_State* L) {
-    dlmodule* module = dlimport::lua_tomodule(L, 1);
-    c_function_binding binding{};
+    Dlmodule* module = dlimport::lua_tomodule(L, 1);
+    C_func_binding binding{};
     const int top = lua_gettop(L);
     if (cinterop::is_struct_info(L, 2)) {
         auto& si = cinterop::to_struct_info(L, 2);
         binding.types.push_back(si);
     } else {
-        string_view return_type = luaL_checkstring(L, 2);
+        Str_view return_type = luaL_checkstring(L, 2);
         auto res = string_to_param_type(return_type);
         if (not res) luaL_argerrorL(L, 2, "not a c type");
         binding.types.push_back(std::move(*res));
@@ -169,14 +166,14 @@ int cinterop::new_function_binding(lua_State* L) {
             }
             auto res = string_to_param_type(luaL_checkstring(L, i));
             if (not res) luaL_argerrorL(L, i, "not a c type");
-            else if (*res == c_type::c_void) luaL_argerrorL(L, i, "an argument type cannot be void.");
+            else if (*res == C_type::c_void) luaL_argerrorL(L, i, "an argument type cannot be void.");
             binding.types.push_back(std::move(*res));
         }
     }
-    c_function_binding* up = static_cast<c_function_binding*>(lua_newuserdatadtor(L, sizeof(c_function_binding), [](void* ud) {
-        static_cast<c_function_binding*>(ud)->~c_function_binding();
+    C_func_binding* up = static_cast<C_func_binding*>(lua_newuserdatadtor(L, sizeof(C_func_binding), [](void* ud) {
+        static_cast<C_func_binding*>(ud)->~C_func_binding();
     }));
-    new (up) c_function_binding{std::move(binding)};
+    new (up) C_func_binding{std::move(binding)};
     lua_pushcclosure(L, call_binding, "c_function_binding", 1);
     return 1;
 }

@@ -1,10 +1,10 @@
 #include "dluau.h"
-#include "shared.hpp"
+#include "dluau.hpp"
 #include <iostream>
-using std::string;
+using namespace dluau::type_aliases;
 
 static int call(lua_State* L) {
-    string input;
+    String input;
     std::cin >> input;
     lua_pushlstring(L, input.data(), input.size());
     return 1;

@@ -1,21 +1,14 @@
 #include <dluau.h>
-#include "shared.hpp"
-#include <format>
-#include <functional>
-#include <boost/container/flat_map.hpp>
-using std::string;
-using std::string_view;
-using std::cout, std::format;
-using std::function, std::bind;
-using boost::container::flat_map;
-static std::string separator{"\t"};
+#include <dluau.hpp>
+using namespace dluau::type_aliases;
+static String separator{"\t"};
 
-static string get_print_statement(lua_State* L, int offset = 0) {
+static String get_print_statement(lua_State* L, int offset = 0) {
     const int top = lua_gettop(L);
-    string to_print;
+    String to_print;
     for (int i{1 + offset}; i <= top; ++i) {
         size_t len{};
-        std::string_view v{luaL_tolstring(L, i, &len), len};
+        Str_view v{luaL_tolstring(L, i, &len), len};
         to_print.append(v).append(separator);
     }
     to_print.resize(to_print.size() - separator.size());
@@ -27,7 +20,7 @@ static int call(lua_State* L) {
     return 0;
 }
 static int index(lua_State* L) {
-    string_view key = luaL_checkstring(L, 2);
+    Str_view key = luaL_checkstring(L, 2);
     switch(key.at(0)) {
         case 's':
             lua_pushlstring(L, separator.data(), separator.length());
@@ -36,8 +29,8 @@ static int index(lua_State* L) {
     luaL_argerrorL(L, 2, "unknown field");
 }
 static int newindex(lua_State* L) {
-    string_view key = luaL_checkstring(L, 2);
-    string_view v = luaL_checkstring(L, 3);
+    Str_view key = luaL_checkstring(L, 2);
+    Str_view v = luaL_checkstring(L, 3);
     switch(key.at(0)) {
         case 's':
             separator = v;

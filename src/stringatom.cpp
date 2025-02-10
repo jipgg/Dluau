@@ -2,22 +2,21 @@
 #include <unordered_map>
 #include <ranges>
 #include <algorithm>
-#include <shared.hpp>
+#include <dluau.hpp>
 namespace ranges = std::ranges;
-using std::string;
-using std::pair;
-static std::unordered_map<string, int16_t> stringatom_registry;
+using namespace dluau;
+static std::unordered_map<String, int16_t> stringatom_registry;
 static int16_t current_stringatom_value{0};
 
-int16_t shared::default_useratom(const char* key, size_t size) {
-    const std::string key_value{key, size};
+int16_t dluau::default_useratom(const char* key, size_t size) {
+    const String key_value{key, size};
     if (not stringatom_registry.contains(key_value)) {
         stringatom_registry.emplace(key_value, ++current_stringatom_value);
     }
     return stringatom_registry.at(key_value);
 }
 const char* dluau_findstringatom(int atom) {
-    auto predicate = [&atom](const pair<string, int16_t>& pair) {return pair.second == atom;};
+    auto predicate = [&atom](const Pair<String, int16_t>& pair) {return pair.second == atom;};
     auto found = ranges::find_if(stringatom_registry, predicate);
     if (found != ranges::end(stringatom_registry)) return found->first.c_str();
     return nullptr;
@@ -31,8 +30,8 @@ int dluau_stringatom(lua_State* L, const char *key) {
     return atom;
 }
 int dluau_lstringatom(lua_State* L, const char *key, size_t len) {
-    const std::string key_value{key, len};
-    if (stringatom_registry.contains(std::string(key_value))) return stringatom_registry.at(key_value);
+    const String key_value{key, len};
+    if (stringatom_registry.contains(key_value)) return stringatom_registry.at(key_value);
     lua_pushlstring(L, key, len);
     int atom;
     lua_tostringatom(L, -1, &atom);

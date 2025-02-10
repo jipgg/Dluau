@@ -1,5 +1,7 @@
 type module = typeof(require('@gpm/time'))
 local lazy = lazyrequire("@gpm/time") :: module
+local dummy = require('dummy_module')
+print(dummy.submodule.name)
 
 print(lazy.current_zone)
 print(lazy)

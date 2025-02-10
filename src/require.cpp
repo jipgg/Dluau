@@ -94,24 +94,32 @@ static optional<error_trail> substitute_alias(string& str) {
     return nullopt;
 }
 static int lazyrequire_handler(lua_State* L) {
-    const string name = lua_tostring(L, lua_upvalueindex(1));
-    dluau_require(L, name.c_str());
-    lua_getmetatable(L, 1);
-    lua_pushvalue(L, -2);
-    lua_setfield(L, -2, "__index");
-    lua_pop(L, 1);
-    if (lua_istable(L, -1)) {
-        lua_pushvalue(L, 2);
-        lua_gettable(L, -2);
-        lua_remove(L, -2);
+    try {
+        const string name = lua_tostring(L, lua_upvalueindex(1));
+        dluau_require(L, name.c_str());
+        lua_getmetatable(L, 1);
+        lua_pushvalue(L, -2);
+        lua_setfield(L, -2, "__index");
+        lua_pop(L, 1);
+        if (lua_istable(L, -1)) {
+            lua_pushvalue(L, 2);
+            lua_gettable(L, -2);
+            lua_remove(L, -2);
+        }
+        return 1;
+    } catch(std::exception& e) {
+        luaL_errorL(L, e.what());
     }
-    return 1;
 }
 int dluau_lazyrequire(lua_State* L, const char* name) {
     lua_newtable(L);
     lua_newtable(L);
     lua_pushstring(L, "__index");
-    lua_pushstring(L, name);
+    auto result = shared::resolve_require_path(L, name);
+    if (auto* err = get_if<error_trail>(&result)) {
+        luaL_errorL(L, err->formatted().c_str());
+    }
+    lua_pushstring(L, std::get<string>(result).c_str());
     lua_pushcclosure(L, lazyrequire_handler, "lazyrequire_handler", 1);
     lua_settable(L, -3);
     lua_setmetatable(L, -2);

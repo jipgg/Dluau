@@ -21,6 +21,9 @@ public:
         message_(std::move(message)) {
         traceback_.emplace_back(std::move(sl));
     }
+    operator std::string() const {
+        return formatted();
+    }
     error_trail& propagate(std::source_location sl = std::source_location::current()) {
         traceback_.emplace_back(sl);
         return *this;

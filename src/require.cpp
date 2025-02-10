@@ -1,4 +1,5 @@
 #include "shared.hpp"
+#include <dluau.hpp>
 #include <common.hpp>
 #include <boost/container/flat_map.hpp>
 #include <filesystem>
@@ -115,22 +116,18 @@ int dluau_lazyrequire(lua_State* L, const char* name) {
     lua_newtable(L);
     lua_newtable(L);
     lua_pushstring(L, "__index");
-    auto result = shared::resolve_require_path(L, name);
-    if (auto* err = get_if<error_trail>(&result)) {
-        luaL_errorL(L, err->formatted().c_str());
-    }
-    lua_pushstring(L, std::get<string>(result).c_str());
+    auto resolved = shared::resolve_require_path(L, name);
+    if (!resolved) dluau::error(L, resolved.error());
+    dluau::push(L, *resolved);
     lua_pushcclosure(L, lazyrequire_handler, "lazyrequire_handler", 1);
     lua_settable(L, -3);
     lua_setmetatable(L, -2);
     return 1;
 }
 int dluau_require(lua_State* L, const char* name) {
-    auto result = shared::resolve_require_path(L, name);
-    if (auto* err = get_if<error_trail>(&result)) {
-        luaL_errorL(L, err->formatted().c_str());
-    }
-    const string file_path{std::move(get<string>(result))};
+    auto resolved = shared::resolve_require_path(L, name);
+    if (not resolved) dluau::error(L, resolved.error());
+    const string file_path{std::move(*resolved)};
     if (luamodules.contains(file_path)) {
         lua_getref(L, luamodules[file_path]);
         return 1;
@@ -189,10 +186,10 @@ static optional<fs::path> find_source(fs::path p, const fs::path& base, span<con
     return nullopt;
 }
 namespace shared {
-variant<lua_State*, error_trail> load_file(lua_State* L, string_view path) {
+std::expected<lua_State*, error_trail> load_file(lua_State* L, string_view path) {
     string script_path{path};
     optional<string> source = common::read_file(script_path);
-    if (not source) return error_trail(format("couldn't read source '{}'.", script_path));
+    if (not source) return std::unexpected(error_trail(format("couldn't read source '{}'.", script_path)));
     auto normalized = common::normalize_path(script_path);
     shared::precompile(*source, get_precompiled_library_values(normalized.string()));
     string identifier{fs::relative(script_path).string()};
@@ -212,10 +209,10 @@ variant<lua_State*, error_trail> load_file(lua_State* L, string_view path) {
         luaL_sandboxthread(script_thread);
         return script_thread;
     }
-    return error_trail(format("failed to load '{}'\nreason: {}\nsource: {}", script_path, lua_tostring(script_thread, -1), *source));
+    return std::unexpected(error_trail(format("failed to load '{}'\nreason: {}\nsource: {}", script_path, lua_tostring(script_thread, -1), *source)));
 }
 
-variant<string, error_trail> resolve_require_path(lua_State* L, string name, span<const string> file_exts) {
+std::expected<string, error_trail> resolve_require_path(lua_State* L, string name, span<const string> file_exts) {
     if (not config_file_initialized) {
         config_file_initialized = true;
         if (auto err = load_aliases()) err->propagate();
@@ -233,7 +230,7 @@ variant<string, error_trail> resolve_require_path(lua_State* L, string name, spa
     if (not found_source) return error_trail(format("couldn't find source for '{}'", name));
     return common::normalize_path(*found_source).string();
 }
-variant<string, error_trail> resolve_path(string name, const path& base, span<const string> file_exts) {
+std::expected<string, error_trail> resolve_path(string name, const path& base, span<const string> file_exts) {
     if (has_alias(name)) {
         if (auto err = substitute_alias(name)) return err->propagate();
     } else if (name[0] == '~') {

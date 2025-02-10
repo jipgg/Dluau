@@ -81,9 +81,8 @@ inline std::variant<fs::path, error_trail> substitute_user_folder(const fs::path
     }
     return error_trail("could not get user folder");
 }
-inline fs::path normalize_path(fs::path path, const fs::path& relative = "") {
+inline fs::path normalize_path(fs::path path, const fs::path& base = fs::current_path()) {
     if (path.is_relative()) {
-        const fs::path& base = relative.empty() ? fs::current_path() : relative;
         path = base / path;
     }
     path = fs::weakly_canonical(path);

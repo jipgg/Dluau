@@ -1,4 +1,4 @@
-local dc = dlimport.cinterop
+local dc = cinterop
 local native = dc.native
 local struct = dc.struct
 local dll = dlimport.load(assert(dlimport.searchpath("dluaulib")))

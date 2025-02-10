@@ -1,6 +1,5 @@
 #include "dluau.h"
 #include <fstream>
-#include <optional>
 #include <format>
 #include "luacode.h"
 #include <lua.h>
@@ -9,15 +8,10 @@
 #include <lualib.h>
 #include <boost/container/flat_map.hpp>
 #include <nlohmann/json.hpp>
-#include <variant>
+#include <print>
 #include "shared.hpp"
-using std::string, std::string_view;
-using std::stringstream, std::ifstream;
 using common::error_trail;
 using nlohmann::json;
-using std::optional;
-using std::nullopt, std::format;
-using std::get, std::get_if;
 
 static lua_CompileOptions copts{.debugLevel = 1};
 lua_CompileOptions* shared::compile_options{&copts};
@@ -44,7 +38,7 @@ static int lua_loadstring(lua_State* L) {
     return 2;
 }
 static int lua_collectgarbage(lua_State* L) {
-    string_view option = luaL_optstring(L, 1, "collect");
+    std::string_view option = luaL_optstring(L, 1, "collect");
     if (option == "collect") {
         lua_gc(L, LUA_GCCOLLECT, 0);
         return 0;
@@ -104,22 +98,22 @@ int dluau_run(const dluau_runoptions* opts) {
         lua_pop(L, 1);
     }
     luaL_sandbox(L);
-    constexpr const char* errfmt = "\033[31m{}\033[0m\n";
+    constexpr const char* errfmt = "\033[31m{}\033[0m";
     if (opts->scripts == nullptr) {
-        std::cerr << format(errfmt, "no sources given.");
+        std::println(std::cerr, errfmt, "no sources given");
         return -1;
     }
     using std::views::split;
-    for (auto sr : split(string_view(opts->scripts), shared::arg_separator)) {
-        string_view script{sr.data(), sr.size()};
-        if (auto err = shared::run_file(L, script)) {
-            std::cerr << format(errfmt, err->formatted());
+    for (auto sr : split(std::string_view(opts->scripts), shared::arg_separator)) {
+        std::string_view script{sr.data(), sr.size()};
+        if (auto result = shared::run_file(L, script); !result) {
+            std::println(std::cerr, errfmt, result.error().formatted());
             return -1;
         }
     }
     while (shared::tasks_in_progress()) {
-        if (auto err = shared::task_step(L)) {
-            std::cerr << format(errfmt, err->formatted());
+        if (auto result = shared::task_step(L); !result) {
+            std::println(std::cerr, errfmt, result.error().formatted());
             return -1;
         }
     }
@@ -134,15 +128,15 @@ bool has_permissions(lua_State* L) {
     if (ar.source[0] == '@' or ar.source[0] == '=') return true;
     return false;
 }
-optional<error_trail> run_file(lua_State* L, string_view script_path) {
+std::expected<void, error_trail> run_file(lua_State* L, string_view script_path) {
     auto r = load_file(L, script_path);
-    if (auto* err = get_if<error_trail>(&r)) return err->propagate();
+    if (not r) return std::unexpected(r.error().propagate());
 
-    auto* co = get<lua_State*>(r);
+    auto* co = *r;
     int status = lua_resume(co, L, 0);
     if (status != LUA_OK and status != LUA_YIELD) {
-        return error_trail{luaL_checkstring(co, -1)};
+        return std::unexpected<error_trail>(luaL_checkstring(co, -1));
     }
-    return nullopt;
+    return std::expected<void, error_trail>();
 }
 }

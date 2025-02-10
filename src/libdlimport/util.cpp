@@ -18,9 +18,8 @@ variant<dlmodule_ref, error_trail> load_module(lua_State* L) {
     if (not shared::has_permissions(L)) return error_trail("current environment context does not allow loading");
     const string name = luaL_checkstring(L, 1);
     auto resolved = shared::resolve_require_path(L, name, dl_file_extensions);
-    if (auto err = std::get_if<error_trail>(&resolved)) return err->propagate();
-    auto p = std::get<string>(resolved);
-    return init_module(p);
+    if (!resolved) return resolved.error().propagate();
+    return init_module(*resolved);
 }
 optional<fs::path> search_path(const fs::path& dlpath) {
     char buffer[MAX_PATH];

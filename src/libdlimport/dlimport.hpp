@@ -8,7 +8,6 @@
 #include <memory>
 #include <string>
 #include <variant>
-#include <common/error_trail.hpp>
 #include <optional>
 #include <dluau.hpp>
 using namespace dluau::type_aliases;

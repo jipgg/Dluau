@@ -27,15 +27,11 @@ set(version_PATCH 4)
 
 set(lib_DIR src)
 set(cli_DIR cli)
-set(common_DIR common)
 file(GLOB_RECURSE lib_SRC ${lib_DIR}/*.cpp)
 file(GLOB cli_SRC ${cli_DIR}/*.cpp)
 
 add_subdirectory(${luau_DIR})
 add_library(lib SHARED ${lib_SRC})
-add_library(common INTERFACE)
-target_include_directories(common INTERFACE ${common_DIR})
-target_link_libraries(common INTERFACE Boost::container)
 add_executable(cli ${cli_SRC})
 if(WIN32)
     file(GLOB windows_host_SRC ${cli_DIR}/windows_host/*.cpp)
@@ -68,7 +64,6 @@ target_link_libraries(lib PUBLIC
     Luau.VM
     Luau.Compiler
     Luau.CodeGen
-    common
     Boost::container
     dyncall_s
     nlohmann_json::nlohmann_json

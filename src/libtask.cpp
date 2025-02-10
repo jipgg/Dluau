@@ -1,8 +1,6 @@
 #include "dluau.hpp"
 #include <common.hpp>
 #include <chrono>
-#include <queue>
-#include <variant>
 #include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
 #include <utility>
@@ -14,7 +12,7 @@ using Steady_clock = chrono::steady_clock;
 using Stime_point = Steady_clock::time_point;
 template <class Key>
 using Flat_set = boost::container::flat_set<Key>;
-using Raii = common::raii;
+using Raii = common::Raii;
 
 struct Deferrer {
     lua_State* state;
@@ -66,7 +64,7 @@ static Expected<void> close_thread(lua_State* L, lua_State* co) {
     lua_pushthread(co);
     lua_xmove(co, L, 1);
     if (lua_pcall(L, 1, 0, 0) != LUA_OK) {
-        std::string errmsg = lua_tostring(L, -1);
+        String errmsg = lua_tostring(L, -1);
         lua_pop(L, 1);
         return Unexpected(std::move(errmsg));
     }
@@ -171,7 +169,7 @@ static int cancel(lua_State* L) {
     return 0;
 }
 static int index(lua_State* L) {
-    Str_view key = luaL_checkstring(L, 2);
+    Strview key = luaL_checkstring(L, 2);
     if (key == "this") {
         lua_pushthread(L);
         return 1;

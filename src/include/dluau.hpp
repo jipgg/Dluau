@@ -3,15 +3,14 @@
 #include <string>
 #include <format>
 #include <filesystem>
-#include <common/error_trail.hpp>
 #include <regex>
-#include <ranges>
 #include <expected>
 #include <optional>
 #include <chrono>
+#include <span>
+#include <ranges>
 #include <variant>
 #include <memory>
-#include <numeric>
 #include <boost/container/flat_map.hpp>
 
 
@@ -33,7 +32,7 @@ using Path = std::filesystem::path;
 using Regex = std::regex;
 using Smatch = std::smatch;
 using Sregex_iterator = std::sregex_iterator;
-using Str_view = std::string_view;
+using Strview = std::string_view;
 template <class Fty> using Func = std::function<Fty>;
 template <class T> using Vector = std::vector<T>;
 template <class T, size_t N> using Array = std::array<T, N>;
@@ -54,14 +53,14 @@ extern lua_CompileOptions* compile_options;
 static const auto default_file_extensions = std::to_array<String>({".luau", ".lua"});
 Expected<String> resolve_require_path(lua_State* L, String name, Span<const String> file_exts = default_file_extensions);
 Expected<String> resolve_path(String name, const Path& base, Span<const String> file_exts = default_file_extensions);
-Expected<lua_State*> load_file(lua_State* L, Str_view path);
-Expected<void> run_file(lua_State* L, Str_view script_path);
+Expected<lua_State*> load_file(lua_State* L, Strview path);
+Expected<void> run_file(lua_State* L, Strview script_path);
 bool tasks_in_progress();
 Expected<void> task_step(lua_State* L);
 bool has_permissions(lua_State* L);
 constexpr char arg_separator{','};
 int16_t default_useratom(const char* key, size_t len);
-inline Str_view args;
+inline Strview args;
 bool precompile(String& source);
 bool precompile(String& source, Span<const std::pair<Regex, String>> sv);
 
@@ -90,7 +89,7 @@ template <class ...Ts>
 void push(lua_State* L, const std::format_string<Ts...>& fmt, Ts&&...args) {
     lua_pushstring(L, std::format(fmt, std::forward<Ts>(args)...).c_str());
 }
-inline void push(lua_State* L, Str_view string) {
+inline void push(lua_State* L, Strview string) {
     lua_pushlstring(L, string.data(), string.length());
 }
 inline void push(lua_State* L, const char* string) {

@@ -15,7 +15,6 @@
 #include <variant>
 using namespace dluau::type_aliases;
 using dluau::has_permissions;
-using common::error_trail;
 using dlimport::Dlmodule;
 
 

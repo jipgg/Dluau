@@ -1,5 +1,6 @@
 #include <dluau.h>
 #include <dluau.hpp>
+#include <iostream>
 using namespace dluau::type_aliases;
 static String separator{"\t"};
 
@@ -8,7 +9,7 @@ static String get_print_statement(lua_State* L, int offset = 0) {
     String to_print;
     for (int i{1 + offset}; i <= top; ++i) {
         size_t len{};
-        Str_view v{luaL_tolstring(L, i, &len), len};
+        Strview v{luaL_tolstring(L, i, &len), len};
         to_print.append(v).append(separator);
     }
     to_print.resize(to_print.size() - separator.size());
@@ -20,7 +21,7 @@ static int call(lua_State* L) {
     return 0;
 }
 static int index(lua_State* L) {
-    Str_view key = luaL_checkstring(L, 2);
+    Strview key = luaL_checkstring(L, 2);
     switch(key.at(0)) {
         case 's':
             lua_pushlstring(L, separator.data(), separator.length());
@@ -29,8 +30,8 @@ static int index(lua_State* L) {
     luaL_argerrorL(L, 2, "unknown field");
 }
 static int newindex(lua_State* L) {
-    Str_view key = luaL_checkstring(L, 2);
-    Str_view v = luaL_checkstring(L, 3);
+    Strview key = luaL_checkstring(L, 2);
+    Strview v = luaL_checkstring(L, 3);
     switch(key.at(0)) {
         case 's':
             separator = v;

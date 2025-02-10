@@ -1,5 +1,4 @@
 #include <dluau.hpp>
-#include <fstream>
 #include <format>
 #include "luacode.h"
 #include <lua.h>
@@ -9,6 +8,7 @@
 #include <boost/container/flat_map.hpp>
 #include <nlohmann/json.hpp>
 #include <print>
+#include <iostream>
 using namespace dluau::type_aliases;
 using Json = nlohmann::json;
 
@@ -36,8 +36,8 @@ static int lua_loadstring(Lstate L) {
     lua_insert(L, -2);
     return 2;
 }
-static int lua_collectgarbage(lua_State* L) {
-    Str_view option = luaL_optstring(L, 1, "collect");
+static int lua_collectgarbage(Lstate L) {
+    Strview option = luaL_optstring(L, 1, "collect");
     if (option == "collect") {
         lua_gc(L, LUA_GCCOLLECT, 0);
         return 0;
@@ -49,8 +49,8 @@ static int lua_collectgarbage(lua_State* L) {
     }
     dluau::error(L, "collectgarbage must be called with 'count' or 'collect'");
 }
-void dluau_registerglobals(lua_State *L) {
-    const luaL_Reg global_functions[] = {
+void dluau_registerglobals(Lstate L) {
+    const Lreg global_functions[] = {
         {"loadstring", lua_loadstring},
         {"collectgarbage", lua_collectgarbage},
         {"require", lua_require},
@@ -61,7 +61,7 @@ void dluau_registerglobals(lua_State *L) {
     luaL_register(L, NULL, global_functions);
     lua_pop(L, 1);
 }
-void dluau_openlibs(lua_State *L) {
+void dluau_openlibs(Lstate L) {
     luaL_openlibs(L);
     dluauopen_print(L);
     dluauopen_scan(L);
@@ -78,8 +78,8 @@ int dluau_newlightuserdatatag() {
     static int curr_type_tag = 1;
     return curr_type_tag++; 
 }
-lua_State* dluau_newstate() {
-    lua_State* L = luaL_newstate();
+Lstate dluau_newstate() {
+    Lstate L = luaL_newstate();
     lua_callbacks(L)->useratom = dluau::default_useratom;
     dluau_registerglobals(L);
     return L;
@@ -88,8 +88,8 @@ int dluau_run(const dluau_runoptions* opts) {
     dluau::compile_options->debugLevel = 3;
     dluau::compile_options->optimizationLevel = opts->optimization_level;
     if (opts->args) dluau::args = opts->args;
-    std::unique_ptr<lua_State, decltype(&lua_close)> state{dluau_newstate(), lua_close}; 
-    lua_State* L = state.get();
+    Unique<lua_State, decltype(&lua_close)> state{dluau_newstate(), lua_close}; 
+    Lstate L = state.get();
     dluau_openlibs(L);
     if (opts->global_functions) {
         lua_pushvalue(L, LUA_GLOBALSINDEX);
@@ -102,8 +102,8 @@ int dluau_run(const dluau_runoptions* opts) {
         std::println(std::cerr, errfmt, "no sources given");
         return -1;
     }
-    for (auto sr : views::split(Str_view(opts->scripts), dluau::arg_separator)) {
-        Str_view script{sr.data(), sr.size()};
+    for (auto sr : views::split(Strview(opts->scripts), dluau::arg_separator)) {
+        Strview script{sr.data(), sr.size()};
         if (auto result = dluau::run_file(L, script); !result) {
             std::println(std::cerr, errfmt, result.error());
             return -1;
@@ -120,13 +120,13 @@ int dluau_run(const dluau_runoptions* opts) {
 }
 
 namespace dluau {
-bool has_permissions(lua_State* L) {
+bool has_permissions(Lstate L) {
     lua_Debug ar;
     if (not lua_getinfo(L, 1, "s", &ar)) return false;
     if (ar.source[0] == '@' or ar.source[0] == '=') return true;
     return false;
 }
-Expected<void> run_file(lua_State* L, Str_view script_path) {
+Expected<void> run_file(Lstate L, Strview script_path) {
     auto r = ::dluau::load_file(L, script_path);
     if (not r) return Unexpected(r.error());
     auto* co = *r;

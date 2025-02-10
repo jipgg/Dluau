@@ -1,11 +1,11 @@
-#include "dluau.h"
+#include <dluau.hpp>
 #include <iostream>
 #include <string>
-using std::string;
 #include <format>
+using namespace dluau::type_aliases;
 
 DLUAU_API const char* get_version() {
-    static const string version = std::format("{}.{}.{}", DLUAU_VERSION_MAJOR, DLUAU_VERSION_MINOR, DLUAU_VERSION_PATCH);
+    static const String version = std::format("{}.{}.{}", DLUAU_VERSION_MAJOR, DLUAU_VERSION_MINOR, DLUAU_VERSION_PATCH);
     return version.c_str();
 }
 DLUAU_API int get_version_major() {

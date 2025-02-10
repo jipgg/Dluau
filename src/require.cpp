@@ -31,13 +31,13 @@ static auto get_precompiled_library_values(const Path& p) {
 }
 
 static Expected<Path> find_config_file(Path base = fs::current_path(), int search_depth = 5) {
-    const auto config_file_names = std::to_array<Str_view>({
+    const auto config_file_names = std::to_array<Strview>({
         ".luaurc", ".dluaurc",
         ".dluaurc.json", ".luaurc.json",
         "luaurc.json", "dluaurc.json",
     });
     auto exists = [&cfn = config_file_names, &base](Path& out) -> bool {
-        for (Str_view name : cfn) {
+        for (Strview name : cfn) {
             const Path potential_path = base / name;
             if (fs::exists(potential_path)) {
                 out = potential_path;
@@ -55,7 +55,7 @@ static Expected<Path> find_config_file(Path base = fs::current_path(), int searc
 static bool has_alias(const String& str) {
     return str[0] == '@';
 }
-static Expected<void> load_aliases(const fs::path& base = fs::current_path(), int search_depth = 5) {
+static Expected<void> load_aliases(const Path& base = fs::current_path(), int search_depth = 5) {
     auto found_config = find_config_file(base, search_depth);
     if (not found_config) return Expected<void>();
 
@@ -69,8 +69,8 @@ static Expected<void> load_aliases(const fs::path& base = fs::current_path(), in
         }
         Path path{String(val)};
         auto with_user_folder = common::substitute_user_folder(path);
-        if (auto err = get_if<common::error_trail>(&with_user_folder)) return Unexpected(*err);
-        else path = get<fs::path>(with_user_folder);
+        if (not with_user_folder) return Unexpected(with_user_folder.error());
+        else path = *with_user_folder;
         auto normalized = common::normalize_path(path);
         aliases.emplace(key, std::move(normalized.string()));
     }
@@ -135,7 +135,7 @@ int dluau_require(lua_State* L, const char* name) {
     dluau::precompile(source, get_precompiled_library_values(file_path));
     size_t bc_len;
     char* bc_arr = luau_compile(source.data(), source.size(), ::dluau::compile_options, &bc_len);
-    common::raii free_after([&bc_arr]{std::free(bc_arr);});
+    common::Raii free_after([&bc_arr]{std::free(bc_arr);});
     String chunkname = file_path;
     chunkname = '@' + chunkname;
     int status{-1};
@@ -181,7 +181,7 @@ static Opt<Path> find_source(Path p, const Path& base, Span<const String> file_e
     return std::nullopt;
 }
 namespace dluau {
-Expected<lua_State*> load_file(lua_State* L, Str_view path) {
+Expected<lua_State*> load_file(lua_State* L, Strview path) {
     String script_path{path};
     Opt<String> source = common::read_file(script_path);
     if (not source) return Unexpected(format("couldn't read source '{}'.", script_path));
@@ -218,8 +218,8 @@ Expected<String> resolve_require_path(lua_State* L, String name, Span<const Stri
         if (auto success = substitute_alias(name); !success) return success.error();
     } else if (name[0] == '~') {
         auto with_user = common::substitute_user_folder(name);
-        if (auto err = get_if<common::error_trail>(&with_user)) return err->propagate();
-        name = get<fs::path>(with_user).string();
+        if (not with_user) return Unexpected(with_user.error());
+        name = with_user.value().string();
     }
     auto found_source = find_source(name, script_path, file_exts);
     if (not found_source) return Unexpected(format("couldn't find source for '{}'", name));
@@ -230,8 +230,8 @@ Expected<String> resolve_path(String name, const Path& base, Span<const String> 
         if (auto ok = substitute_alias(name); !ok) return ok.error();
     } else if (name[0] == '~') {
         auto with_user = common::substitute_user_folder(name);
-        if (auto err = get_if<common::error_trail>(&with_user)) return err->propagate();
-        name = get<fs::path>(with_user).string();
+        if (not with_user) return Unexpected(with_user.error());
+        name = (*with_user).string();
     }
     auto found_source = find_source(name, base, file_exts);
     if (not found_source) return Unexpected(format("couldn't find source for '{}'", name));

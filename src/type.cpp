@@ -1,16 +1,15 @@
 #include <dluau.h>
 #include <lualib.h>
-#include <vector>
 #include <string>
 #include <dluau.hpp>
 #include <boost/container/flat_set.hpp>
 #include <boost/container/flat_map.hpp>
-using namespace dluau;
+using namespace dluau::type_aliases;
 
 class Userdata_type_registry{
     boost::container::flat_set<String> registry_;
     Flat_map<String, int> tags_;
-    std::vector<const char*> zarray_;
+    Vector<const char*> zarray_;
 public:
     const char* const* zarray() const {
         if (zarray_.size() > 0) return zarray_.data();

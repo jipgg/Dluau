@@ -120,9 +120,9 @@ static int call_binding(lua_State* L) {
     }
     luaL_errorL(L, "call error");
 }
-Opt<C_type> string_to_param_type(Str_view str) {
+Opt<C_type> string_to_param_type(Strview str) {
     using ct = C_type;
-    static const Flat_map<Str_view, C_type> map {
+    static const Flat_map<Strview, C_type> map {
         {"c_int", ct::c_int},
         {"c_uint", ct::c_uint},
         {"c_short", ct::c_short},
@@ -149,7 +149,7 @@ int cinterop::new_function_binding(lua_State* L) {
         auto& si = cinterop::to_struct_info(L, 2);
         binding.types.push_back(si);
     } else {
-        Str_view return_type = luaL_checkstring(L, 2);
+        Strview return_type = luaL_checkstring(L, 2);
         auto res = string_to_param_type(return_type);
         if (not res) luaL_argerrorL(L, 2, "not a c type");
         binding.types.push_back(std::move(*res));

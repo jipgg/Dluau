@@ -30,7 +30,7 @@ struct Struct_info {
     Unique<int, Func<void(int*)>> metatable;
     void* newinstance(Lstate L);
 };
-Opt<C_type> string_to_param_type(Str_view str);
+Opt<C_type> string_to_param_type(Strview str);
 namespace cinterop {
 Shared<Struct_info>& check_struct_info(Lstate L, int idx);
 Shared<Struct_info>& to_struct_info(Lstate L, int idx);

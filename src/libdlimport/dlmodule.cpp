@@ -1,15 +1,13 @@
 #include "dlimport.hpp"
 #include <format>
-#include <common/error_trail.hpp>
 #include <common.hpp>
-#include <filesystem>
 constexpr int unintialized{-1};
 static int importfunction_sa{unintialized};
 using dlimport::Dlmodule;
 
 static int index(Lstate L) {
     Dlmodule* module = dlimport::lua_tomodule(L, 1);
-    const Str_view key = luaL_checkstring(L, 2);
+    const Strview key = luaL_checkstring(L, 2);
     if (key == "path") {
         lua_pushstring(L, module->path.string().c_str());
         return 1;

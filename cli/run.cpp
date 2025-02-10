@@ -4,13 +4,12 @@
 #include <format>
 #include <common.hpp>
 #include <functional>
-using std::string, std::format, std::span;
-using cli::configuration;
+using cli::Configuration;
 #ifdef _WIN32
 #include <Windows.h>
-constexpr std::string_view runtime_host_name{"dluau-windows-host.exe"};
+constexpr Strview runtime_host_name{"dluau-windows-host.exe"};
 
-static int run_windows_host(span<char> zarg) {
+static int run_windows_host(Span<char> zarg) {
     STARTUPINFO startup_info = { sizeof(startup_info) }; // use current console
     PROCESS_INFORMATION process_info = { 0 };
     LPCSTR executable_name = nullptr;
@@ -27,9 +26,9 @@ static int run_windows_host(span<char> zarg) {
         inherit_handles,creation_flags, environment, current_directory,
         &startup_info, &process_info
     );
-    struct raii {
-        std::function<void()> subroutine;
-        ~raii() {subroutine();}
+    struct Raii {
+        Func<void()> subroutine;
+        ~Raii() {subroutine();}
     } close_handles([&process_info] {
         CloseHandle(process_info.hProcess);
         CloseHandle(process_info.hThread);
@@ -43,17 +42,17 @@ static int run_windows_host(span<char> zarg) {
     GetExitCodeProcess(process_info.hProcess, &exit_code);
     return exit_code;
 }
-int cli::run(const configuration& config, const string* const args) {
+int cli::run(const Configuration& config, const String* const args) {
     using namespace std::string_literals;
     auto path = common::get_bin_path();
     if (not path) {
         std::cerr << "\033[31mFailed to get executable path.\033[0m\n";
         return -2;
     }
-    string exe = (path->parent_path() / runtime_host_name).string();
-    string cmd = format("{} --sources={}", exe, config.sources);
-    if (args) cmd += format(" --args={}", *args);
-    cmd += format(" -O{}", config.optimization_level);
+    String exe = (path->parent_path() / runtime_host_name).string();
+    String cmd = std::format("{} --sources={}", exe, config.sources);
+    if (args) cmd += std::format(" --args={}", *args);
+    cmd += std::format(" -O{}", config.optimization_level);
     auto exit_code = run_windows_host(cmd);
     return exit_code;
 }

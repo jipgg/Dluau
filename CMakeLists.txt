@@ -19,7 +19,7 @@ set(lib_EXPORT "DLUAU_LIB_EXPORT")
 
 set(version_MAJOR 0)
 set(version_MINOR 1)
-set(version_PATCH 4)
+set(version_PATCH 5)
 
 set(lib_DIR src)
 set(cli_DIR cli)

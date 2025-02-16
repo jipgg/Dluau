@@ -13,9 +13,7 @@
 #include <memory>
 #include <boost/container/flat_map.hpp>
 
-
-namespace dluau {
-namespace type_aliases {
+namespace dluau::type_aliases {
 namespace fs = std::filesystem;
 namespace views = std::views;
 namespace ranges = std::ranges;
@@ -46,6 +44,8 @@ template <class T> using Ref = std::reference_wrapper<T>;
 template <class T, class Dx = std::default_delete<T>> using Unique = std::unique_ptr<T, Dx>;
 template <class T> using Shared = std::shared_ptr<T>;
 }
+
+namespace dluau {
 using namespace type_aliases;
 const Flat_map<lua_State*, String>& get_script_paths();
 const Flat_map<String, String>& get_aliases();
@@ -72,17 +72,17 @@ template <class ...Ts>
     luaL_errorL(L, msg.c_str());
 }
 template <class ...Ts>
-[[noreturn]] constexpr void argerror(lua_State* L, int idx, const std::format_string<Ts...>& fmt, Ts&&...args) {
+[[noreturn]] constexpr void arg_error(lua_State* L, int idx, const std::format_string<Ts...>& fmt, Ts&&...args) {
     luaL_argerror(L, idx, std::format(fmt, std::forward<Ts>(args)...).c_str());
 }
-[[noreturn]] inline void argerror(lua_State* L, int idx, const String& msg) {
+[[noreturn]] inline void arg_error(lua_State* L, int idx, const String& msg) {
     luaL_argerrorL(L, idx, msg.c_str());
 }
 template <class ...Ts>
-[[noreturn]] constexpr void typeerror(lua_State* L, int idx, const std::format_string<Ts...>& fmt, Ts&&...args) {
+[[noreturn]] constexpr void type_error(lua_State* L, int idx, const std::format_string<Ts...>& fmt, Ts&&...args) {
     luaL_typeerrorL(L, idx, std::format(fmt, std::forward<Ts>(args)...).c_str());
 }
-[[noreturn]] inline void typeerror(lua_State* L, int idx, const String& msg) {
+[[noreturn]] inline void type_error(lua_State* L, int idx, const String& msg) {
     luaL_typeerrorL(L, idx, msg.c_str());
 }
 template <class ...Ts>
@@ -111,20 +111,20 @@ inline void push(lua_State* L, bool boolean) {
     lua_pushboolean(L, boolean);
 }
 template <class T = void>
-T& toudtagged(lua_State* L, int idx, int tag) {
+T& to_userdata_tagged(lua_State* L, int idx, int tag) {
     return *static_cast<T*>(lua_touserdatatagged(L, idx, tag));
 }
 template <class T = void>
-T& touserdata(lua_State* L, int idx) {
+T& to_userdata(lua_State* L, int idx) {
     return *static_cast<T*>(lua_touserdata(L, idx));
 }
 template <class T>
-T& checkudtagged(lua_State* L, int idx, int tag) {
-    if (lua_userdatatag(L, idx) != tag) typeerror(L, typeid(T).name());
+T& check_userdata_tagged(lua_State* L, int idx, int tag) {
+    if (lua_userdatatag(L, idx) != tag) type_error(L, typeid(T).name());
     return *static_cast<T*>(lua_touserdatatagged(L, idx, tag));
 }
 template <class T>
-T& newudtagged(lua_State* L, int tag) {
+T& new_userdata_tagged(lua_State* L, int tag) {
     return *static_cast<T*>(lua_newuserdatatagged(L, sizeof(T), tag));
 }
 template <class T>
@@ -132,7 +132,7 @@ void default_dtor(void* ud) {
     static_cast<T*>(ud)->~T();
 }
 template <class T>
-T& newuserdata(lua_State* L, void(*dtor)(void*) = default_dtor<T>) {
+T& new_userdata(lua_State* L, void(*dtor)(void*) = default_dtor<T>) {
     return *static_cast<T*>(lua_newuserdatadtor(L, sizeof(T), dtor));
 }
 template <class T, std::constructible_from<T> ...Params>

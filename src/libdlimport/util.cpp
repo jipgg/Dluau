@@ -9,12 +9,14 @@ const Dlmodule_map& get_dlmodules() {
     return dlmodules;
 }
 static const auto dl_file_extensions = std::to_array<String>({".so", ".dll", ".dylib"});
-Expected<Ref<Dlmodule>> load_module(lua_State* L) {
+Expected<Ref<Dlmodule>> load_module(lua_State* L, const std::string& require_path) {
     if (not dluau::has_permissions(L)) return Unexpected("current environment context does not allow loading");
-    const String name = luaL_checkstring(L, 1);
-    auto resolved = dluau::resolve_require_path(L, name, dl_file_extensions);
+    auto resolved = dluau::resolve_require_path(L, require_path, dl_file_extensions);
     if (!resolved) return Unexpected(resolved.error());
     return init_module(*resolved);
+}
+Expected<Ref<Dlmodule>> load_module(lua_State* L) {
+    return load_module(L, luaL_checkstring(L, 1));
 }
 Opt<Path> search_path(const Path& dlpath) {
     char buffer[MAX_PATH];

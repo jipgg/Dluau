@@ -4,10 +4,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(dluau LANGUAGES CXX C)
 find_package(Boost REQUIRED COMPONENTS container)
-add_subdirectory(extern/dyncall-1.4)
-set(DynLoad_DIR ${DynCall_SOURCE_DIR}/dynload)
-set(DynCall_DIR ${DynCall_SOURCE_DIR}/dyncall)
-set(DynCallback_DIR ${DynCall_SOURCE_DIR}/dyncallback)
 
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 add_subdirectory(extern/nlohmann_json)
@@ -58,14 +54,13 @@ target_compile_definitions(lib PRIVATE
     DLUAU_VERSION_MINOR=${version_MINOR}
     DLUAU_VERSION_PATCH=${version_PATCH}
 )
-target_include_directories(lib PRIVATE ${lib_DIR} ${DynCall_DIR})
+target_include_directories(lib PRIVATE ${lib_DIR})
 target_include_directories(lib PUBLIC ${lib_DIR}/include)
 target_link_libraries(lib PUBLIC
     Luau.VM
     Luau.Compiler
     Luau.CodeGen
     Boost::container
-    dyncall_s
     nlohmann_json::nlohmann_json
 )
 set(lib_NAME dluaulib)

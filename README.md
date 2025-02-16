@@ -8,9 +8,6 @@ A minimal runtime that extends the [Luau](https://github.com/luau-lang/luau) lan
 It extends the Luau C API with a minimal set of utilities to standardize/synchronize userdata type tags
 and namecall stringatoms for more easily extending the environment with external Luau C API that can be dynamically loaded with the builtin `dlimport` library.
 
-A `cinterop` library with support for creating raw C bindings for exported C functions as well as partial support for mapping usable POD C struct wrappers (`structinfo`)
-that can be used to interpret c struct values.
-
 For this to work reliably the runtime consists of a shared dll named `dluaulib.dll` which other dlls can link to or import symbols from.
 
 Also does it provide an abstraction layer for the windows executable host. As opposed to Linux, Windows differentiates between true console applications and windows applications,
@@ -54,57 +51,6 @@ since dlimport also supports creating bindings of 'true' C functions. This seeme
 safe luau c functions and UB territory that can happen when loading functions with different parameters and return types,
 since lua_CFunctions are always the same type (`int(*)(lua_State*)`).  
 
-#### Dynamic C API bindings
-The project has partial support for C POD structs. Currently it does not allow for you to nest struct types inside eachother, but this is a planned feature.
-To create a struct description you can use the `cinterop.struct` library.
-
-**A basic example for mapping a c `point` struct:** (we are assuming the struct has no padding for this example)
-```c
-// the struct we are going to map:
-struct point {int x, y;};
-```
-```luau
-type point = {x: c_int, y: c_int}
-local point_fields_info = {
-    ["x"] = {
-        type = 'c_int',
-        memoffset = 0,
-    },
-    ["y"] = {
-        type = 'c_int',
-        memoffset = cinterop.sizeof('c_int'),
-    },
-}
-local point_memsize = cinterop.sizeof('c_int') * 2
--- create a new `structinfo` object
-local point_info: structinfo = cinterop.struct.newinfo(point_memsize, point_fields_info)
-```
-Optionally you can register a metatable for making accessing fields more ergonomic.
-This metatable will automattically be set to the userdata when instantiating an instance of `structinfo`.
-```luau
-local point_info: structinfo
-...
-local point_metatable = {
-    __index = function(data: userdata, key: string)
-        return cinterop.struct.getfield(point_info, data, key)
-    end,
-    __newindex = function(data: userdata, key: string, newval: c_int)
-        cinterop.struct.setfield(point_info, data, key, newval)
-    end,
-    __type = 'point', -- this metemethod works for `typeof()` since the instance itself is raw userdata
-}
-point_info = cinterop.struct.newinfo(point_memsize, point_fields_info, point_metatable)
-```
-Then you can pass the `structinfo` object as a parameter specifier in `cinterop.bindfunction`
-```luau
-...
-local some_dll: dlmodule = dlimport.load("some_dll")
-local c_function_returning_point: () -> point = cinterop.bindfunction(some_dll, point_info, 'c_function_returning_point')
--- using the binding after
-local my_point = c_function_returning_point()
-```
-***Creating C API bindings dynamically is slower and gives you less control than creating the bindings directly with the
-Luau C API, but the former does allow you to interop with C without the need for recompiling any source code.***
 ### searching DLLs
 The searching algorithm for finding the DLL behaves the same as with regular the `require('someluaumodule')`
 meaning that you can also use '@aliases' in this function.

@@ -9,7 +9,6 @@
 #include <boost/container/flat_map.hpp>
 #include <dluau.hpp>
 #include <filesystem>
-#include <dyncall.h>
 #include <array>
 #include "dlimport.hpp"
 #include <variant>
@@ -62,6 +61,20 @@ static int loaded_modules(Lstate L) {
         lua_rawseti(L, -2, i++);
     }
     return 1;
+}
+dluau_Dlmodule* dluau_todlmodule(lua_State* L, int idx) {
+    return dlimport::lua_tomodule(L, idx);
+}
+void dluau_pushdlmodule(lua_State* L, dluau_Dlmodule* dlm) {
+    dlimport::lua_pushmodule(L, dlm);
+}
+uintptr_t dluau_dlmodulefind(dluau_Dlmodule* dlm, const char* symbol) {
+    return dlimport::find_proc_address(*dlm, symbol).value_or(0);
+}
+dluau_Dlmodule* dluau_loaddlmodule(lua_State* L, const char* require_path) {
+    auto res = dlimport::load_module(L, require_path);
+    if (!res) return nullptr;
+    return &(res->get());
 }
 void dluauopen_dlimport(Lstate L) {
     Dlmodule::init(L);

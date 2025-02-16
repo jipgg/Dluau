@@ -68,7 +68,6 @@ void dluau_openlibs(Lstate L) {
     dluauopen_dlimport(L);
     dluauopen_task(L);
     dluauopen_os(L);
-    dluauopen_cinterop(L);
 }
 int dluau_newuserdatatag() {
     static int curr_type_tag = 1;
@@ -84,7 +83,7 @@ Lstate dluau_newstate() {
     dluau_registerglobals(L);
     return L;
 }
-int dluau_run(const dluau_runoptions* opts) {
+int dluau_run(const dluau_RunOptions* opts) {
     dluau::compile_options->debugLevel = 3;
     dluau::compile_options->optimizationLevel = opts->optimization_level;
     if (opts->args) dluau::args = opts->args;

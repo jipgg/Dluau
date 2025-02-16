@@ -43,7 +43,7 @@ struct Cleaning_instruction {
 
 static Flat_map<Lthread, Waiter> waiting;
 static Flat_map<Lthread, Afterer> do_after;
-static Vector<dluau_ctask> ctasks;
+static Vector<dluau_CTask> ctasks;
 static Vector<Deferrer> deferred;
 static Vector<Cleaning_instruction> janitor;
 
@@ -251,9 +251,9 @@ Expected<void> task_step(lua_State* L) {
             return Unexpected(lua_tostring(state, -1));
         }
     }
-    for (dluau_ctask& task : ctasks) {
+    for (dluau_CTask& task : ctasks) {
         const char* errmsg{nullptr};
-        dluau_ctaskstatus status = task(&errmsg);
+        dluau_CTaskStatus status = task(&errmsg);
         switch (status) {
             case DLUAU_CTASK_CONTINUE:
                 continue;
@@ -279,7 +279,7 @@ Expected<void> task_step(lua_State* L) {
                 do_after.erase(state);
                 continue;
             } case Job::ctask: {
-                auto task = reinterpret_cast<dluau_ctask>(v.id);
+                auto task = reinterpret_cast<dluau_CTask>(v.id);
                 auto found = ranges::find(ctasks, task);
                 if (found == ranges::end(ctasks)) return Unexpected(std::format("couldn't find ctask ({}) during the removal phase", v.id));
                 ctasks.erase(found);
@@ -293,7 +293,7 @@ Expected<void> task_step(lua_State* L) {
 }
 }
 
-DLUAU_API void dluau_addctask(dluau_ctask cb) {
+DLUAU_API void dluau_addctask(dluau_CTask cb) {
     ctasks.push_back(cb);
 }
 

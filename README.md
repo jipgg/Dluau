@@ -6,7 +6,7 @@ and does not ensure stability of implemented features.
 A minimal 'runtime' that extends the [Luau](https://github.com/luau-lang/luau) language with a more flexible feature-set for loading and running external Luau C API DLLs.
 The goal of this project is to stay minimal, mostly serving as just an extended luau environment,
 meaning that this project does not come with a standard library with general purpose tools.
-However, i am working on a [General Purpose Library]() that serves as a substitute for the lack of standard library, focused on modularity, only loading the dynamic libraries that you are actually using.
+However, i am working on a [General Purpose Library](https://github.com/jipgg/dluau.gpm) that serves as a substitute for the lack of standard library, focused on modularity, only loading the dynamic libraries that you are actually using.
 ## Features
 Provides a shared runtime environment `dluaulib` for ensuring compatibility between external dynamic libraries that import/export dluau C API.
 

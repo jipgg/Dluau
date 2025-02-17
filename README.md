@@ -3,28 +3,34 @@ Any API, feature and/or functionality is volatile and open to change at any time
 The project lacks proper documentation, varying degrees of comprehensibility in error messages
 and does not ensure stability of implemented features.
 # Dluau
-A minimal runtime that extends the [Luau](https://github.com/luau-lang/luau) language and turns it into a more flexible, general purpose and dynamically extensible scripting environment.
+A minimal 'runtime' that extends the [Luau](https://github.com/luau-lang/luau) language with a more flexible feature-set for loading and running external Luau C API DLLs.
+The goal of this project is to stay minimal, mostly serving as just an extended luau environment,
+meaning that this project does not come with a standard library with general purpose tools.
+However, i am working on a [General Purpose Library]() that serves as a substitute for the lack of standard library, focused on modularity, only loading the dynamic libraries that you are actually using.
 ## Features
-It extends the Luau C API with a minimal set of utilities to standardize/synchronize userdata type tags
-and namecall stringatoms for more easily extending the environment with external Luau C API that can be dynamically loaded with the builtin `dlimport` library.
+Provides a shared runtime environment `dluaulib` for ensuring compatibility between external dynamic libraries that import/export dluau C API.
 
-For this to work reliably the runtime consists of a shared dll named `dluaulib.dll` which other dlls can link to or import symbols from.
+Extends the Luau C API with a minimal set of utilities to standardize/synchronize userdata type tag creation
+and namecall stringatoms with the goal of making it easier to extend the environment with external Luau C API that can be dynamically loaded with the builtin `dlimport` library.
 
-Also does it provide an abstraction layer for the windows executable host. As opposed to Linux, Windows differentiates between true console applications and windows applications,
+Also does it provide an abstraction layer for the windows executable host. As opposed to Linux, Windows differentiates between 'true' console applications and windows applications in the form of subsystems,
 the latter allowing you to create GUI applications and the former behaving like your standard console app. Dluau always runs the environment as a Windows subsystem from the host
-and emulates the console behavior to behave functionally the same as it would work on Linux.
+and emulates the console behavior to behave functionally almost the same as your standard console app.
 What this means is that you can potentially run both gui apps and console apps from the same host application.
 
-It also provides a couple of quality-of-life features like a `nameof` pseudo function and a `script` 'library' which get resolved to string literals before compilation.
-Also does it implement a `task` library that is essentially a port of Roblox's task library with some minor differences and features.
+It also provides a couple of quality-of-life features like a `nameof<T>(variable: T)` precompiler function and a precompiled `script` 'library' which get resolved to string literals before compilation.
+
+The baseline for a Luau runtime these days seems to be that it at least provides a `task` library that loosely ports the Roblox Studio version, so also this 'runtime' has one implemented.
 
 The `os` library features have been reverted to the vanilla lua version.
-`os.execute`, `os.getenv`, `os.remove` and `os.rename` have been re-enabled.
+`os.execute`, `os.getenv`, `os.remove` and `os.rename` have been reenabled.
 ### DLL loading
-I've made a basic cmake [stub library (outdated)](https://github.com/jipgg/dluaulib-stub) of the dluaulib.dll and Luau + dluau API that you can add as a
-subdirectory to your CMakeLists.txt for creating your own DLLs without having to build the whole source.
-Or a [cmake project example (outdated)](https://github.com/jipgg/dluau-dlmodule-example) to clone/use as reference that
-already links the stub library and gives you a base project to start with.
+You can dynamically import the symbols from `dluaulib`, which is the most flexible approach, but also the least optimal one.
+For statically linking with cmake for C/C++ projects i've made a basic cmake [stub library](https://github.com/jipgg/dluaulib-stub) of the dluaulib.dll and Luau + dluau API that you can add as a
+subdirectory to your CMakeLists.txt for creating your own DLLs without having to build the whole source of this project.
+Allows you to link with the dluaulib symbol entry points without the need for it to have the full implementation of the source code.
+For an example/reference [cmake project using the stub library](https://github.com/jipgg/dluau.gpm)
+
 **To link the stub library with cmake:**
 ```cmake
 add_subdirectory(path/to/dluaulib-stub)
@@ -46,21 +52,20 @@ local my_imported_function: (some_arg: string)->() = dlexample:importfunction('s
 -- note: actual exported dll symbol would be `dlexport_some_imported_function_symbol`
 my_imported_function("hello world!")
 ```
-This convention serves as a safeguard because i didn't find a practical way to ensure an exported symbol is indeed of type lua_CFunction,
-since dlimport also supports creating bindings of 'true' C functions. This seemed like the best compromise to create a barrier between
-safe luau c functions and UB territory that can happen when loading functions with different parameters and return types,
-since lua_CFunctions are always the same type (`int(*)(lua_State*)`).  
+I am not sure if i will keep this convention yet.
+My main motivation for this is to make it less easy to accidentally import non-`lua_CFunction`s
+which would result in undefined behavior. Dynamically importing function symbols is inherently type unsafe.
 
 ### searching DLLs
-The searching algorithm for finding the DLL behaves the same as with regular the `require('someluaumodule')`
-meaning that you can also use '@aliases' in this function.
-When loading a dll with dlimport it also adds the dll's directory as a location for the system to find other DLL dependencies.
-So when your dll imports symbols from another DLL it will find that dependency even if it is not in the conventional places where the system
-searches in like PATH as long as a copy of the dll exists inside the dlmodule directory.
+The searching algorithm for finding the DLL behaves the same as with the regular `require` function, meaning that it support aliases.
+When loading a dll with dlimport it also adds the DLL's directory as a location for the system to find other DLL dependencies.
+So when your DLL imports symbols from another DLL it will find that dependency even if it is not in the conventional places where the system
+searches in like PATH as long as a copy of the dll exists inside one of the loaded `dlmodule` directories.
 
-Use `dlimport.searchpath` when you want to search for the absolute path of a DLL in the system.
+Use `dlimport.searchpath` in cases you want to search for an installed DLL in the system. Returns the absolute path on found.
+
 ## Autocompletion/LSP
-the dluau api definition and documentation files for [luau-lsp](https://github.com/JohnnyMorganz/luau-lsp) can be found [here](lsp/).
+The dluau api definition and documentation files for [luau-lsp](https://github.com/JohnnyMorganz/luau-lsp) can be found [here](lsp/).
 ### vscode
 In VSCode you can then add these 2 files to your definition- and documentation files in the luau-lsp settings to get the autocompletion working.
 ### Neovim
@@ -71,17 +76,19 @@ Afterwards call
 require('path.to.nvimlspsetup').setup({"path/to/definition/file.d.luau"}, {"path/to/docs/file.json"})
 ```
 to set up the LSP.
+
 ## Platform support
-At this point in time only Windows is being fully supported and mainly worked on out of personal development convenience,
+At this point in time only **Windows** is being fully supported and mainly worked on out of personal development convenience,
 but the plan is to fully support Linux in the future once i've gotten the project to a relatively stable state.
 No plans for macOS support at the moment, however.
 ## Installation
 You can download the latest binaries from [releases](https://github.com/jipgg/dluau/releases) or build from source.
 ### Building from source
 #### Dependencies
-- [dyncall] (https://dyncall.org/) for dynamically calling C functions and creating struct mappings.
-- [nlohman::json] (https://github.com/nlohmann/json) for json parsing
-- [Boost.Container] (https://github.com/boostorg/container) for a C++20 `flat_map` and `flat_set` implementation.
+**[nlohman::json] (https://github.com/nlohmann/json)** for json parsing
+
+**[Boost.Container] (https://github.com/boostorg/container)** for a `flat_map` and `flat_set` implementation.
+The project uses the C++23 Standard, but sadly `std::flat_map` and `std::flat_set` support/implementation in the big 3 compilers is still very limited.
 #### Resolving dependencies
 The external project dependencies are mostly self-contained in the project, but it currently does
 require you to resolve the CMake Boost.Container package on your own. I personally use vcpkg for this.
@@ -115,3 +122,5 @@ dluau -O2 example.luau -D0
 The tests are mostly just for me to quickly mash up some scripts to test the environment and check if functionality stayed relatively the same.
 They are by no means formal tests that can ensure the stability of the build.
 Also are the not all up-to-date with the latest build.
+# Contact
+Best way of contacting me is leaving me a DM on Discord at `jipg`.

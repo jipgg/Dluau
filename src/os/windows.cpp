@@ -50,10 +50,11 @@ static auto get_module_handle(lua_State* L) -> int {
     else push_result(luaL_checkstring(L, 1));
     return 1;
 }
-static void set_integer(lua_State* L, const char* field, int val) {
+static void set_integer(lua_State* L, int val, const char* field) {
     lua_pushinteger(L, val);
     lua_setfield(L, -2, field);
 }
+#define register(L, macro) set_integer(L, macro, #macro)
 void register_windows_lib(lua_State* L) {
     const luaL_Reg os_windows[] = {
         {"message_box", message_box},
@@ -65,10 +66,49 @@ void register_windows_lib(lua_State* L) {
         {nullptr, nullptr}
     };
     lua_newtable(L);
+    register(L, MB_ABORTRETRYIGNORE);
+    register(L, MB_CANCELTRYCONTINUE);
+    register(L, MB_HELP);
+    register(L, MB_OK);
+    register(L, MB_OKCANCEL);
+    register(L, MB_RETRYCANCEL);
+    register(L, MB_YESNO);
+    register(L, MB_YESNOCANCEL);
+    register(L, MB_ICONEXCLAMATION);
+    register(L, MB_ICONWARNING);
+    register(L, MB_ICONINFORMATION);
+    register(L, MB_ICONASTERISK);
+    register(L, MB_ICONQUESTION);
+    register(L, MB_ICONSTOP);
+    register(L, MB_ICONERROR);
+    register(L, MB_ICONHAND);
+    register(L, MB_DEFBUTTON1);
+    register(L, MB_DEFBUTTON2);
+    register(L, MB_DEFBUTTON3);
+    register(L, MB_DEFBUTTON4);
+    register(L, MB_APPLMODAL);
+    register(L, MB_SYSTEMMODAL);
+    register(L, MB_TASKMODAL);
+    register(L, MB_DEFAULT_DESKTOP_ONLY);
+    register(L, MB_RIGHT);
+    register(L, MB_RTLREADING);
+    register(L, MB_SETFOREGROUND);
+    register(L, MB_TOPMOST);
+    register(L, MB_SERVICE_NOTIFICATION);
+    register(L, IDABORT);
+    register(L, IDCANCEL);
+    register(L, IDCONTINUE);
+    register(L, IDIGNORE);
+    register(L, IDNO);
+    register(L, IDOK);
+    register(L, IDRETRY);
+    register(L, IDTRYAGAIN);
+    register(L, IDYES);
     luaL_register(L, nullptr, os_windows);
     lua_setreadonly(L, -1, true);
     lua_setfield(L, -2, "windows");
 }
+#undef register
 #else
 void register_windows_lib(lua_State* L) {}
 #endif

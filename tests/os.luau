@@ -1,9 +1,17 @@
-local dll = os.windows.load_library('dluaulib')
-if dll then
-    task.defer(os.windows.free_library, dll)
+local winapi = os.windows
+local gpm = require('@gpm')
+local id = os.windows.message_box("hello world", tostring(gpm.time.now()),
+    bit32.bor(winapi.MB_CANCELTRYCONTINUE)
+)
+if id == winapi.IDOK then
+    print("ok")
+elseif id == winapi.IDNO then
+    print('no')
+elseif id == winapi.IDCANCEL then
+    print('cancel')
+else
+    print(`{nameof(id)} {id}`)
 end
-print(dll)
-local result = os.windows.message_box("hello world", "YOO")
 -- print(result, os.platform)
 -- print(os.windows.get_module_handle())
 -- local now = os.clock()

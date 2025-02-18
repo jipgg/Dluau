@@ -1,6 +1,6 @@
 local winapi = os.windows
-local gpm = require('@gpm')
-local id = os.windows.message_box("hello world", tostring(gpm.time.now()),
+--local time = require('@gpm/time')
+local id = os.windows.message_box("hello world", "yo",
     bit32.bor(winapi.MB_CANCELTRYCONTINUE)
 )
 if id == winapi.IDOK then

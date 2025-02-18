@@ -1,5 +1,5 @@
 #pragma once
-#ifdef DLUAU_LIB_EXPORT
+#ifdef DLUAUCORE_EXPORT
 #define DLUAU_API extern "C" __declspec(dllexport)
 #else
 #define DLUAU_API extern "C" __declspec(dllimport)

@@ -26,15 +26,15 @@
             "name": "lib",
             "configurePreset": "default",
             "targets": [
-                "lib"
+                "Dluau.Core"
             ]
         },
         {
             "name": "cli",
             "configurePreset": "default",
             "targets": [
-                "cli",
-                "windows_host"
+                "Dluau.CLI",
+                "Dluau.CLI.Winhost"
             ]
         }
   ]

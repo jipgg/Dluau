@@ -5,17 +5,20 @@
 using std::string;
 
 DLUAU_API auto get_version() -> const char* {
-    static const string version = std::format("{}.{}.{}", DLUAU_VERSION_MAJOR, DLUAU_VERSION_MINOR, DLUAU_VERSION_PATCH);
+    static const string version = std::format(
+        "{}.{}.{}", DLUAUCORE_VERSION_MAJOR,
+        DLUAUCORE_VERSION_MINOR, DLUAUCORE_VERSION_PATCH
+    );
     return version.c_str();
 }
 DLUAU_API auto get_version_major() -> int {
-    return DLUAU_VERSION_MAJOR;
+    return DLUAUCORE_VERSION_MAJOR;
 }
 DLUAU_API auto get_version_minor() -> int {
-    return DLUAU_VERSION_MINOR;
+    return DLUAUCORE_VERSION_MINOR;
 }
 DLUAU_API auto get_version_patch() -> int {
-    return DLUAU_VERSION_PATCH;
+    return DLUAUCORE_VERSION_PATCH;
 }
 #ifndef NDEBUG
 DLUAU_API auto test_unsigned_int_return() -> unsigned int {

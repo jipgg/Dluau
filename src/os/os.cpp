@@ -1,7 +1,7 @@
-#include <dluau.h>
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include "os.hpp"
 
 static int os_execute(lua_State* L) {
     lua_pushinteger(L, std::system(luaL_checkstring(L, 1)));
@@ -47,5 +47,6 @@ void dluauopen_os(lua_State* L) {
         {nullptr, nullptr}
     };
     luaL_register(L, nullptr, extendedlib);
+    register_windows_lib(L);
     lua_pop(L, 1);
 }

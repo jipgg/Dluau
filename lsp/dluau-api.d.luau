@@ -3,21 +3,25 @@ declare nameof: <T>(v: T) -> string
 declare lazyrequire: <T>(modulename: string) -> T
 declare class userdata end
 
-export type osdate = {day: number, month: number, year: number, min: number, sec: number, hour: number, wday: number, yday: number, isdst: boolean}
-export type osdateopt = {day: number?, month: number?, year: number?, min: number?, sec: number?, hour: number?, wday: number?, yday: number?, isdst: boolean?}
-type osdateformatargs = '%a'|'%A'|'%b'|'%B'|'%c'|'%d'|'%H'|'%I'|'%M'|'%m'|'%p'|'%S'|'%w'|'%x'|'%X'|'%Y'|'%y'|'%%'
+export type os_date = {day: number, month: number, year: number, min: number, sec: number, hour: number, wday: number, yday: number, isdst: boolean}
+export type os_date_opt = {day: number?, month: number?, year: number?, min: number?, sec: number?, hour: number?, wday: number?, yday: number?, isdst: boolean?}
+type os_date_format_args = '%a'|'%A'|'%b'|'%B'|'%c'|'%d'|'%H'|'%I'|'%M'|'%m'|'%p'|'%S'|'%w'|'%x'|'%X'|'%Y'|'%y'|'%%'
+type os_windows = {
+    message_box: (message: string, title: string?) -> (),
+}
 type os = {
     execute: (command: string) -> number,
     exit: (code: number) -> never,
     getenv: (varname: string) -> string?,
     remove: (filename: string) -> (boolean | nil, string),
     rename: (oldfilename: string, newfilename: string) -> (boolean | nil, string),
-    date: (('*t'|'!*t', time: number?) -> osdate)
+    date: (('*t'|'!*t', time: number?) -> os_date)
         & ((format: string?, time: number?) -> string)
-        & ((formatargs: osdateformatargs|string?, time: number?) -> string),
-    time: (date: osdateopt?) -> number,
-    difftime: (t2: osdate | number, t1: osdate | number)->number,
+        & ((formatargs: os_date_format_args|string?, time: number?) -> string),
+    time: (date: os_date_opt?) -> number,
+    difftime: (t2: os_date | number, t1: os_date | number)->number,
     clock: ()->number,
+    windows: os_windows,
 }
 declare os: os
 

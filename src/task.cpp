@@ -228,7 +228,7 @@ Expected<void> task_step(lua_State* L) {
         }
         janitor.emplace_back(reinterpret_cast<uintptr_t>(state), Job::after);
     }
-    for (auto& d : deferred) {
+    for (auto& d : deferred | views::reverse) {
         auto status = lua_resume(d.state, L, d.argn);
         lua_unref(L, d.ref);
         if (has_errored(status)) {
@@ -293,8 +293,19 @@ Expected<void> task_step(lua_State* L) {
 }
 }
 
-DLUAU_API void dluau_addctask(dluau_CTask cb) {
+void dluau_addctask(dluau_CTask cb) {
     ctasks.push_back(cb);
+}
+bool dluau_tasksinprogress() {
+    return dluau::tasks_in_progress();
+}
+bool dluau_taskstep(lua_State* L) {
+    auto r = dluau::task_step(L);
+    if (not r) {
+        lua_pushstring(L, r.error().c_str());
+        return false;
+    }
+    return true;
 }
 
 void dluauopen_task(lua_State* L) {

@@ -60,6 +60,7 @@ struct dluau_RunOptions {
     const char* scripts;
     // program launch arguments separated with ','
     const char* args;
+    const char* aliases;
     // extra global function registry to inject
     // null-terminated
     const luaL_Reg* global_functions;
@@ -87,6 +88,8 @@ enum dluau_CTaskStatus {
 typedef dluau_CTaskStatus(*dluau_CTask)(const char** errmsg);
 // Adds a c task to the dluau task scheduler.
 DLUAU_API void dluau_addctask(dluau_CTask step_callback);
+DLUAU_API bool dluau_tasksinprogress();
+DLUAU_API bool dluau_taskstep(lua_State* L);
 struct dluau_Dlmodule;
 
 DLUAU_API dluau_Dlmodule* dluau_todlmodule(lua_State* L, int idx);

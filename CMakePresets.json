@@ -8,8 +8,7 @@
             "binaryDir": "${sourceDir}/cmake",
             "cacheVariables": {
                 "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/bin",
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-                "VCPKG_TARGET_TRIPLET": "x64-windows-static"
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
             }
         },
         {
@@ -23,7 +22,7 @@
     ],
     "buildPresets": [
         {
-            "name": "lib",
+            "name": "core",
             "configurePreset": "default",
             "targets": [
                 "Dluau.Core"
@@ -35,6 +34,17 @@
             "targets": [
                 "Dluau.CLI",
                 "Dluau.CLI.Winhost"
+            ]
+        },
+        {
+            "name": "std",
+            "configurePreset": "default",
+            "targets": [
+                "Dluau.Std.Time",
+                "Dluau.Std.Process",
+                "Dluau.Std.Mathx",
+                "Dluau.Std.Fs",
+                "Dluau.Std.Cinterop"
             ]
         }
   ]

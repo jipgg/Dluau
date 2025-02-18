@@ -10,22 +10,23 @@
 #include "host_main.hpp"
 #include <print>
 #include <ranges>
-using namespace dluau::type_aliases;
-static void output_error(Strview msg) {
-    std::print(std::cerr, "\033[31m{}\033[0m\n", msg);
-}
+namespace rngs = std::ranges;
+using std::string_view, std::string;
+using std::optional;
+using Args = std::vector<string_view>;
+using Args_view = std::span<const string_view>;
 
-static Opt<String> get_if_param(Span<const Strview> argv, Strview prefix) {
-    auto found = ranges::find_if(argv, [&prefix](Strview e) {
+static auto get_if_param(Args_view argv, string_view prefix) -> optional<string> {
+    auto found = rngs::find_if(argv, [&prefix](string_view e) {
         return e.substr(0, prefix.length()) == prefix;
     });
-    if (found == ranges::end(argv)) return std::nullopt;
-    return std::make_optional<String>(found->substr(prefix.length()));
+    if (found == rngs::end(argv)) return std::nullopt;
+    return std::make_optional<string>(found->substr(prefix.length()));
 }
-static bool contains(Span<const Strview> argv, Strview v) {
-    return ranges::find_if(argv, [&v](Strview e) {return v == e;}) != ranges::end(argv);
+static auto contains(Args_view argv, string_view v) -> bool {
+    return rngs::find_if(argv, [&v](auto e){return v==e;}) != rngs::end(argv);
 }
-int host_main(const Vector<Strview>& args) {
+auto host_main(const Args& args) -> int {
     try {
         auto src = get_if_param(args, "--sources=");
         auto ar = get_if_param(args, "--args=");
@@ -36,7 +37,7 @@ int host_main(const Vector<Strview>& args) {
         opts.debug_level = contains(args, "-D0") ? 0 : 1;
         return dluau_run(&opts);
     } catch (std::exception& e) {
-        std::cerr << std::format("Unexpected error: {}.\n", e.what());
+        std::println(std::cerr, "Unexpected error: {}.", e.what());
         return -1;
     }
 }

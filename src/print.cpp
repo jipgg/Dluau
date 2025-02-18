@@ -1,27 +1,28 @@
 #include <dluau.h>
 #include <dluau.hpp>
 #include <iostream>
-using namespace dluau::type_aliases;
-static String separator{"\t"};
+using std::string, std::string_view;
 
-static String get_print_statement(lua_State* L, int offset = 0) {
+static string separator{"\t"};
+
+static auto get_print_statement(lua_State* L, int offset = 0) -> string {
     const int top = lua_gettop(L);
-    String to_print;
+    string to_print;
     for (int i{1 + offset}; i <= top; ++i) {
         size_t len{};
-        Strview v{luaL_tolstring(L, i, &len), len};
+        string_view v{luaL_tolstring(L, i, &len), len};
         to_print.append(v).append(separator);
     }
     to_print.resize(to_print.size() - separator.size());
     return to_print;
 }
 
-static int call(lua_State* L) {
+static auto call(lua_State* L) -> int {
     std::cout << get_print_statement(L, 1) << '\n'; 
     return 0;
 }
-static int index(lua_State* L) {
-    Strview key = luaL_checkstring(L, 2);
+static auto index(lua_State* L) -> int {
+    string_view key = luaL_checkstring(L, 2);
     switch(key.at(0)) {
         case 's':
             lua_pushlstring(L, separator.data(), separator.length());
@@ -29,9 +30,9 @@ static int index(lua_State* L) {
     }
     luaL_argerrorL(L, 2, "unknown field");
 }
-static int newindex(lua_State* L) {
-    Strview key = luaL_checkstring(L, 2);
-    Strview v = luaL_checkstring(L, 3);
+static auto newindex(lua_State* L) -> int {
+    string_view key = luaL_checkstring(L, 2);
+    string_view v = luaL_checkstring(L, 3);
     switch(key.at(0)) {
         case 's':
             separator = v;

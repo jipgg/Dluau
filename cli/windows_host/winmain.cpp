@@ -3,9 +3,8 @@
 #include <ranges>
 #include <dluau.hpp>
 #include "host_main.hpp"
-using namespace dluau::type_aliases;
 
-static bool simulate_key_press(int key) {
+static auto simulate_key_press(int key) -> bool {
     HANDLE hin = GetStdHandle(STD_INPUT_HANDLE);
     if (hin == INVALID_HANDLE_VALUE) return false;
     INPUT_RECORD ir[2] = {};
@@ -27,7 +26,7 @@ static bool simulate_key_press(int key) {
     WriteConsoleInput(hin, ir, 2, &written);
     return true;
 }
-static bool redirect_console_output(bool try_attach_console = true) {
+static auto redirect_console_output(bool try_attach_console = true) -> bool {
     bool alloc = false;
     if (try_attach_console) {
         if (!AttachConsole(ATTACH_PARENT_PROCESS)) {
@@ -60,11 +59,11 @@ void enable_virtual_terminal_processing() {
     }
 }
 
-int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {
+auto WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) -> int {
     const bool alloc = redirect_console_output();
     enable_virtual_terminal_processing();
-    auto range = views::split(Strview(lpCmdLine), ' ');
-    Vector<Strview> args;
+    auto range = std::views::split(std::string_view(lpCmdLine), ' ');
+    std::vector<std::string_view> args;
     for (auto sub : range) args.emplace_back(sub.begin(), sub.end());
     const int exit_code = host_main(args);
     FreeConsole();

@@ -1,15 +1,15 @@
 #include "dluau.h"
 #include "dluau.hpp"
 #include <iostream>
-using namespace dluau::type_aliases;
+using std::string;
 
-static int call(lua_State* L) {
-    String input;
+static auto call(lua_State* L) -> int {
+    string input;
     std::cin >> input;
     lua_pushlstring(L, input.data(), input.size());
     return 1;
 }
-static int buffer(lua_State* L) {
+static auto buffer(lua_State* L) -> int {
     size_t len{};
     char* buf{};
     if (lua_isbuffer(L, 1)) {

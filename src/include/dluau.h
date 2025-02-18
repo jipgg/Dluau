@@ -85,6 +85,11 @@ enum dluau_CTaskStatus {
     DLUAU_CTASK_CONTINUE,
     DLUAU_CTASK_ERROR,
 };
+typedef void* dluau_Opaque;
+DLUAU_API void dluau_pushopaque(lua_State* L, dluau_Opaque pointer);
+DLUAU_API dluau_Opaque dluau_checkopaque(lua_State* L, int idx);
+DLUAU_API dluau_Opaque dluau_toopaque(lua_State* L, int idx);
+DLUAU_API bool dluau_isopaque(lua_State* L, int idx);
 typedef dluau_CTaskStatus(*dluau_CTask)(const char** errmsg);
 // Adds a c task to the dluau task scheduler.
 DLUAU_API void dluau_addctask(dluau_CTask step_callback);

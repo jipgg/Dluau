@@ -3,20 +3,20 @@
 #include <cstring>
 #include "os.hpp"
 
-static int os_execute(lua_State* L) {
+static auto execute(lua_State* L) -> int {
     lua_pushinteger(L, std::system(luaL_checkstring(L, 1)));
     return 1;
 }
-[[noreturn]] static int os_exit(lua_State* L) {
+[[noreturn]] static auto exit(lua_State* L) -> int {
     std::exit(luaL_optinteger(L, 1, 0));
 }
-static int os_getenv(lua_State* L) {
+static auto getenv(lua_State* L) -> int {
     const char* env = std::getenv(luaL_checkstring(L, 1));
     if (env == nullptr) return 0;
     lua_pushstring(L, env);
     return 1;
 }
-static int os_remove(lua_State* L) {
+static auto remove(lua_State* L) -> int {
     if (remove(luaL_checkstring(L, 1))) {
         lua_pushnil(L);
         lua_pushstring(L, strerror(errno));
@@ -25,7 +25,7 @@ static int os_remove(lua_State* L) {
     lua_pushboolean(L, true);
     return 1;
 }
-static int os_rename(lua_State* L) {
+static auto rename(lua_State* L) -> int {
     if (rename(luaL_checkstring(L, 1), luaL_checkstring(L, 2))) {
         lua_pushnil(L);
         lua_pushstring(L, strerror(errno));
@@ -34,19 +34,35 @@ static int os_rename(lua_State* L) {
     lua_pushboolean(L, true);
     return 1;
 }
+consteval auto os_name() -> const char* {
+#if defined(_WIN32)
+    return "windows";
+    #elif defined(__linux__)
+        return "linux";
+    #elif defined(__APPLE__) && defined(__MACH__)
+        return "macOS";
+    #elif defined(__FreeBSD__)
+    return "freeBSD";
+    #else
+        return "unknown";
+    #endif
+}
 
 void dluauopen_os(lua_State* L) {
     lua_getglobal(L, "os");
     if (lua_isnil(L, -1)) luaopen_os(L);
     const luaL_Reg extendedlib[] = {
-        {"execute", os_execute},
-        {"exit", os_exit},
-        {"getenv", os_getenv},
-        {"remove", os_remove},
-        {"rename", os_rename},
+        {"execute", execute},
+        {"exit", exit},
+        {"getenv", getenv},
+        {"remove", remove},
+        {"rename", rename},
         {nullptr, nullptr}
     };
     luaL_register(L, nullptr, extendedlib);
+    lua_pushstring(L, os_name());
+    lua_setfield(L, -2, "platform");
     register_windows_lib(L);
+    lua_setreadonly(L, -1, true);
     lua_pop(L, 1);
 }

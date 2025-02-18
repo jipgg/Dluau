@@ -4,38 +4,39 @@
 #include <dluau.hpp>
 #include <boost/container/flat_set.hpp>
 #include <boost/container/flat_map.hpp>
-using namespace dluau::type_aliases;
+using std::vector, boost::container::flat_set;
+using boost::container::flat_map, std::string;
 
 class Userdata_type_registry{
-    boost::container::flat_set<String> registry_;
-    Flat_map<String, int> tags_;
-    Vector<const char*> zarray_;
+    flat_set<string> registry_;
+    flat_map<string, int> tags_;
+    vector<const char*> zarray_;
 public:
-    const char* const* zarray() const {
+    auto zarray() -> const char* const* const {
         if (zarray_.size() > 0) return zarray_.data();
         return nullptr;
     } 
-    bool exists(const String& v) {
+    auto exists(const string& v) -> bool {
         return registry_.contains(v);
     }
-    bool add(String v) {
+    auto add(string v) -> bool {
         if (registry_.contains(v)) return false;
         registry_.emplace(std::move(v));
         sync_containers();
         return true;
     }
-    bool add_tagged(String v) {
+    auto add_tagged(string v) -> bool {
         if (registry_.contains(v)) return false;
         tags_.emplace(v, dluau_newuserdatatag());
         registry_.emplace(std::move(v));
         sync_containers();
         return true;
     }
-    int get_tag(const String& v) {
+    auto get_tag(const string& v) -> int {
         if (not tags_.contains(v)) return 0;
         return tags_[v];
     }
-    bool remove(String v) {
+    auto remove(string v) -> bool {
         if (not registry_.contains(v)) return false;
         registry_.erase(v);
         sync_containers();
@@ -54,14 +55,14 @@ private:
 
 static Userdata_type_registry userdata_types;
 
-int dluau_gettagfromtype(const char *tname) {
+auto dluau_gettagfromtype(const char *tname) -> int {
     return userdata_types.get_tag(tname);
 }
-bool dluau_istyperegistered(const char *tname) {
+auto dluau_istyperegistered(const char *tname) -> bool {
     return userdata_types.exists(tname);
 }
 
-int dluau_registertypetagged(const char *tname) {
+auto dluau_registertypetagged(const char *tname) -> int {
     userdata_types.add_tagged(tname);
     dluau::compile_options->userdataTypes = userdata_types.zarray();
     return userdata_types.get_tag(tname);

@@ -2,39 +2,39 @@
 #include <iostream>
 #include <string>
 #include <format>
-using namespace dluau::type_aliases;
+using std::string;
 
-DLUAU_API const char* get_version() {
-    static const String version = std::format("{}.{}.{}", DLUAU_VERSION_MAJOR, DLUAU_VERSION_MINOR, DLUAU_VERSION_PATCH);
+DLUAU_API auto get_version() -> const char* {
+    static const string version = std::format("{}.{}.{}", DLUAU_VERSION_MAJOR, DLUAU_VERSION_MINOR, DLUAU_VERSION_PATCH);
     return version.c_str();
 }
-DLUAU_API int get_version_major() {
+DLUAU_API auto get_version_major() -> int {
     return DLUAU_VERSION_MAJOR;
 }
-DLUAU_API int get_version_minor() {
+DLUAU_API auto get_version_minor() -> int {
     return DLUAU_VERSION_MINOR;
 }
-DLUAU_API int get_version_patch() {
+DLUAU_API auto get_version_patch() -> int {
     return DLUAU_VERSION_PATCH;
 }
 #ifndef NDEBUG
-DLUAU_API unsigned int test_unsigned_int_return() {
+DLUAU_API auto test_unsigned_int_return() -> unsigned int {
     return 0xfeu;
 }
-DLUAU_API int test_int_return() {
+DLUAU_API auto test_int_return() -> int {
     return 0xfe;
 }
-DLUAU_API unsigned int test_unsigned_int_arg(unsigned int e) {
+DLUAU_API auto test_unsigned_int_arg(unsigned int e) -> unsigned int {
     return e;
 }
-DLUAU_API int test_int_arg(int e) {
+DLUAU_API auto test_int_arg(int e) -> int {
     return e;
 }
-struct point {
+struct Point {
     int x;
     int y;
 };
-struct test {
+struct Test {
     int a;
     char abc[3];
     bool yes;
@@ -43,23 +43,23 @@ struct test {
     unsigned char uch;
 };
 DLUAU_API void print_test_info() {
-    std::cout << std::format("[size] {}\n", sizeof(test));
-    std::cout << std::format("[field] a: {}\n", offsetof(test, a));
-    std::cout << std::format("[field] abc: {}\n", offsetof(test, abc));
-    std::cout << std::format("[field] yes: {}\n", offsetof(test, yes));
-    std::cout << std::format("[field] flt: {}\n", offsetof(test, flt));
-    std::cout << std::format("[field] num: {}\n", offsetof(test, num));
-    std::cout << std::format("[field] uch: {}\n", offsetof(test, uch));
+    std::cout << std::format("[size] {}\n", sizeof(Test));
+    std::cout << std::format("[field] a: {}\n", offsetof(Test, a));
+    std::cout << std::format("[field] abc: {}\n", offsetof(Test, abc));
+    std::cout << std::format("[field] yes: {}\n", offsetof(Test, yes));
+    std::cout << std::format("[field] flt: {}\n", offsetof(Test, flt));
+    std::cout << std::format("[field] num: {}\n", offsetof(Test, num));
+    std::cout << std::format("[field] uch: {}\n", offsetof(Test, uch));
 }
-DLUAU_API point test_point(int x, int y) {
+DLUAU_API auto test_point(int x, int y) -> Point {
     std::cout << std::format("X: {}, Y: {}\n", x, y);
-    std::cout << std::format("SIZE: {}, XOFF: {}, YOFF {}\n", sizeof(point), offsetof(point, x), offsetof(point, y));
-    return point{.x = x, .y = y};
+    std::cout << std::format("SIZE: {}, XOFF: {}, YOFF {}\n", sizeof(Point), offsetof(Point, x), offsetof(Point, y));
+    return Point{.x = x, .y = y};
 }
-DLUAU_API void print_point(point point) {
+DLUAU_API void print_point(Point point) {
     std::cout << std::format("POINT: {{X: {}, Y: {}}}\n", point.x, point.y);
 }
-DLUAU_API unsigned char test_unsigned_char_return() {
+DLUAU_API auto test_unsigned_char_return() -> unsigned char {
     return 0xfeui8;
 }
 #endif

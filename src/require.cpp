@@ -5,40 +5,45 @@
 #include <nlohmann/json.hpp>
 #include <string>
 #include <optional>
-using namespace dluau::type_aliases;
 namespace fs = std::filesystem;
-namespace ranges = std::ranges;
-using Json = nlohmann::json;
-using dluau::default_file_extensions;
+namespace rngs = std::ranges;
+using nlohmann::json;
+using std::span;
+using dluau::def_file_exts;
+using boost::container::flat_map;
+using std::string, std::regex, std::pair;
+using std::expected, std::unexpected;
+using fs::path, std::string_view;
+using std::format, std::optional;
 
-static Flat_map<String, String> aliases;
-static Flat_map<String, int> luamodules;
-static Flat_map<lua_State*, String> script_paths;
+static flat_map<string, string> aliases;
+static flat_map<string, int> luamodules;
+static flat_map<lua_State*, string> script_paths;
 static bool config_file_initialized{false};
 
-static auto get_precompiled_library_values(const Path& p) {
-    auto as_string_literal = [](const Path& path) {
+static auto get_precompiled_library_values(const fs::path& p) -> decltype(auto) {
+    auto as_string_literal = [](const fs::path& path) {
         auto str = path.string();
-        ranges::replace(str, '\\', '/');
+        rngs::replace(str, '\\', '/');
         return format("(\"{}\")", str);
     };
-    const auto arr = std::to_array<Pair<Regex, String>>({
-        {Regex(R"(\bscript.directory\b)"), as_string_literal(p.parent_path())},
-        {Regex(R"(\bscript.path\b)"), as_string_literal(p)},
-        {Regex(R"(\bscript.name\b)"), as_string_literal(Path(p).stem())},
+    const auto arr = std::to_array<pair<regex, string>>({
+        {regex(R"(\bscript.directory\b)"), as_string_literal(p.parent_path())},
+        {regex(R"(\bscript.path\b)"), as_string_literal(p)},
+        {regex(R"(\bscript.name\b)"), as_string_literal(fs::path(p).stem())},
     });
     return arr;
 }
 
-static Expected<Path> find_config_file(Path base = fs::current_path(), int search_depth = 5) {
-    const auto config_file_names = std::to_array<Strview>({
+static auto find_config_file(path base = fs::current_path(), int search_depth = 5) -> expected<path, string> {
+    const auto config_file_names = std::to_array<>({
         ".luaurc", ".dluaurc",
         ".dluaurc.json", ".luaurc.json",
         "luaurc.json", "dluaurc.json",
     });
-    auto exists = [&cfn = config_file_names, &base](Path& out) -> bool {
-        for (Strview name : cfn) {
-            const Path potential_path = base / name;
+    auto exists = [&cfn = config_file_names, &base](path& out) -> bool {
+        for (string_view name : cfn) {
+            const path potential_path = base / name;
             if (fs::exists(potential_path)) {
                 out = potential_path;
                 return true;
@@ -47,51 +52,51 @@ static Expected<Path> find_config_file(Path base = fs::current_path(), int searc
         return false;
     };
     int depth{};
-    Path potential_path;
+    path potential_path;
     while (not exists(potential_path) and depth++ < search_depth) base = base.parent_path();
-    if (potential_path.empty()) return Unexpected("could not find config file");
+    if (potential_path.empty()) return std::unexpected("could not find config file");
     return potential_path;
 }
-static bool has_alias(const String& str) {
+static auto has_alias(const string& str) -> bool {
     return str[0] == '@';
 }
-static Expected<void> load_aliases(const Path& base = fs::current_path(), int search_depth = 5) {
+static auto load_aliases(const path& base = fs::current_path(), int search_depth = 5) -> expected<void, string> {
     auto found_config = find_config_file(base, search_depth);
-    if (not found_config) return Expected<void>();
+    if (not found_config) return expected<void, string>();
 
     auto source = common::read_file(*found_config);
-    if (not source) return Unexpected(std::format("couldn't read source '{}.'", found_config.value().string()));
-    Json parsed = Json::parse(*source);
-    if (not parsed.contains("aliases")) return Expected<void>();
+    if (not source) return unexpected(std::format("couldn't read source '{}.'", found_config.value().string()));
+    json parsed = json::parse(*source);
+    if (not parsed.contains("aliases")) return expected<void, string>();
     for (auto [key, val] : parsed["aliases"].items()) {
         if (not val.is_string()) {
-            return Unexpected(format("value in [{}] must be a string '{}'.", key, nlohmann::to_string(val)));
+            return unexpected(format("value in [{}] must be a string '{}'.", key, nlohmann::to_string(val)));
         }
-        Path path{String(val)};
+        path path{string(val)};
         auto with_user_folder = common::substitute_user_folder(path);
-        if (not with_user_folder) return Unexpected(with_user_folder.error());
+        if (not with_user_folder) return unexpected(with_user_folder.error());
         else path = *with_user_folder;
         auto normalized = common::normalize_path(path);
         aliases.emplace(key, std::move(normalized.string()));
     }
-    return Expected<void>();
+    return expected<void, string>();
 }
-static Expected<void> substitute_alias(String& str) {
-    static const Regex alias_regex{R"(\@[A-Za-z][A-Za-z0-9_-]*)"};
+static auto substitute_alias(string& str) -> expected<void, string> {
+    static const regex alias_regex{R"(\@[A-Za-z][A-Za-z0-9_-]*)"};
     std::smatch sm;
     if (not std::regex_search(str, sm, alias_regex)) {
-        return Unexpected(format("failed match allias regex {}", str));
+        return unexpected(format("failed match allias regex {}", str));
     }
-    const String alias = sm.str().substr(1);
+    const string alias = sm.str().substr(1);
     if (not aliases.contains(alias)) {
-        return Unexpected(format("alias '{}' does not exist.", alias));
+        return unexpected(format("alias '{}' does not exist.", alias));
     }
     str.replace(sm.position(), sm.length(), aliases[alias]);
-    return Expected<void>();
+    return expected<void, string>{};
 }
-static int lazyrequire_handler(lua_State* L) {
+static auto lazyrequire_handler(lua_State* L) -> int {
     try {
-        const String name = lua_tostring(L, lua_upvalueindex(1));
+        const string name = lua_tostring(L, lua_upvalueindex(1));
         dluau_require(L, name.c_str());
         lua_getmetatable(L, 1);
         lua_pushvalue(L, -2);
@@ -107,7 +112,7 @@ static int lazyrequire_handler(lua_State* L) {
         luaL_errorL(L, e.what());
     }
 }
-int dluau_lazyrequire(lua_State* L, const char* name) {
+auto dluau_lazyrequire(lua_State* L, const char* name) -> int {
     lua_newtable(L);
     lua_newtable(L);
     lua_pushstring(L, "__index");
@@ -119,10 +124,10 @@ int dluau_lazyrequire(lua_State* L, const char* name) {
     lua_setmetatable(L, -2);
     return 1;
 }
-int dluau_require(lua_State* L, const char* name) {
+auto dluau_require(lua_State* L, const char* name) -> int {
     auto resolved = ::dluau::resolve_require_path(L, name);
     if (not resolved) ::dluau::error(L, resolved.error());
-    const String file_path{std::move(*resolved)};
+    const string file_path{std::move(*resolved)};
     if (luamodules.contains(file_path)) {
         lua_getref(L, luamodules[file_path]);
         return 1;
@@ -136,7 +141,7 @@ int dluau_require(lua_State* L, const char* name) {
     size_t bc_len;
     char* bc_arr = luau_compile(source.data(), source.size(), ::dluau::compile_options, &bc_len);
     common::Raii free_after([&bc_arr]{std::free(bc_arr);});
-    String chunkname = file_path;
+    string chunkname = file_path;
     chunkname = '@' + chunkname;
     int status{-1};
     if (luau_load(M, chunkname.c_str(), bc_arr, bc_len, 0) == LUA_OK) {
@@ -162,17 +167,17 @@ int dluau_require(lua_State* L, const char* name) {
     luamodules.emplace(file_path, lua_ref(L, -1));
     return 1;
 }
-static Opt<Path> find_source(Path p, const Path& base, Span<const String> file_exts = default_file_extensions) {
+static auto find_source(path p, const path& base, span<const string> file_exts = def_file_exts) -> optional<path> {
     if (p.is_relative()) p = base / p;
     if (not fs::exists(p)) {
         if (not p.has_extension()) {
-            for (const String& ext : file_exts) {
+            for (const string& ext : file_exts) {
                 p.replace_extension(ext);
                 if (fs::exists(p)) return p;
             }
         }
     } else if (fs::is_directory(p)) {
-        for (const String& ext : file_exts) {
+        for (const string& ext : file_exts) {
             p /= std::format("init{}", ext);
             if (fs::exists(p)) return p; 
             p = p.parent_path();
@@ -181,21 +186,21 @@ static Opt<Path> find_source(Path p, const Path& base, Span<const String> file_e
     return std::nullopt;
 }
 namespace dluau {
-Expected<lua_State*> load_file(lua_State* L, Strview path) {
-    String script_path{path};
-    Opt<String> source = common::read_file(script_path);
-    if (not source) return Unexpected(format("couldn't read source '{}'.", script_path));
+auto load_file(lua_State* L, string_view path) -> expected<lua_State*, string> {
+    string script_path{path};
+    optional<string> source = common::read_file(script_path);
+    if (not source) return unexpected(format("couldn't read source '{}'.", script_path));
     auto normalized = common::normalize_path(script_path);
     dluau::precompile(*source, get_precompiled_library_values(normalized.string()));
-    String identifier{fs::relative(script_path).string()};
-    ranges::replace(identifier, '\\', '/');
+    string identifier{fs::relative(script_path).string()};
+    rngs::replace(identifier, '\\', '/');
     identifier = '=' + identifier;
     size_t outsize;
     char* bc = luau_compile(
         source->data(), source->size(),
         compile_options, &outsize
     );
-    String bytecode{bc, outsize};
+    string bytecode{bc, outsize};
     std::free(bc);
     lua_State* script_thread = lua_newthread(L);
     script_paths.emplace(script_thread, normalized.string());
@@ -204,43 +209,43 @@ Expected<lua_State*> load_file(lua_State* L, Strview path) {
         luaL_sandboxthread(script_thread);
         return script_thread;
     }
-    return Unexpected(format("failed to load '{}'\nreason: {}\nsource: {}", script_path, lua_tostring(script_thread, -1), *source));
+    return unexpected(format("failed to load '{}'\nreason: {}\nsource: {}", script_path, lua_tostring(script_thread, -1), *source));
 }
 
-Expected<String> resolve_require_path(lua_State* L, String name, Span<const String> file_exts) {
+auto resolve_require_path(lua_State* L, string name, span<const string> file_exts) -> expected<string, string> {
     if (not config_file_initialized) {
         config_file_initialized = true;
         if (auto loaded = load_aliases(); !loaded) return loaded.error();
     }
-    if (not script_paths.contains(L)) return Unexpected("require is only allowed from a script thread");
-    const Path script_path{Path(script_paths.at(L)).parent_path()};
+    if (not script_paths.contains(L)) return unexpected("require is only allowed from a script thread");
+    const path script_path{path(script_paths.at(L)).parent_path()};
     if (name[0] == '@') {
         if (auto success = substitute_alias(name); !success) return success.error();
     } else if (name[0] == '~') {
         auto with_user = common::substitute_user_folder(name);
-        if (not with_user) return Unexpected(with_user.error());
+        if (not with_user) return unexpected(with_user.error());
         name = with_user.value().string();
     }
     auto found_source = find_source(name, script_path, file_exts);
-    if (not found_source) return Unexpected(format("couldn't find source for '{}'", name));
+    if (not found_source) return unexpected(format("couldn't find source for '{}'", name));
     return common::normalize_path(*found_source).string();
 }
-Expected<String> resolve_path(String name, const Path& base, Span<const String> file_exts) {
+auto resolve_path(string name, const path& base, span<const string> file_exts) -> expected<string, string> {
     if (has_alias(name)) {
         if (auto ok = substitute_alias(name); !ok) return ok.error();
     } else if (name[0] == '~') {
         auto with_user = common::substitute_user_folder(name);
-        if (not with_user) return Unexpected(with_user.error());
+        if (not with_user) return unexpected(with_user.error());
         name = (*with_user).string();
     }
     auto found_source = find_source(name, base, file_exts);
-    if (not found_source) return Unexpected(format("couldn't find source for '{}'", name));
+    if (not found_source) return unexpected(format("couldn't find source for '{}'", name));
     return common::normalize_path(*found_source).string();
 }
-const Flat_map<String, String>& get_aliases() {
+auto get_aliases() -> const flat_map<string, string>& {
     return aliases;
 }
-const Flat_map<lua_State*, String>& get_script_paths() {
+auto get_script_paths() -> const flat_map<lua_State*, string>& {
     return script_paths;
 }
 }

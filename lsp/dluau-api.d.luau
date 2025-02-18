@@ -2,12 +2,20 @@ declare collectgarbage: (("collect") -> ()) & (("count") -> number)
 declare nameof: <T>(v: T) -> string
 declare lazyrequire: <T>(modulename: string) -> T
 declare class userdata end
+declare class opaque end
+export type opaque_tagged<Tag> = {["@Tag"]: Tag} & opaque
 
 export type os_date = {day: number, month: number, year: number, min: number, sec: number, hour: number, wday: number, yday: number, isdst: boolean}
 export type os_date_opt = {day: number?, month: number?, year: number?, min: number?, sec: number?, hour: number?, wday: number?, yday: number?, isdst: boolean?}
 type os_date_format_args = '%a'|'%A'|'%b'|'%B'|'%c'|'%d'|'%H'|'%I'|'%M'|'%m'|'%p'|'%S'|'%w'|'%x'|'%X'|'%Y'|'%y'|'%%'
+type HINSTANCE = opaque_tagged<'HINSTANCE'>
 type os_windows = {
-    message_box: (message: string, title: string?) -> (),
+    message_box: (message: string, title: string?, utype: number?) -> number,
+    get_last_error: () -> number,
+    format_message: (error_code: number) -> string,
+    get_module_handle: (name: string?) -> HINSTANCE?,
+    load_library: (lib_name: string) -> HINSTANCE?,
+    free_library: (a: HINSTANCE) -> boolean,
 }
 type os = {
     execute: (command: string) -> number,
@@ -21,6 +29,7 @@ type os = {
     time: (date: os_date_opt?) -> number,
     difftime: (t2: os_date | number, t1: os_date | number)->number,
     clock: ()->number,
+    platform: 'windows'|'linux'|'macOS'|'freeBSD',
     windows: os_windows,
 }
 declare os: os

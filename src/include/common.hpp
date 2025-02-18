@@ -12,9 +12,12 @@
 #endif
 
 namespace common {
-using namespace dluau::type_aliases;
+namespace fs = std::filesystem;
+namespace rngs = std::ranges;
+using std::optional, std::string;
+using std::expected;
 struct Raii {
-    using Fn = Func<void()>;
+    using Fn = std::function<void()>;
     Fn sr;
     Raii() noexcept = default;
     explicit Raii(Fn subroutine) noexcept : sr(std::move(subroutine)) {}
@@ -24,7 +27,7 @@ struct Raii {
     Raii& operator=(Raii&& other) noexcept = default;
     ~Raii() { if (sr) sr(); }
 };
-inline Opt<String> read_file(const Path &path) {
+inline auto read_file(const fs::path &path) -> optional<string> {
     if (not fs::exists(path)) [[unlikely]] {
         return std::nullopt;
     }
@@ -33,19 +36,19 @@ inline Opt<String> read_file(const Path &path) {
     if  (not file_in.is_open()) [[unlikely]] {
         return std::nullopt;
     }
-    String curr_line{};
+    string curr_line{};
     std::stringstream file_stream{};
     while (std::getline(file_in,curr_line)) {
         file_stream << curr_line << '\n';
     }
     return file_stream.str();
 }
-inline Opt<Path> get_bin_path() {
+inline auto get_bin_path() -> optional<fs::path> {
 #ifdef _WIN32
     char buffer[MAX_PATH];
     DWORD length = GetModuleFileNameA(nullptr, buffer, MAX_PATH);
     if (length == 0) return std::nullopt;
-    return String(buffer, length);
+    return string(buffer, length);
 #else /*linux*/
     char buffer[PATH_MAX];
     ssize_t length = readlink("/proc/self/exe", buffer, PATH_MAX);
@@ -53,40 +56,40 @@ inline Opt<Path> get_bin_path() {
     return std::string(buffer, length);
 #endif
 }
-inline Opt<String> find_environment_variable(const String& name) {
+inline auto find_environment_variable(const string& name) -> optional<string> {
     if (const char* env = getenv(name.c_str())) {
         return env;
     }
     return std::nullopt;
 }
-inline Opt<String> get_user_folder() {
+inline auto get_user_folder() -> optional<string> {
     char user[MAX_PATH];
     const bool success = SUCCEEDED(
         SHGetFolderPathA(NULL, CSIDL_PROFILE, NULL, 0, user)
     );
     if (success) {
-        String folder{user};
-        ranges::replace(folder, '\\', '/');
+        string folder{user};
+        rngs::replace(folder, '\\', '/');
         return folder;
     }
     return std::nullopt;
 }
-inline Expected<Path> substitute_user_folder(const fs::path& p) {
+inline auto substitute_user_folder(const fs::path& p) -> expected<fs::path, string> {
     if (p.string()[0] != '~') return p;
     if (auto opt = get_user_folder()) {
-        String path{p.string()};
+        string path{p.string()};
         path.replace(0, 1, *opt);
-        return Path(path);
+        return fs::path(path);
     }
-    return Unexpected("could not get user folder");
+    return std::unexpected("could not get user folder");
 }
-inline Path normalize_path(Path path, const Path& base = fs::current_path()) {
+inline auto normalize_path(fs::path path, const fs::path& base = fs::current_path()) -> fs::path {
     if (path.is_relative()) {
         path = base / path;
     }
     path = fs::weakly_canonical(path);
-    String str = path.string();
-    ranges::replace(str, '\\', '/');
+    string str = path.string();
+    rngs::replace(str, '\\', '/');
     return str;
 }
 }

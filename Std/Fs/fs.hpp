@@ -1,5 +1,5 @@
 #pragma once
-#include <gpm.hpp>
+#include <std.hpp>
 #include <filesystem>
 #include <memory>
 #include <iostream>
@@ -16,30 +16,30 @@ fs::path& check_path(lua_State* L, int idx);
 void newindex_parent(lua_State* L, fs::path& p);
 void validate_path(lua_State* L, const fs::path& p);
 using Path = fs::path;
-constexpr const char* fs_namespace{"gpm.fs"};
-struct SymlinkTypeInfo {
+constexpr const char* fs_namespace{"std.fs"};
+struct Symlink_type_info {
     static consteval const char* type_namespace() {return fs_namespace;}
-    static consteval const char* type_name() {return "Symlink";}
+    static consteval const char* type_name() {return "symlink";}
 };
-struct DirTypeInfo {
+struct Dir_type_info {
     static consteval const char* type_namespace() {return fs_namespace;}
-    static consteval const char* type_name() {return "Directory";}
+    static consteval const char* type_name() {return "directory";}
 };
-struct FileTypeInfo {
+struct File_type_info {
     static consteval const char* type_namespace() {return fs_namespace;}
-    static consteval const char* type_name() {return "File";}
+    static consteval const char* type_name() {return "file";}
 };
-using SymlinkType = LazyUserdataType<Path, SymlinkTypeInfo>;
-using DirType = LazyUserdataType<Path, DirTypeInfo>;
-using FileType = LazyUserdataType<Path, FileTypeInfo>;
+using T_symlink = Lazy_type<Path, Symlink_type_info>;
+using T_directory = Lazy_type<Path, Dir_type_info>;
+using T_file = Lazy_type<Path, File_type_info>;
 
 void create_new_file(lua_State* L, const fs::path& path);
 fs::copy_options to_copy_options(std::string_view str);
 
-template<class FilesystemIterator>
+template<class Filesystem_iterator>
 int fs_iterator(lua_State* L) {
-    FilesystemIterator& it = *static_cast<FilesystemIterator*>(lua_touserdata(L, lua_upvalueindex(1)));
-    const FilesystemIterator end;
+    Filesystem_iterator& it = *static_cast<Filesystem_iterator*>(lua_touserdata(L, lua_upvalueindex(1)));
+    const Filesystem_iterator end;
     while(it != end) {
         bool pushed = true;
         const fs::directory_entry& e = *it;
@@ -48,13 +48,13 @@ int fs_iterator(lua_State* L) {
             e.status().type();
         switch (type) {
             case fs::file_type::directory:
-                DirType::make(L, e.path());
+                T_directory::make(L, e.path());
             break;
             case fs::file_type::regular:
-                FileType::make(L, e.path());
+                T_file::make(L, e.path());
             break;
             case fs::file_type::symlink:
-                SymlinkType::make(L, e.path());
+                T_symlink::make(L, e.path());
             break;
             default: pushed = false;
         }

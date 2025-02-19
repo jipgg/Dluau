@@ -1,25 +1,25 @@
 #pragma once
+#include <std.hpp>
 #include <chrono>
-#include <LazyUserdataType.hpp>
-using TimeSpan = std::chrono::nanoseconds;
-using Time = std::chrono::zoned_time<std::chrono::milliseconds>;
-using NanoTime = std::chrono::time_point<std::chrono::steady_clock, TimeSpan>;
+using Time_span = std::chrono::nanoseconds;
+using Time_point = std::chrono::zoned_time<std::chrono::milliseconds>;
+using Nano_time_point = std::chrono::time_point<std::chrono::steady_clock, Time_span>;
 using Date = std::chrono::year_month_day;
 
-constexpr const char* time_namespace{"gpm.time"};
-struct TimeTypeInfo {
+constexpr const char* time_namespace{"std.time"};
+struct Time_type_info {
     static consteval const char* type_namespace() {return time_namespace;}
-    static consteval const char* type_name() {return "Time";}
+    static consteval const char* type_name() {return "time_point";}
 };
-struct TimeSpanTypeInfo {
+struct Time_span_type_info {
     static consteval const char* type_namespace() {return time_namespace;}
-    static consteval const char* type_name() {return "TimeSpan";}
+    static consteval const char* type_name() {return "time_span";}
 };
-struct NanoTimeTypeInfo {
+struct Nano_time_type_info {
     static consteval const char* type_namespace() {return time_namespace;}
-    static consteval const char* type_name() {return "NanoTime";}
+    static consteval const char* type_name() {return "nano_time_point";}
 };
 
-using TimeSpanType = LazyUserdataType<TimeSpan, TimeSpanTypeInfo>;
-using TimeType = LazyUserdataType<Time, TimeTypeInfo>;
-using NanoTimeType = LazyUserdataType<NanoTime, NanoTimeTypeInfo>;
+using T_time_span = Lazy_type<Time_span, Time_span_type_info>;
+using T_time_point = Lazy_type<Time_point, Time_type_info>;
+using T_nano_time_point = Lazy_type<Nano_time_point, Nano_time_type_info>;

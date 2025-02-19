@@ -1,8 +1,8 @@
-#include "gpm.hpp"
+#include "std.hpp"
 #include "lua_utility.hpp"
 using namespace gpm;
 
-static const WriterType::Registry namecall = {
+static const Writer_type::Registry namecall = {
     {"free", [](lua_State* L, Writer& r) -> int {
         r.reset();
         return 0;
@@ -50,7 +50,7 @@ static const WriterType::Registry namecall = {
     }},
 };
 
-static const WriterType::Registry index = {
+static const Writer_type::Registry index = {
     {"eof", [](lua_State* L, Writer& w) -> int {
         lua_pushboolean(L, w->eof());
         return 1;
@@ -60,7 +60,7 @@ static const WriterType::Registry index = {
         return 1;
     }},
 };
-static const WriterType::Registry newindex = {
+static const Writer_type::Registry newindex = {
     {"offset", [](lua_State* L, Writer& r) -> int {
         auto old_pos = r->tellp();
         r->seekp(luaL_checkinteger(L, 3), std::ios::beg);
@@ -72,13 +72,13 @@ static const WriterType::Registry newindex = {
         return 0;
     }},
 };
-template<> const WriterType::InitInfo WriterType::init_info{
+template<> const Writer_type::Init_info Writer_type::init_info{
     .index = index,
     .newindex = newindex,
     .namecall = namecall,
     .checker = [](lua_State* L, Writer& self) {
         if (self == nullptr) {
-            lu::error(L, "{} resource was already freed", WriterType::TypeInfo::type_name());
+            lu::error(L, "{} resource was already freed", Writer_type::Type_info_t::type_name());
         }
         return 0;
     },

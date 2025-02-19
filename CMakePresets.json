@@ -42,7 +42,6 @@
             "targets": [
                 "Dluau.Std.Time",
                 "Dluau.Std.Process",
-                "Dluau.Std.Mathx",
                 "Dluau.Std.Fs",
                 "Dluau.Std.Cinterop"
             ]

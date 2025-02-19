@@ -14,29 +14,29 @@ concept Like_type_info = requires {
     {Ty::type_name()} -> std::same_as<const char*>;
 };
 template <class Ty>
-struct DefaultTypeInfo {
+struct Default_type_info {
     static consteval const char* type_namespace() {return "gpm";};
     static const char* type_name() {return typeid(Ty).name();}
 };
-template<class Ty, Like_type_info TypeInfo_ = DefaultTypeInfo<Ty>>
-class LazyUserdataType {
+template<class Ty, Like_type_info Type_info = Default_type_info<Ty>>
+class Lazy_type {
 public:
     static constexpr const char* type_info_metamethod_key{"__cpp_std_type_info"};
-    using Type = Ty;
-    using TypeInfo = TypeInfo_;
+    using Ty_t = Ty;
+    using Type_info_t = Type_info;
     using Action = int(*)(lua_State*, Ty&);
     using Registry = boost::container::flat_map<std::string, Action>;
-    struct InitInfo {
+    struct Init_info {
         Registry index{};
         Registry newindex{};
         Registry namecall{};
         Action checker{};
         const luaL_Reg* meta{};
     };
-    static const InitInfo init_info;
+    static const Init_info init_info;
     static constexpr std::string full_type_name() {
         using namespace std::string_literals;
-        return TypeInfo::type_namespace() + "."s + TypeInfo::type_name();
+        return Type_info_t::type_namespace() + "."s + Type_info_t::type_name();
     }
     static bool is(lua_State* L, int idx) {
         luaL_getmetatable(L, full_type_name().c_str());
@@ -60,7 +60,7 @@ public:
         return *static_cast<Ty*>(lua_touserdata(L, idx));
     }
     [[nodiscard]] static Ty& check(lua_State* L, int idx) {
-        if (not is(L, idx)) luaL_typeerrorL(L, idx, TypeInfo::type_name());
+        if (not is(L, idx)) luaL_typeerrorL(L, idx, Type_info_t::type_name());
         return view(L, idx);
     }
     static Ty& create(lua_State* L, const Ty& v) {
@@ -96,7 +96,7 @@ public:
     }
     static void push_metatable(lua_State* L) {
         if (luaL_newmetatable(L, full_type_name().c_str())) {
-            std::string ti = TypeInfo::type_name();
+            std::string ti = Type_info_t::type_name();
             const luaL_Reg meta[] = {
                 {"__index", metamethod_index},
                 {"__newindex", metamethod_newindex},
@@ -105,7 +105,7 @@ public:
             };
             luaL_register(L, nullptr, meta);
             if (init_info.meta) luaL_register(L, nullptr, init_info.meta);
-            lua_pushstring(L, TypeInfo::type_name());
+            lua_pushstring(L, Type_info_t::type_name());
             lua_setfield(L, -2, "__type");
             lua_pushstring(L, full_type_name().c_str());
             lua_setfield(L, -2, "__fulltype");
@@ -135,7 +135,7 @@ private:
         auto found_it = init_info.index.find(key);
         if (found_it == init_info.index.end()) {
             if (key == "type") {
-                lua_pushstring(L, TypeInfo::type_name());
+                lua_pushstring(L, Type_info_t::type_name());
                 return 1;
             } else if (key == "full_type") {
                 lua_pushstring(L, full_type_name().c_str());

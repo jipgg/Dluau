@@ -6,8 +6,8 @@ namespace fs = std::filesystem;
 
 void newindex_parent(lua_State* L, fs::path &p) {
     fs::path parent;
-    if (DirType::is(L, 3)) {
-        parent = DirType::check(L, 3);
+    if (T_directory::is(L, 3)) {
+        parent = T_directory::check(L, 3);
     } else {
         parent = luaL_checkstring(L, 3);
         validate_path(L, parent);
@@ -35,7 +35,7 @@ void create_new_file(lua_State* L, const fs::path& p) {
     if (fs::exists(p)) lu::error(L, "file already exists.");
     std::ofstream of{p};
     if (not of.is_open()) lu::error(L, "couldn't open file");
-    FileType::create(L, p);
+    T_file::create(L, p);
 }
 auto to_copy_options(std::string_view str) -> fs::copy_options {
     if (str == "recursive") {

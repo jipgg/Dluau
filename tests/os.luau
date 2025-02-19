@@ -1,6 +1,5 @@
 local winapi = os.windows
 print(std.time.now())
---local time = require('@gpm/time')
 local id = os.windows.message_box("hello world", "yo",
     bit32.bor(winapi.MB_CANCELTRYCONTINUE)
 )

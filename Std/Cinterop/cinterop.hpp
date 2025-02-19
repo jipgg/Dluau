@@ -6,13 +6,12 @@
 #include <functional>
 #include <memory>
 #include <boost/container/flat_map.hpp>
-#include <LazyUserdataType.hpp>
+#include <std.hpp>
 
-constexpr const char* cinterop_namespace{"gpm.cinterop"};
-struct CinteropNamespace {
-    static consteval const char* type_namespace() {return "gpm.cinterop";}
+struct Cinterop_namespace {
+    static consteval const char* type_namespace() {return "std.cinterop";}
 };
-enum class NativeType {
+enum class Native_type {
     Int = DC_SIGCHAR_INT,
     Uint = DC_SIGCHAR_UINT,
     Ulong = DC_SIGCHAR_ULONG,
@@ -28,23 +27,23 @@ enum class NativeType {
     String,
     Bool = DC_SIGCHAR_BOOL,
 };
-struct StructInfo {
+struct Struct_info {
     int memory_size;
-    struct FieldInfo {
-        NativeType type;
+    struct Field_info {
+        Native_type type;
         int memory_offset;
         int array_size;
     };
-    boost::container::flat_map<std::string, FieldInfo> fields;
+    boost::container::flat_map<std::string, Field_info> fields;
     std::unique_ptr<DCaggr, decltype(&dcFreeAggr)> aggr;
     std::unique_ptr<int, std::function<void(int*)>> metatable;
     void* newinstance(lua_State* L);
 };
-struct StructInfoTypeInfo: public CinteropNamespace {
-    static consteval const char* type_name() {return "StructInfo";}
+struct Struct_info_type_info: public Cinterop_namespace {
+    static consteval const char* type_name() {return "struct_info";}
 };
-using StructInfoType = LazyUserdataType<std::shared_ptr<StructInfo>, StructInfoTypeInfo>;
-auto string_to_param_type(std::string_view str) -> std::optional<NativeType>;
+using Struct_info_type = Lazy_type<std::shared_ptr<Struct_info>, Struct_info_type_info>;
+auto string_to_param_type(std::string_view str) -> std::optional<Native_type>;
 namespace cinterop {
 auto new_struct_instance(lua_State* L) -> int;
 auto new_function_binding(lua_State* L) -> int;

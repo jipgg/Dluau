@@ -190,11 +190,11 @@ declare class struct_info
     new_instance: <Ty>(self: struct_info) -> Ty
 end
 
-export type field_info_type = 'boolean'|'number'|'string'|'userdata'|'uint'|'ulong'|'ushort'|'char'|'int'|'float'|'short'|'long'|'uchar'
+export type field_info_type = 'bool'|'double'|'char*'|'void*'|'uint'|'ulong'|'ushort'|'char'|'int'|'float'|'short'|'long'|'uchar'
 export type field_info = {
     type: field_info_type,
     memory_offset: number,
-    array_size: number,
+    array_size: number?,
 }
 type field_info_map = {[string]: field_info}
 type cinterop = {

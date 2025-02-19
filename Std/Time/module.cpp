@@ -1,7 +1,7 @@
-#include "gpm_api.h"
 #include "time.hpp"
 using std::optional, std::nullopt;
 using namespace std::chrono;
+
 static optional<int> opt_int_field(lua_State* L, int idx, const std::string& name) {
     lua_getfield(L, idx, name.c_str());
     if (lua_isnumber(L, -1)) {
@@ -15,16 +15,16 @@ static int time_now(lua_State* L) {
     const time_zone* zone = current_zone();
     if (lua_isstring(L, 1)) zone = locate_zone(lua_tostring(L, 1));
     auto now = zoned_time(zone, time_point_cast<milliseconds>(system_clock::now()));
-    TimeType::make(L, now);
+    T_time_point::make(L, now);
     return 1;
 }
 static int utc_now(lua_State* L) {
     auto now = zoned_time(time_point_cast<milliseconds>(system_clock::now()));
-    TimeType::make(L, now);
+    T_time_point::make(L, now);
     return 1;
 }
 static int nano_now(lua_State* L) {
-    NanoTimeType::make(L, NanoTime(duration_cast<nanoseconds>(steady_clock::now().time_since_epoch())));
+    T_nano_time_point::make(L, Nano_time_point(duration_cast<nanoseconds>(steady_clock::now().time_since_epoch())));
     return 1;
 }
 static int from_datetime(lua_State* L) {
@@ -35,7 +35,7 @@ static int from_datetime(lua_State* L) {
     hours h{luaL_checkinteger(L, 4)};
     minutes m{luaL_checkinteger(L, 5)};
     seconds s{luaL_checkinteger(L, 6)};
-    TimeType::make(L, Time(current_zone(), local_days(ymd) + h + m + s));
+    T_time_point::make(L, Time_point(current_zone(), local_days(ymd) + h + m + s));
     return 1;
 }
 static int from_date(lua_State* L) {
@@ -43,7 +43,7 @@ static int from_date(lua_State* L) {
         year{luaL_checkinteger(L, 1)}
         / month{static_cast<unsigned>(luaL_checkinteger(L, 2))}
         / day{static_cast<unsigned>(luaL_checkinteger(L, 3))};
-    TimeType::make(L, Time(current_zone(), local_days(ymd)));
+    T_time_point::make(L, Time_point(current_zone(), local_days(ymd)));
     return 1;
 }
 
@@ -52,7 +52,7 @@ static int from_duration(lua_State* L) {
     minutes m{luaL_checkinteger(L, 2)};
     seconds s{luaL_checkinteger(L, 3)};
     milliseconds ms{luaL_optinteger(L, 4, 0)};
-    TimeSpanType::create(L, h + m + s + ms);
+    T_time_span::create(L, h + m + s + ms);
     return 1;
 }
 static int from_time(lua_State* L) {
@@ -60,13 +60,13 @@ static int from_time(lua_State* L) {
     minutes m{luaL_checkinteger(L, 2)};
     seconds s{luaL_checkinteger(L, 3)};
     milliseconds ms{luaL_optinteger(L, 4, 0)};
-    TimeSpanType::create(L, h + m + s + ms);
+    T_time_span::create(L, h + m + s + ms);
     return 1;
 }
 
 template<class Duration>
 static int new_ratio(lua_State* L) {
-    TimeSpanType::create(L, Duration{luaL_checkinteger(L, 1)});
+    T_time_span::create(L, Duration{luaL_checkinteger(L, 1)});
     return 1;
 }
 

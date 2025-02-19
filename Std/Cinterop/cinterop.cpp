@@ -1,11 +1,10 @@
 #include "cinterop.hpp"
 #include <print>
-#include <gpm_api.h>
 #include <dluau.h>
 
 DLUAUSTD_API auto dlrequire(lua_State *L) -> int {
     const luaL_Reg lib[] = {
-        {"StructInfo", cinterop::create_struct_info},
+        {"struct_info", cinterop::create_struct_info},
         {"bind_function", cinterop::new_function_binding},
         {nullptr, nullptr}
     };

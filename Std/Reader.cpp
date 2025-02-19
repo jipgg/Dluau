@@ -1,12 +1,11 @@
-#include "LazyUserdataType.hpp"
-#include "gpm.hpp"
+#include "std.hpp"
 #include <lua_utility.hpp>
 static const char* tname = "gpm.Reader";
 using namespace gpm;
 using std::string;
 
 static int reader_line_iterator(lua_State* L) {
-    auto& reader = ReaderType::check(L, lua_upvalueindex(1));
+    auto& reader = Reader_type::check(L, lua_upvalueindex(1));
     char delimiter = lua_tointeger(L, lua_upvalueindex(2));
     string line;
     if (std::getline(*reader, line, delimiter)) {
@@ -15,7 +14,7 @@ static int reader_line_iterator(lua_State* L) {
     }
     return 0;
 }
-static const ReaderType::Registry namecall = {
+static const Reader_type::Registry namecall = {
     {"free", [](lua_State* L, Reader& r) -> int {
         r.reset();
         return 0;
@@ -85,7 +84,7 @@ static const ReaderType::Registry namecall = {
     }},
 };
 
-static const ReaderType::Registry index = {
+static const Reader_type::Registry index = {
     {"eof", [](lua_State* L, Reader& r) -> int {
         lua_pushboolean(L, r->eof());
         return 1;
@@ -112,7 +111,7 @@ static const ReaderType::Registry index = {
         return 1;
     }},
 };
-static const ReaderType::Registry newindex = {
+static const Reader_type::Registry newindex = {
     {"offset", [](lua_State* L, Reader& r) -> int {
         auto old_pos = r->tellg();
         r->seekg(luaL_checkinteger(L, 3), std::ios::beg);
@@ -125,7 +124,7 @@ static const ReaderType::Registry newindex = {
     }},
 };
 
-template<> const ReaderType::InitInfo ReaderType::init_info {
+template<> const Reader_type::Init_info Reader_type::init_info {
     .index = index,
     .newindex = newindex,
     .namecall = namecall,

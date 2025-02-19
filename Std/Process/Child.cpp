@@ -1,9 +1,9 @@
 #include "process.hpp"
 #include <lua_utility.hpp>
 
-static const ChildType::Registry index {
+static const T_child::Registry index {
     {"pid", [](lua_State* L, Child& child) {
-        PidType::make(L, child.id());
+        T_pid::make(L, child.id());
         return 1;
     }},
     {"joinable", [](lua_State* L, Child& child) {
@@ -23,7 +23,7 @@ static const ChildType::Registry index {
         return 1;
     }},
 };
-static const ChildType::Registry namecall {
+static const T_child::Registry namecall {
     {"join", [](lua_State* L, Child& child) {
         child.join();
         return 0;
@@ -42,7 +42,7 @@ static const ChildType::Registry namecall {
     }},
 };
 
-template <> const ChildType::InitInfo ChildType::init_info {
+template <> const T_child::Init_info T_child::init_info {
     .index = index,
     .namecall = namecall,
 };

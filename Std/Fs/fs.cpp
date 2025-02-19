@@ -1,6 +1,6 @@
 #include "dluau.h"
-#include <gpm_api.h>
 #include <fstream>
+#include "fs.hpp"
 #include <lua_utility.hpp>
 #include "fs.hpp"
 #include <filesystem>
@@ -8,7 +8,7 @@
 namespace fs = std::filesystem;
 
 static auto current_directory(lua_State* L) -> int {
-    DirType::make(L, fs::current_path());
+    T_directory::make(L, fs::current_path());
     return 1;
 }
 static auto canonical(lua_State* L) -> int {
@@ -66,7 +66,7 @@ static auto proximate(lua_State* L) -> int {
     return 1;
 }
 static auto temp_folder(lua_State* L) -> int {
-    DirType::create(L, fs::temp_directory_path());
+    T_directory::create(L, fs::temp_directory_path());
     return 1;
 }
 static auto find_environment_variable(lua_State* L) -> int {
@@ -93,11 +93,11 @@ static auto remove_all(lua_State* L) -> int {
     return 0;
 }
 static auto open_file(lua_State* L) -> int {
-    FileType::create(L, luaL_checkstring(L, 1));
+    T_file::create(L, luaL_checkstring(L, 1));
     return 1;
 }
 static auto open_directory(lua_State* L) -> int {
-    DirType::create(L, luaL_checkstring(L, 1));
+    T_directory::create(L, luaL_checkstring(L, 1));
     return 1;
 }
 static auto make_directory(lua_State* L) -> int {
@@ -107,7 +107,7 @@ static auto make_directory(lua_State* L) -> int {
         if (!err) lu::arg_error(L, 1, "directory already exists");
         else lu::arg_error(L, 1, err.message());
     }
-    DirType::make(L, p);
+    T_directory::make(L, p);
     return 1;
 }
 static auto make_symlink(lua_State* L) -> int {
@@ -117,7 +117,7 @@ static auto make_symlink(lua_State* L) -> int {
     if (fs::is_directory(to)) fs::create_directory_symlink(to, new_symlink, err);
     else fs::create_symlink(to, new_symlink, err);
     if (err) lu::error(L, err.message());
-    SymlinkType::make(L, new_symlink);
+    T_symlink::make(L, new_symlink);
     return 1;
 }
 static auto make_file(lua_State* L) -> int {
@@ -141,10 +141,10 @@ static auto copy(lua_State* L) -> int {
     }
     if (err) lu::error(L, err.message());
     if (fs::is_directory(to)) {
-        DirType::make(L, to);
+        T_directory::make(L, to);
         return 1;
     } else if (fs::is_regular_file(to)) {
-        FileType::make(L, to);
+        T_file::make(L, to);
         return 1;
     }
     return 0;

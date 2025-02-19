@@ -56,7 +56,7 @@ static void set_integer(lua_State* L, int val, const char* field) {
 }
 #define register(L, macro) set_integer(L, macro, #macro)
 void register_windows_lib(lua_State* L) {
-    const luaL_Reg os_windows[] = {
+    const luaL_Reg os_windows_winapi[] = {
         {"message_box", message_box},
         {"get_last_error", get_last_error},
         {"format_message", format_message},
@@ -65,6 +65,7 @@ void register_windows_lib(lua_State* L) {
         {"free_library", free_library},
         {nullptr, nullptr}
     };
+    lua_newtable(L);
     lua_newtable(L);
     register(L, MB_ABORTRETRYIGNORE);
     register(L, MB_CANCELTRYCONTINUE);
@@ -104,8 +105,9 @@ void register_windows_lib(lua_State* L) {
     register(L, IDRETRY);
     register(L, IDTRYAGAIN);
     register(L, IDYES);
-    luaL_register(L, nullptr, os_windows);
+    luaL_register(L, nullptr, os_windows_winapi);
     lua_setreadonly(L, -1, true);
+    lua_setfield(L, -2,"winapi");
     lua_setfield(L, -2, "windows");
 }
 #undef register

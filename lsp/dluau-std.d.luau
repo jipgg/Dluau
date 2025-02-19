@@ -212,7 +212,7 @@ type std_cinterop = {
         ...field_info_type | struct_info
     ) -> ((Args...)->Return)),
 }
-type std_os_windows = {
+type std_os_windows_winapi = {
     message_box: (message: string, title: string?, utype: number?) -> number,
     get_last_error: () -> number,
     format_message: (error_code: number) -> string,
@@ -257,6 +257,9 @@ type std_os_windows = {
     IDRETRY: number,
     IDTRYAGAIN: number,
     IDYES: number,
+}
+type std_os_windows = {
+    winapi: std_os_windows_winapi,
 }
 type std_os = {
     execute: (command: string) -> number,

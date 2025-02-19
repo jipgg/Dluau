@@ -1,9 +1,9 @@
-local winapi = std.os.windows
+local winapi = std.os.windows.winapi
 print(std.time.now())
 local my_child = std.process.child("echo yoooooooooooo")
 my_child:join()
 print(`{nameof(my_child)} exited with {my_child.exit_code}`)
-local id = std.os.windows.message_box("hello world", "yo",
+local id = winapi.message_box("hello world", "yo",
     bit32.bor(winapi.MB_CANCELTRYCONTINUE)
 )
 if id == winapi.IDOK then

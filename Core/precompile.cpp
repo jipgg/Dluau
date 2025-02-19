@@ -4,6 +4,7 @@
 #include <common.hpp>
 #include <span>
 #include <functional>
+#include <set>
 using std::string, std::size_t;
 using std::regex, std::smatch, std::sregex_iterator;
 using std::function, std::vector;

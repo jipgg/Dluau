@@ -40,4 +40,19 @@ auto find_proc_address(dluau_Dlmodule& module, const std::string& symbol) -> std
 auto lua_tomodule(lua_State* L, int idx) -> dluau_Dlmodule*;
 auto lua_pushmodule(lua_State* L, dluau_Dlmodule* module) -> dluau_Dlmodule*;
 auto search_path(const fs::path& dlpath) -> std::optional<fs::path>;
+inline auto init_require_module(lua_State* L, fs::path path) -> std::expected<void, std::string> {
+    path = common::normalize_path(path);
+    auto r = init_module(path);
+    if (!r) return std::unexpected(r.error());
+    dluau_Dlmodule& module = *r;
+    auto address = find_proc_address(module, "dlrequire");
+    if (not address) return std::unexpected("couldn't find exported 'dlrequire'");
+    lua_pushcfunction(L, reinterpret_cast<lua_CFunction>(*address), "dlrequire");
+    if (LUA_OK != lua_pcall(L, 0, 1, 0)) {
+        std::string errmsg = lua_tostring(L, -1);
+        lua_pop(L, 1);
+        return std::unexpected(errmsg);
+    }
+    return std::expected<void, std::string>{};
+}
 }

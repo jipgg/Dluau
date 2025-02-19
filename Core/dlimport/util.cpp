@@ -1,13 +1,16 @@
 #include "dlimport.hpp"
 #include <filesystem>
 #include <functional>
+#include <boost/container/flat_set.hpp>
 #include <common.hpp>
 using namespace std::string_literals;
+using boost::container::flat_map;
 using std::string, std::unexpected, std::array;
 static const array dl_file_extensions = {".so"s, ".dll"s, ".dylib"s};
+static boost::container::flat_set<std::filesystem::path> added_dll_directories; 
+static dlimport::Dlmodule_map dlmodules;
 
 namespace dlimport {
-static Dlmodule_map dlmodules;
 const Dlmodule_map& get_dlmodules() {
     return dlmodules;
 }
@@ -55,12 +58,15 @@ string get_last_error_as_string() {
 }
 auto init_module(const fs::path& path) -> Expect_dlmodule {
     if (auto it = dlmodules.find(path); it == dlmodules.end()) {
+        if (not added_dll_directories.contains(path)) {
         auto cookie = AddDllDirectory(path.parent_path().c_str());
         if (not cookie) return unexpected(format(
             "failed to add dll directory '{}'\nmessage: {}",
             path.parent_path().string(),
-            get_last_error_as_string()
-        ));
+            get_last_error_as_string()));
+        } else {
+            added_dll_directories.emplace(path);
+        }
         HMODULE hm = LoadLibraryEx(
             path.string().c_str(),
             nullptr,

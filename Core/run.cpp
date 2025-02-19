@@ -7,6 +7,7 @@
 #include <lualib.h>
 #include <boost/container/flat_map.hpp>
 #include <nlohmann/json.hpp>
+#include <dlimport/dlimport.hpp>
 #include <print>
 #include <iostream>
 using nlohmann::json;
@@ -93,7 +94,7 @@ void dluau_openlibs(lua_State* L) {
     dluauopen_dlimport(L);
     dluauopen_task(L);
     dluauopen_os(L);
-    lua_loadstd(L);
+    //lua_loadstd(L);
 }
 auto dluau_newuserdatatag() -> int {
     static int curr_type_tag = 1;
@@ -121,15 +122,46 @@ auto dluau_run(const dluau_RunOptions* opts) -> int {
         luaL_register(L, nullptr, opts->global_functions);
         lua_pop(L, 1);
     }
-    luaL_sandbox(L);
     constexpr const char* errfmt = "\033[31m{}\033[0m";
     if (opts->scripts == nullptr) {
         println(cerr, errfmt, "no sources given");
         return -1;
     }
+    std::vector<dluau::Preprocessed_file> files;
+    std::set<std::string> dependencies;
     for (auto sr : vws::split(string_view(opts->scripts), dluau::arg_separator)) {
         string_view script{sr.data(), sr.size()};
-        if (auto result = dluau::run_file(L, script); !result) {
+        auto r = dluau::preprocess_source(script, &dependencies);
+        if (not r) {
+            println(cerr, errfmt, r.error());
+            return -1;
+        }
+        files.emplace_back(std::move(*r));
+        /*if (auto result = dluau::run_file(L, script); !result) {*/
+        /*    println(cerr, errfmt, result.error());*/
+        /*    return -1;*/
+        /*}*/
+    }
+    if (not dependencies.empty()) {
+        const fs::path bin_dir = common::get_bin_path()->parent_path();
+        lua_newtable(L);
+        for (const auto& dependency : dependencies) {
+            println("YO NEW DEPENDENCY {}", dependency);
+            constexpr const char* dll_fmt = "dluau_std_{}.dll";
+            auto r = dlimport::init_require_module(
+                L, bin_dir / std::format(dll_fmt, dependency)
+            );
+            if (!r) {
+                println(cerr, errfmt, r.error());
+                return -1;
+            }
+            lua_setfield(L, -2, dependency.c_str());
+        }
+        lua_setglobal(L, "std");
+    }
+    luaL_sandbox(L);
+    for (const auto& pf : files) {
+        if (auto result = dluau::run_file(L, pf); !result) {
             println(cerr, errfmt, result.error());
             return -1;
         }
@@ -142,23 +174,4 @@ auto dluau_run(const dluau_RunOptions* opts) -> int {
     }
     std::cout << "\033[0m";
     return 0;
-}
-
-namespace dluau {
-auto has_permissions(lua_State* L) -> bool {
-    lua_Debug ar;
-    if (not lua_getinfo(L, 1, "s", &ar)) return false;
-    if (ar.source[0] == '@' or ar.source[0] == '=') return true;
-    return false;
-}
-auto run_file(lua_State* L, string_view script_path) -> expected<void, string> {
-    auto r = ::dluau::load_file(L, script_path);
-    if (not r) return unexpected(r.error());
-    auto* co = *r;
-    int status = lua_resume(co, L, 0);
-    if (status != LUA_OK and status != LUA_YIELD) {
-        return unexpected(luaL_checkstring(co, -1));
-    }
-    return expected<void, string>{};
-}
 }

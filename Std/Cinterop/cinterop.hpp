@@ -8,6 +8,7 @@
 #include <boost/container/flat_map.hpp>
 #include <std.hpp>
 
+
 struct Cinterop_namespace {
     static consteval const char* type_namespace() {return "std.cinterop";}
 };
@@ -23,8 +24,8 @@ enum class Native_type {
     Void = DC_SIGCHAR_VOID,
     Float = DC_SIGCHAR_FLOAT,
     Double = DC_SIGCHAR_DOUBLE,
-    VoidPtr = DC_SIGCHAR_POINTER,
-    String,
+    Void_ptr = DC_SIGCHAR_POINTER,
+    Char_ptr,
     Bool = DC_SIGCHAR_BOOL,
 };
 struct Struct_info {

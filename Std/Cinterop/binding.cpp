@@ -64,10 +64,10 @@ static auto call_binding(lua_State* L) -> int {
                 case Native_type::Double:
                     dcArgDouble(vm, luaL_checknumber(L, i));
                     break;
-                case Native_type::String:
+                case Native_type::Char_ptr:
                     dcArgPointer(vm, (DCpointer)luaL_checkstring(L, i));
                     break;
-                case Native_type::VoidPtr:
+                case Native_type::Void_ptr:
                     if (not lua_islightuserdata(L, i)) luaL_typeerrorL(L, i, "not light userdata.");
                     dcArgPointer(vm, lua_tolightuserdata(L, i));
                     break;
@@ -116,10 +116,10 @@ static auto call_binding(lua_State* L) -> int {
             case Native_type::Float:
                 lua_pushnumber(L, dcCallFloat(vm, fnptr));
                 return 1;
-            case Native_type::String:
+            case Native_type::Char_ptr:
                 lua_pushstring(L, static_cast<char*>(dcCallPointer(vm, fnptr)));
                 return 1;
-            case Native_type::VoidPtr:
+            case Native_type::Void_ptr:
                 lua_pushlightuserdata(L, dcCallPointer(vm, fnptr));
                 return 1;
             case Native_type::Void:
@@ -147,10 +147,10 @@ auto string_to_param_type(std::string_view str) -> std::optional<Native_type> {
         {"uchar", Native_type::Uchar},
         {"float", Native_type::Float},
         {"boolean", Native_type::Bool},
-        {"userdata", Native_type::VoidPtr},
+        {"userdata", Native_type::Void_ptr},
         {"number", Native_type::Double},
         {"void", Native_type::Void},
-        {"string", Native_type::String},
+        {"string", Native_type::Char_ptr},
     };
     if (not map.contains(str)) return std::nullopt;
     return map.at(str);

@@ -87,13 +87,13 @@ static void set_field(lua_State* L, const Field_info& fi, void* data, int idx, i
         case Native_type::Double:
             *(static_cast<double*>(off) + n) = luaL_checknumber(L, idx);
             break;
-        case Native_type::VoidPtr:
+        case Native_type::Void_ptr:
             *(static_cast<void**>(off) + n) = lua_tolightuserdata(L, idx);
             break;
         case Native_type::Void:
             luaL_errorL(L, "cannot set void");
             break;
-        case Native_type::String:
+        case Native_type::Char_ptr:
             luaL_errorL(L, "cannot set string");
             break;
     }
@@ -136,13 +136,13 @@ static void push_field(lua_State* L, const Field_info& fi, void* data, int n = 0
         case Native_type::Double:
             lua_pushnumber(L, *(static_cast<double*>(off) + n));
             break;
-        case Native_type::VoidPtr:
+        case Native_type::Void_ptr:
             lua_pushlightuserdata(L, *(static_cast<void**>(off) + n));
             break;
         case Native_type::Void:
             lua_pushnil(L);
             break;
-        case Native_type::String:
+        case Native_type::Char_ptr:
             lua_pushstring(L, *(static_cast<const char**>(off) + n));
             break;
     }
@@ -221,6 +221,10 @@ static const Registry namecalls{
     }},
     {"new_instance", [](lua_State* L, auto& s) {
         s->newinstance(L);
+        return 1;
+    }},
+    {"to_pointer", [](lua_State* L, std::shared_ptr<Struct_info>& s) -> int {
+        lua_pushlightuserdata(L, (void*)lua_topointer(L, 2));
         return 1;
     }}
 };

@@ -33,3 +33,8 @@ target_link_libraries(Dluau.Std.Process PRIVATE
     Boost::process
     Boost::filesystem
 )
+set_target_properties(Dluau.Std.Time PROPERTIES OUTPUT_NAME dluau_std_time)
+set_target_properties(Dluau.Std.Mathx PROPERTIES OUTPUT_NAME dluau_std_mathx)
+set_target_properties(Dluau.Std.Fs PROPERTIES OUTPUT_NAME dluau_std_fs)
+set_target_properties(Dluau.Std.Process PROPERTIES OUTPUT_NAME dluau_std_process)
+set_target_properties(Dluau.Std.Cinterop PROPERTIES OUTPUT_NAME dluau_std_cinterop)

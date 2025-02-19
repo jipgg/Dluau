@@ -21,20 +21,6 @@ static flat_map<string, int> luamodules;
 static flat_map<lua_State*, string> script_paths;
 static bool config_file_initialized{false};
 
-static auto get_precompiled_library_values(const fs::path& p) -> decltype(auto) {
-    auto as_string_literal = [](const fs::path& path) {
-        auto str = path.string();
-        rngs::replace(str, '\\', '/');
-        return format("(\"{}\")", str);
-    };
-    const auto arr = std::to_array<pair<regex, string>>({
-        {regex(R"(\bscript.directory\b)"), as_string_literal(p.parent_path())},
-        {regex(R"(\bscript.path\b)"), as_string_literal(p)},
-        {regex(R"(\bscript.name\b)"), as_string_literal(fs::path(p).stem())},
-    });
-    return arr;
-}
-
 static auto find_config_file(path base = fs::current_path(), int search_depth = 5) -> expected<path, string> {
     const auto config_file_names = std::to_array<>({
         ".luaurc", ".dluaurc",
@@ -137,7 +123,7 @@ auto dluau_require(lua_State* L, const char* name) -> int {
     lua_State* M = lua_newthread(lua_mainthread(L));
     luaL_sandboxthread(M);
     script_paths.emplace(M, file_path);
-    dluau::precompile(source, get_precompiled_library_values(file_path));
+    dluau::precompile(source, dluau::get_precompiled_library_values(file_path));
     size_t bc_len;
     char* bc_arr = luau_compile(source.data(), source.size(), ::dluau::compile_options, &bc_len);
     common::Raii free_after([&bc_arr]{std::free(bc_arr);});
@@ -186,39 +172,21 @@ static auto find_source(path p, const path& base, span<const string> file_exts =
     return std::nullopt;
 }
 namespace dluau {
-auto load_file(lua_State* L, string_view path) -> expected<lua_State*, string> {
-    string script_path{path};
-    optional<string> source = common::read_file(script_path);
-    if (not source) return unexpected(format("couldn't read source '{}'.", script_path));
-    auto normalized = common::normalize_path(script_path);
-    dluau::precompile(*source, get_precompiled_library_values(normalized.string()));
-    string identifier{fs::relative(script_path).string()};
-    rngs::replace(identifier, '\\', '/');
-    identifier = '=' + identifier;
-    size_t outsize;
-    char* bc = luau_compile(
-        source->data(), source->size(),
-        compile_options, &outsize
-    );
-    string bytecode{bc, outsize};
-    std::free(bc);
-    lua_State* script_thread = lua_newthread(L);
-    script_paths.emplace(script_thread, normalized.string());
-    const int load_status = luau_load(script_thread, identifier.c_str(), bytecode.data(), bytecode.size(), 0);
-    if (load_status == LUA_OK) {
-        luaL_sandboxthread(script_thread);
-        return script_thread;
-    }
-    return unexpected(format("failed to load '{}'\nreason: {}\nsource: {}", script_path, lua_tostring(script_thread, -1), *source));
+namespace detail {
+auto get_script_paths() -> flat_map<lua_State*, string>& {
+    return script_paths;
 }
-
+}
 auto resolve_require_path(lua_State* L, string name, span<const string> file_exts) -> expected<string, string> {
     if (not config_file_initialized) {
         config_file_initialized = true;
         if (auto loaded = load_aliases(); !loaded) return loaded.error();
     }
-    if (not script_paths.contains(L)) return unexpected("require is only allowed from a script thread");
-    const path script_path{path(script_paths.at(L)).parent_path()};
+    path script_path{name};
+    if (not script_path.is_absolute()) {
+        if (script_paths.contains(L)) script_path = path(script_paths.at(L)).parent_path();
+        else unexpected("relative require is only allowed from a script thread");
+    } 
     if (name[0] == '@') {
         if (auto success = substitute_alias(name); !success) return success.error();
     } else if (name[0] == '~') {

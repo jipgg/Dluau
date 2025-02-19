@@ -47,9 +47,7 @@ using StructInfoType = LazyUserdataType<std::shared_ptr<StructInfo>, StructInfoT
 auto string_to_param_type(std::string_view str) -> std::optional<NativeType>;
 namespace cinterop {
 auto new_struct_instance(lua_State* L) -> int;
-void register_c_types(lua_State* L);
 auto new_function_binding(lua_State* L) -> int;
-auto c_type_sizeof(lua_State* L) -> int;
 auto create_struct_info(lua_State* L) -> int;
 }
 

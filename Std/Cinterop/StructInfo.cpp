@@ -1,7 +1,9 @@
 #include "cinterop.hpp"
+#include <bit>
 constexpr const char* tname{"structinfo"};
 static const int tag = dluau_registertypetagged(tname);
 using FieldInfo = StructInfo::FieldInfo;
+using std::bit_cast;
 
 using namespace cinterop;
 
@@ -54,31 +56,31 @@ static void set_field(lua_State* L, const FieldInfo& fi, void* data, int idx, in
             *(static_cast<bool*>(off) + n) = luaL_checkboolean(L, idx);
             break;
         case NativeType::Char:
-            *(static_cast<char*>(off) + n) = check_char(L, idx);
+            *(static_cast<char*>(off) + n) = luaL_checknumber(L, idx);
             break;
         case NativeType::Uchar:
-            *(static_cast<unsigned char*>(off) + n) = check_uchar(L, idx);
+            *(static_cast<unsigned char*>(off) + n) = luaL_checknumber(L, idx);
             break;
         case NativeType::Short:
-            *(static_cast<short*>(off) + n) = check_short(L, idx);
+            *(static_cast<short*>(off) + n) = luaL_checknumber(L, idx);
             break;
         case NativeType::Ushort:
-            *(static_cast<unsigned short*>(off) + n) = check_ushort(L, idx);
+            *(static_cast<unsigned short*>(off) + n) = luaL_checknumber(L, idx);
             break;
         case NativeType::Long:
-            *(static_cast<long*>(off) + n) = check_long(L, idx);
+            *(static_cast<long*>(off) + n) = luaL_checknumber(L, idx);
             break;
         case NativeType::Ulong:
-            *(static_cast<unsigned long*>(off) + n) = check_ulong(L, idx);
+            *(static_cast<unsigned long*>(off) + n) = luaL_checknumber(L, idx);
             break;
         case NativeType::Int:
-            *(static_cast<int*>(off) + n) = check_int(L, idx);
+            *(static_cast<int*>(off) + n) = luaL_checknumber(L, idx);
             break;
         case NativeType::Uint:
-            *(static_cast<unsigned int*>(off) + n) = check_uint(L, idx);
+            *(static_cast<unsigned int*>(off) + n) = luaL_checknumber(L, idx);
             break;
         case NativeType::Float:
-            *(static_cast<float*>(off) + n) = check_float(L, idx);
+            *(static_cast<float*>(off) + n) = luaL_checknumber(L, idx);
             break;
         case NativeType::Double:
             *(static_cast<double*>(off) + n) = luaL_checknumber(L, idx);
@@ -103,31 +105,31 @@ static void push_field(lua_State* L, const FieldInfo& fi, void* data, int n = 0)
             lua_pushboolean(L, *(static_cast<bool*>(off) + n));
             break;
         case NativeType::Char:
-            push_char(L, *(static_cast<char*>(off) + n));
+            lua_pushnumber(L, *(static_cast<char*>(off) + n));
             break;
         case NativeType::Uchar:
-            push_uchar(L, *(static_cast<unsigned char*>(off) + n));
+            lua_pushnumber(L, *(static_cast<unsigned char*>(off) + n));
             break;
         case NativeType::Short:
-            push_short(L, *(static_cast<short*>(off) + n));
+            lua_pushnumber(L, *(static_cast<short*>(off) + n));
             break;
         case NativeType::Ushort:
-            push_ushort(L, *(static_cast<unsigned short*>(off) + n));
+            lua_pushnumber(L, *(static_cast<unsigned short*>(off) + n));
             break;
         case NativeType::Long:
-            push_long(L, *(static_cast<long*>(off) + n));
+            lua_pushnumber(L, *(static_cast<long*>(off) + n));
             break;
         case NativeType::Ulong:
-            push_ulong(L, *(static_cast<unsigned long*>(off) + n));
+            lua_pushnumber(L, *(static_cast<unsigned long*>(off) + n));
             break;
         case NativeType::Int:
-            push_int(L, *(static_cast<int*>(off) + n));
+            lua_pushnumber(L, *(static_cast<int*>(off) + n));
             break;
         case NativeType::Uint:
-            push_uint(L, *(static_cast<unsigned int*>(off) + n));
+            lua_pushnumber(L, *(static_cast<unsigned int*>(off) + n));
             break;
         case NativeType::Float:
-            push_float(L, *(static_cast<float*>(off) + n));
+            lua_pushnumber(L, *(static_cast<float*>(off) + n));
             break;
         case NativeType::Double:
             lua_pushnumber(L, *(static_cast<double*>(off) + n));

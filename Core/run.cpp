@@ -10,6 +10,7 @@
 #include <print>
 #include <iostream>
 using nlohmann::json;
+namespace fs = std::filesystem;
 using std::string_view, std::string;
 namespace vws = std::views;
 using std::println, std::cerr;
@@ -22,6 +23,28 @@ static auto lua_require(lua_State* L) -> int {
 }
 static auto lua_lazyrequire(lua_State* L) -> int {
     return dluau_lazyrequire(L, luaL_checkstring(L, 1));
+}
+
+static void lua_loadstd(lua_State* L) {
+    const auto std_path = fs::absolute(fs::current_path()) / "Std/std/init.luau";
+    auto source = common::read_file(std_path);
+    if (not source) {
+        std::println(std::cerr, "failed to read std source");
+        return;
+    } 
+    dluau::precompile(*source, dluau::get_precompiled_library_values(std_path));
+    constexpr const char* chunkname = "std";
+    size_t outsize;
+    char* bc = luau_compile(source->data(), source->size(), dluau::compile_options, &outsize);
+    string bytecode(bc, outsize);
+    std::free(bc);
+    if (luau_load(L, chunkname, bytecode.data(), bytecode.size(), 0) == 0) {
+        if (lua_pcall(L, 0, 1, 0) != LUA_OK) {
+            std::println(std::cerr, "failed to call std {}", lua_tostring(L, 1));
+            return;
+        }
+        lua_setglobal(L, "std");
+    } else std::println(std::cerr, "failed to load std {}", lua_tostring(L, -1));
 }
 static auto lua_loadstring(lua_State* L) -> int {
     size_t l = 0;
@@ -70,6 +93,7 @@ void dluau_openlibs(lua_State* L) {
     dluauopen_dlimport(L);
     dluauopen_task(L);
     dluauopen_os(L);
+    lua_loadstd(L);
 }
 auto dluau_newuserdatatag() -> int {
     static int curr_type_tag = 1;

@@ -12,16 +12,18 @@
 #include <variant>
 #include <memory>
 #include <boost/container/flat_map.hpp>
+#include <regex>
 
 namespace dluau {
 using boost::container::flat_map;
+using namespace std::string_literals;
 using std::string, std::string_view;
 using std::span, std::array;
 using std::expected, std::unexpected;
 using std::format_string, std::format;
 namespace fs = std::filesystem;
 extern lua_CompileOptions* compile_options;
-static const array<string, 2> def_file_exts = {".luau", ".lua"};
+static const array def_file_exts = {".luau"s, ".lua"s};
 constexpr char arg_separator{','};
 inline string_view args;
 auto get_script_paths() -> const flat_map<lua_State*, string>&;
@@ -36,6 +38,23 @@ auto has_permissions(lua_State* L) -> bool;
 auto default_useratom(const char* key, size_t len) -> int16_t;
 auto precompile(string& source) -> bool;
 auto precompile(string& source, span<const std::pair<std::regex, string>> sv) -> bool;
+namespace detail {
+auto get_script_paths() -> flat_map<lua_State*, string>&;
+}
+
+inline auto get_precompiled_library_values(const fs::path& p) -> decltype(auto) {
+    auto as_string_literal = [](const fs::path& path) {
+        auto str = path.string();
+        std::ranges::replace(str, '\\', '/');
+        return format("(\"{}\")", str);
+    };
+    const auto arr = std::to_array<std::pair<std::regex, string>>({
+        {std::regex(R"(\bscript.directory\b)"), as_string_literal(p.parent_path())},
+        {std::regex(R"(\bscript.path\b)"), as_string_literal(p)},
+        {std::regex(R"(\bscript.name\b)"), as_string_literal(fs::path(p).stem())},
+    });
+    return arr;
+}
 template<class Ty>
 constexpr auto to_opaque(lua_State* L, int idx) -> Ty* {
     return static_cast<Ty*>(dluau_toopaque(L, idx));

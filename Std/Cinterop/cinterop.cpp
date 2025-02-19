@@ -44,6 +44,7 @@ DLUAUSTD_API void print_test_struct_info() {
         "\n(float) some_float: offsetof({}), sizeof({})"
         "\n(unsigned int) some_unsigned_int: offsetof({}), sizeof({})"
         "\n(char) some_char: offsetof({}), sizeof({})"
+        "\n(char) some_unsigned_char: offsetof({}), sizeof({})"
         "\n(char[10]) some_char_arr: offsetof({}), sizeof({})",
         sizeof(Test_struct),
         offsetof(Test_struct, some_int), sizeof(Test_struct::some_int),

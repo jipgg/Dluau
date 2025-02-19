@@ -52,7 +52,7 @@ auto Struct_info::newinstance(lua_State* L) -> void* {
 
 static void set_field(lua_State* L, const Field_info& fi, void* data, int idx, int n = 0) {
     void* off = static_cast<int8_t*>(data) + fi.memory_offset;
-    if (n >= fi.array_size) luaL_errorL(L, "out of range");
+    if (n < 0 or n >= fi.array_size) luaL_errorL(L, "out of range");
     switch(fi.type) {
         case Native_type::Bool:
             *(static_cast<bool*>(off) + n) = luaL_checkboolean(L, idx);
@@ -209,9 +209,6 @@ static const Registry namecalls{
         const int arrindex = luaL_optinteger(L, 4, 0);
         if (not s->fields.contains(key)) luaL_errorL(L, "invalid field key");
         const auto& field = s->fields.at(key);
-        if (arrindex < 0 or arrindex >= field.array_size) {
-            luaL_errorL(L, "index out of range");
-        }
         push_field(L, field, data, arrindex);
         return 1;
     }},
@@ -221,9 +218,6 @@ static const Registry namecalls{
         const int arrindex = luaL_optinteger(L, 5, 0);
         if (not s->fields.contains(key)) luaL_errorL(L, "invalid field key");
         const auto& field = s->fields.at(key);
-        if (arrindex < 0 or arrindex >= field.array_size) {
-            luaL_errorL(L, "index out of range");
-        }
         set_field(L, field, data, 4, arrindex);
         return 0;
     }},
@@ -231,10 +225,6 @@ static const Registry namecalls{
         s->newinstance(L);
         return 1;
     }},
-    {"to_pointer", [](lua_State* L, std::shared_ptr<Struct_info>& s) -> int {
-        dluau_pushopaque(L, (void*)lua_topointer(L, 2));
-        return 1;
-    }}
 };
 template<> const Init_info Struct_info_type::init_info{
     .namecall = namecalls,

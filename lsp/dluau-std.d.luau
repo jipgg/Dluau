@@ -57,7 +57,7 @@ declare class directory
 end
 export type pathlike = directory | symlink | file
 
-type fs = {
+type std_fs = {
     canonical: (path: string) -> string,
     weakly_canonical: (path: string) -> string,
     proximate: (path: string, base: string?) -> string,
@@ -132,7 +132,7 @@ declare class nano_time_point
         & ((self: nano_time_point, other: time_span) -> nano_time_point)
     function __add(self, other: time_span): nano_time_point
 end
-export type time = {
+export type std_time = {
     current_zone: string,
     now: (timezone: string?) -> time_point,
     nano_now: () -> nano_time_point,
@@ -165,7 +165,7 @@ declare class child
     native_exit_code: number
     running: boolean
 end
-type process = {
+type std_process = {
     search_path: (exename: string) -> string?,
     system: ((command: string) -> number) & ((exe: string, ...string) -> number),
     spawn: ((command: string) -> ()) & ((exe: string, ...string) -> ()),
@@ -198,7 +198,7 @@ export type field_info = {
     array_size: number?,
 }
 type field_info_map = {[string]: field_info}
-type cinterop = {
+type std_cinterop = {
     pointer_cast: (obj: unknown) -> opaque,
     struct_info: (
         memory_size: number,
@@ -212,11 +212,64 @@ type cinterop = {
         ...field_info_type | struct_info
     ) -> ((Args...)->Return)),
 }
+type std_os_windows = {
+    message_box: (message: string, title: string?, utype: number?) -> number,
+    get_last_error: () -> number,
+    format_message: (error_code: number) -> string,
+    get_module_handle: (name: string?) -> opaque?,
+    load_library: (lib_name: string) -> opaque?,
+    free_library: (a: opaque) -> boolean,
+    MB_ABORTRETRYIGNORE: number,
+    MB_CANCELTRYCONTINUE: number,
+    MB_HELP: number,
+    MB_OK: number,
+    MB_OKCANCEL: number,
+    MB_RETRYCANCEL: number,
+    MB_YESNO: number,
+    MB_YESNOCANCEL: number,
+    MB_ICONEXCLAMATION: number,
+    MB_ICONWARNING: number,
+    MB_ICONINFORMATION: number,
+    MB_ICONASTERISK: number,
+    MB_ICONQUESTION: number,
+    MB_ICONSTOP: number,
+    MB_ICONERROR: number,
+    MB_ICONHAND: number,
+    MB_DEFBUTTON1: number,
+    MB_DEFBUTTON2: number,
+    MB_DEFBUTTON3: number,
+    MB_DEFBUTTON4: number,
+    MB_APPLMODAL: number,
+    MB_SYSTEMMODAL: number,
+    MB_TASKMODAL: number,
+    MB_DEFAULT_DESKTOP_ONLY: number,
+    MB_RIGHT: number,
+    MB_RTLREADING: number,
+    MB_SETFOREGROUND: number,
+    MB_TOPMOST: number,
+    MB_SERVICE_NOTIFICATION: number,
+    IDABORT: number,
+    IDCANCEL: number,
+    IDCONTINUE: number,
+    IDIGNORE: number,
+    IDNO: number,
+    IDOK: number,
+    IDRETRY: number,
+    IDTRYAGAIN: number,
+    IDYES: number,
+}
+type std_os = {
+    execute: (command: string) -> number,
+    exit: (code: number) -> never,
+    platform: 'windows'|'linux'|'macOS'|'freeBSD',
+    windows: std_os_windows,
+}
 type std = {
-    fs: fs,
-    time: time,
-    process: process,
-    cinterop: cinterop
+    os: std_os,
+    fs: std_fs,
+    time: std_time,
+    process: std_process,
+    cinterop: std_cinterop
 }
 
 declare std: std

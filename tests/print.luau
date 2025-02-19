@@ -1,3 +1,4 @@
+print(std)
 local cc = require('console_codes')
 print.separator = '\t'
 print.noline(`{cc.cyan}yo input?: {cc.default}`)

@@ -48,9 +48,7 @@ consteval auto os_name() -> const char* {
     #endif
 }
 
-void dluauopen_os(lua_State* L) {
-    lua_getglobal(L, "os");
-    if (lua_isnil(L, -1)) luaopen_os(L);
+DLUAUSTD_API auto dlrequire(lua_State* L) -> int {
     const luaL_Reg extendedlib[] = {
         {"execute", execute},
         {"exit", exit},
@@ -59,10 +57,11 @@ void dluauopen_os(lua_State* L) {
         {"rename", rename},
         {nullptr, nullptr}
     };
+    lua_newtable(L);
     luaL_register(L, nullptr, extendedlib);
     lua_pushstring(L, os_name());
     lua_setfield(L, -2, "platform");
     register_windows_lib(L);
     lua_setreadonly(L, -1, true);
-    lua_pop(L, 1);
+    return 1;
 }

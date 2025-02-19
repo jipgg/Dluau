@@ -43,7 +43,8 @@
                 "Dluau.Std.Time",
                 "Dluau.Std.Process",
                 "Dluau.Std.Fs",
-                "Dluau.Std.Cinterop"
+                "Dluau.Std.Cinterop",
+                "Dluau.Std.Os"
             ]
         }
   ]

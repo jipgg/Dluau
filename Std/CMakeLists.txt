@@ -34,3 +34,8 @@ set_target_properties(Dluau.Std.Time PROPERTIES OUTPUT_NAME dluau_std_time)
 set_target_properties(Dluau.Std.Fs PROPERTIES OUTPUT_NAME dluau_std_fs)
 set_target_properties(Dluau.Std.Process PROPERTIES OUTPUT_NAME dluau_std_process)
 set_target_properties(Dluau.Std.Cinterop PROPERTIES OUTPUT_NAME dluau_std_cinterop)
+
+file(GLOB Dluau.Std.Os.SOURCES ${Dluau.Std.SOURCE_DIR}/Os/*.cpp)
+add_library(Dluau.Std.Os SHARED ${Dluau.Std.Os.SOURCES})
+target_link_libraries(Dluau.Std.Os PRIVATE Dluau.Std)
+set_target_properties(Dluau.Std.Os PROPERTIES OUTPUT_NAME dluau_std_os)

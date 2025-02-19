@@ -4,8 +4,19 @@
 
 #define DLUAUSTD_CINTEROP_BUILD_TESTS
 
+//fundamentally unsafe but required for flexibility with c api
+static auto pointer_cast(lua_State* L) -> int {
+    if (not lua_islightuserdata(L, 1)
+        and not lua_isuserdata(L, 1)
+        and not lua_isbuffer(L, 1)
+    ) luaL_typeerrorL(L, 1, "userdata or buffer");
+    dluau_pushopaque(L, const_cast<void*>(lua_topointer(L, 1))); // caution
+    return 1;
+}
+
 DLUAUSTD_API auto dlrequire(lua_State *L) -> int {
     const luaL_Reg lib[] = {
+        {"pointer_cast", pointer_cast},
         {"struct_info", cinterop::create_struct_info},
         {"bind_function", cinterop::new_function_binding},
         {nullptr, nullptr}

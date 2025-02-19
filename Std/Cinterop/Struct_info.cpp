@@ -203,12 +203,16 @@ auto cinterop::create_struct_info(lua_State* L) -> int {
 };
 
 static const Registry namecalls{
-    {"get_field", [](lua_State* L, auto& s) -> int {
+    {"get_field", [](lua_State* L, std::shared_ptr<Struct_info>& s) -> int {
         void* data = lua_touserdata(L, 2);
         const char* key = luaL_checkstring(L, 3);
         const int arrindex = luaL_optinteger(L, 4, 0);
         if (not s->fields.contains(key)) luaL_errorL(L, "invalid field key");
-        push_field(L, s->fields.at(key), data, arrindex);
+        const auto& field = s->fields.at(key);
+        if (arrindex < 0 or arrindex >= field.array_size) {
+            luaL_errorL(L, "index out of range");
+        }
+        push_field(L, field, data, arrindex);
         return 1;
     }},
     {"set_field", [](lua_State* L, auto& s) {
@@ -216,7 +220,11 @@ static const Registry namecalls{
         const char* key = luaL_checkstring(L, 3);
         const int arrindex = luaL_optinteger(L, 5, 0);
         if (not s->fields.contains(key)) luaL_errorL(L, "invalid field key");
-        set_field(L, s->fields[key], data, 4, arrindex);
+        const auto& field = s->fields.at(key);
+        if (arrindex < 0 or arrindex >= field.array_size) {
+            luaL_errorL(L, "index out of range");
+        }
+        set_field(L, field, data, 4, arrindex);
         return 0;
     }},
     {"new_instance", [](lua_State* L, auto& s) {
@@ -224,7 +232,7 @@ static const Registry namecalls{
         return 1;
     }},
     {"to_pointer", [](lua_State* L, std::shared_ptr<Struct_info>& s) -> int {
-        lua_pushlightuserdata(L, (void*)lua_topointer(L, 2));
+        dluau_pushopaque(L, (void*)lua_topointer(L, 2));
         return 1;
     }}
 };

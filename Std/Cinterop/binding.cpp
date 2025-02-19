@@ -146,11 +146,11 @@ auto string_to_param_type(std::string_view str) -> std::optional<Native_type> {
         {"char", Native_type::Char},
         {"uchar", Native_type::Uchar},
         {"float", Native_type::Float},
-        {"boolean", Native_type::Bool},
-        {"userdata", Native_type::Void_ptr},
-        {"number", Native_type::Double},
+        {"bool", Native_type::Bool},
+        {"void*", Native_type::Void_ptr},
+        {"double", Native_type::Double},
         {"void", Native_type::Void},
-        {"string", Native_type::Char_ptr},
+        {"char*", Native_type::Char_ptr},
     };
     if (not map.contains(str)) return std::nullopt;
     return map.at(str);

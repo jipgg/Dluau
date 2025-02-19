@@ -8,7 +8,6 @@
 #include <boost/container/flat_map.hpp>
 #include <std.hpp>
 
-
 struct Cinterop_namespace {
     static consteval const char* type_namespace() {return "std.cinterop";}
 };

@@ -175,7 +175,7 @@ type process = {
 }
 -- cinterop
 declare class struct_info
-    function to_pointer(self): userdata
+    function to_pointer(self, obj: unknown): opaque
     get_field: <Ty>(
         self: struct_info,
         data: opaque,
@@ -199,6 +199,7 @@ export type field_info = {
 }
 type field_info_map = {[string]: field_info}
 type cinterop = {
+    pointer_cast: (obj: unknown) -> opaque,
     struct_info: (
         memory_size: number,
         fields: field_info_map,

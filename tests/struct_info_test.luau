@@ -1,4 +1,4 @@
-print(std.cinterop.struct_info)
+print(std.cinterop.struct_info) -- force loading the library
 local dls = dlimport.getmodules()
 local cinterop_dl: dlmodule
 for i, v in dls do
@@ -69,20 +69,20 @@ local print_struct_by_value: (Test_struct) -> () = std.cinterop.bind_function(
     cinterop_dl, 'void', "print_struct_by_value", Test_struct
 )
 
--- local print_struct_by_pointer: (userdata) -> () = std.cinterop.bind_function(
---     cinterop_dl, 'void', "print_struct_by_pointer", 'void*'
--- )
+local print_struct_by_pointer: (opaque) -> ()
+= std.cinterop.bind_function(cinterop_dl, 'void', "print_struct_by_pointer", 'void*')
 local test_obj: Test_struct = Test_struct:new_instance()
 test_obj.some_int = -10
 test_obj.some_unsigned_int = 0
 test_obj.some_float = 1.23
+test_obj.some_char_arr[10] = 97
 test_obj.some_char_arr[1] = 97
 print(test_obj.some_char_arr[1])
 print(test_obj)
 print_struct_by_value(test_obj)
 print(test_obj.some_int)
 print(test_obj.some_unsigned_int)
-
+print_struct_by_pointer(std.cinterop.pointer_cast(test_obj))
 
 -- local point: struct_info
 -- local point_metatable = {

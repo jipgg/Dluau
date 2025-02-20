@@ -55,13 +55,9 @@ static auto replace_nameof_specifiers(const string& source) -> decltype(auto) {
     const regex expression(R"(\bnameof\((.*?)\))");
     auto to_string = [](const string& str) -> expected<string, string> {
         constexpr const char* fmt{"(\"{}\")"};
-        std::println("NAMEOF HERE {}", str);
-        /*
         if (str.find('.') != str.npos) {
             return format(fmt, str.substr(str.find_last_of('.') + 1));
         }
-    */
-        std::println("FORMAT HERE {}", format(fmt, str));
         return expected<string, string>(format(fmt, str));
     };
     return replace_meta_specifiers(source, expression, to_string);
@@ -83,10 +79,6 @@ auto dluau::preprocess_source(const fs::path& path) -> expected<Preprocessed_fil
     data.depends_on_scripts = expand_require_specifiers(*source, dir);
     data.normalized_path = common::normalize_path(path);
     dluau::precompile(*source, get_precompiled_library_values(data.normalized_path));
-    //auto r = replace_nameof_specifiers(*source);
-    //if (!r) return std::unexpected(r.error());
-    //src = r.value();
-    //std::println("\n\nSOURCE OF {}:\n{}\n\n", path.string(), src);
 
     string identifier{fs::relative(path).string()};
     std::ranges::replace(identifier, '\\', '/');

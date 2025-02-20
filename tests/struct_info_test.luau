@@ -64,16 +64,16 @@ local print_struct_by_value: (Test_struct) -> () = std.cinterop.bind_fn(
     cinterop_dl, 'void', "print_struct_by_value", Test_struct
 )
 
-local print_struct_by_pointer: (opaque) -> ()
+local print_struct_by_pointer: (opaque | Test_struct) -> ()
 = std.cinterop.bind_fn(cinterop_dl, 'void', "print_struct_by_pointer", 'void*')
 local test_obj: Test_struct = Test_struct:new_instance()
 test_obj.some_int = -10
 test_obj.some_unsigned_int = 0
 test_obj.some_float = 1.23
-test_obj.some_char_arr[0] = 96
-test_obj.some_char_arr[1] = 97
-test_obj.some_char_arr[2] = 98
-test_obj.some_char_arr[3] = 99
+test_obj.some_char_arr[0] = 97
+test_obj.some_char_arr[1] = 98
+test_obj.some_char_arr[2] = 99
+test_obj.some_char_arr[3] = 100
 print(test_obj.some_char_arr[0])
 print(test_obj.some_char_arr[1])
 print(test_obj.some_char_arr[2])

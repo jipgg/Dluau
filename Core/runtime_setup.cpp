@@ -139,12 +139,6 @@ auto dluau_run(const dluau_RunOptions* opts) -> int {
             modules.emplace(file.normalized_path.string(), std::move(file));
         }
     }
-    for (const auto& path : std_dependencies) {
-        std::println("STD_DEPENDENCY: {}", path);
-    }
-    for (const auto& [path, module] : modules) {
-        std::println("SCRIPT_DEPENDENCY: {}", path);
-    }
     if (not std_dependencies.empty()) {
         const fs::path bin_dir = common::get_bin_path()->parent_path();
         lua_newtable(L);

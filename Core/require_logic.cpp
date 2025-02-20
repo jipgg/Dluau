@@ -118,19 +118,18 @@ auto dluau_require(lua_State* L, const char* name) -> int {
         lua_getref(L, luamodules[file_path]);
         return 1;
     }
-    const auto& pre = dluau::get_preprocessed_modules();
+    const auto& preprocessed = dluau::get_preprocessed_modules();
     std::string source;
-    if (dluau::get_preprocessed_modules().contains(file_path)) {
-        std::println("WAS PREPROCESSED {}", name);
-        source = pre.at(file_path).source;
+    if (preprocessed.contains(file_path)) [[likely]] {
+        source = preprocessed.at(file_path).source;
     } else {
         source = common::read_file(file_path).value_or("");
         if (source.empty()) [[unlikely]] luaL_errorL(L, "couldn't read source '%s'", file_path.c_str());
+        dluau::precompile(source, dluau::get_precompiled_library_values(file_path));
     }
     lua_State* M = lua_newthread(lua_mainthread(L));
     luaL_sandboxthread(M);
     script_paths.emplace(M, file_path);
-    dluau::precompile(source, dluau::get_precompiled_library_values(file_path));
     size_t bc_len;
     char* bc_arr = luau_compile(source.data(), source.size(), ::dluau::compile_options, &bc_len);
     common::Raii free_after([&bc_arr]{std::free(bc_arr);});

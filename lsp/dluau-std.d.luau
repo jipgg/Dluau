@@ -199,7 +199,6 @@ export type field_info = {
 }
 type field_info_map = {[string]: field_info}
 type std_cinterop = {
-    pointer_cast: (obj: unknown) -> opaque,
     struct_info: (
         memory_size: number,
         fields: field_info_map,

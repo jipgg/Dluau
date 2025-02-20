@@ -18,7 +18,6 @@ using nlohmann::json;
 namespace fs = std::filesystem;
 using std::string_view, std::string;
 namespace vws = std::views;
-using std::println, std::cerr;
 namespace rngs = std::ranges;
 
 static lua_CompileOptions copts{.debugLevel = 1};
@@ -107,7 +106,7 @@ auto dluau_run(const dluau_RunOptions* opts) -> int {
     }
     constexpr const char* errfmt = "\033[31m{}\033[0m";
     if (opts->scripts == nullptr) {
-        println(cerr, errfmt, "no sources given");
+        std::println(std::cerr, errfmt, "no sources given");
         return -1;
     }
     std::vector<dluau::Preprocessed_file> files;
@@ -121,7 +120,7 @@ auto dluau_run(const dluau_RunOptions* opts) -> int {
         string_view script{sr.data(), sr.size()};
         auto r = dluau::preprocess_source(script);
         if (not r) {
-            println(cerr, errfmt, r.error());
+            std::println(std::cerr, errfmt, r.error());
             return -1;
         }
         auto& file = *r;
@@ -138,7 +137,7 @@ auto dluau_run(const dluau_RunOptions* opts) -> int {
         processed_scripts.insert(current_script);
         auto r = dluau::preprocess_source(current_script);
         if (!r) {
-            println(cerr, errfmt, r.error());
+            std::println(std::cerr, errfmt, r.error());
             return -1;
         }
         auto& file = *r;
@@ -164,7 +163,7 @@ auto dluau_run(const dluau_RunOptions* opts) -> int {
                 L, bin_dir / std::format(dll_fmt, dependency)
             );
             if (!r) {
-                println(cerr, errfmt, r.error());
+                std::println(std::cerr, errfmt, r.error());
                 return -1;
             }
             lua_setfield(L, -2, dependency.c_str());
@@ -174,13 +173,13 @@ auto dluau_run(const dluau_RunOptions* opts) -> int {
     luaL_sandbox(L);
     for (const auto& pf : files) {
         if (auto result = dluau::run_file(L, pf); !result) {
-            println(cerr, errfmt, result.error());
+            std::println(std::cerr, errfmt, result.error());
             return -1;
         }
     }
     while (dluau::tasks_in_progress()) {
         if (auto result = dluau::task_step(L); !result) {
-            println(cerr, errfmt, result.error());
+            std::println(std::cerr, errfmt, result.error());
             return -1;
         }
     }

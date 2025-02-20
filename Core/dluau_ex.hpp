@@ -25,10 +25,6 @@ using std::span, std::array;
 using std::expected, std::unexpected;
 using std::format_string, std::format;
 namespace fs = std::filesystem;
-extern lua_CompileOptions* compile_options;
-static const array def_file_exts = {".luau"s, ".lua"s};
-constexpr char arg_separator{','};
-inline string_view args;
 struct Preprocessed_file {
     fs::path normalized_path;
     string identifier;
@@ -36,10 +32,15 @@ struct Preprocessed_file {
     std::vector<std::string> depends_on_std;
     std::vector<std::string> depends_on_scripts;
 };
+extern lua_CompileOptions* compile_options;
+static const array def_file_exts = {".luau"s, ".lua"s};
+constexpr char arg_separator{','};
+inline string_view args;
 auto expand_require_specifiers(
     string& source,
     const fs::path& path
 ) -> std::vector<std::string>;
+auto preprocess_source(const fs::path& path) -> expected<Preprocessed_file, string>;
 auto get_script_paths() -> const flat_map<lua_State*, string>&;
 auto get_aliases() -> const flat_map<string, string>&;
 auto resolve_require_path(lua_State* L, string name, span<const string> file_exts = def_file_exts) -> expected<string, string>;
@@ -70,29 +71,5 @@ inline auto get_precompiled_library_values(const fs::path& p) -> decltype(auto) 
         {std::regex(R"(\bscript.name\b)"), as_string_literal(fs::path(p).stem())},
     });
     return arr;
-}
-inline auto preprocess_source(const fs::path& path) -> expected<Preprocessed_file, string> {
-    auto source = common::read_file(path);
-    if (not source) {
-        return unexpected(format("couldn't read source '{}'.", path.string()));
-    }
-    Preprocessed_file data{};
-    std::regex pattern(R"(std\.(\w+))");
-    std::smatch match;
-    std::string src = *source;
-    while(std::regex_search(src, match, pattern)) {
-        data.depends_on_std.emplace_back(match[1].str());
-        src = match.suffix();
-    }
-    const fs::path dir = path.parent_path();
-    data.depends_on_scripts = expand_require_specifiers(*source, dir);
-    data.normalized_path = common::normalize_path(path);
-    dluau::precompile(*source, get_precompiled_library_values(data.normalized_path));
-    string identifier{fs::relative(path).string()};
-    std::ranges::replace(identifier, '\\', '/');
-    identifier = '=' + identifier;
-    data.identifier = std::move(identifier);
-    data.source = std::move(*source);
-    return data;
 }
 }

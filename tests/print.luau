@@ -1,5 +1,5 @@
 print(std)
-require('eeeee')
+--require('eeeee: eee')
 local cc = require('console_codes')
 print.separator = '\t'
 print.noline(`{cc.cyan}yo input?: {cc.default}`)

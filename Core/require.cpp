@@ -191,7 +191,9 @@ auto resolve_require_path(const fs::path& base, string name, span<const string> 
         name = with_user.value().string();
     }
     auto found_source = find_source(name, script_path, file_exts);
-    if (not found_source) return unexpected(format("couldn't find source for '{}'", name));
+    if (not found_source) {
+        return unexpected(format("couldn't find source for '{}'", name));
+    }
     return common::normalize_path(*found_source).string();
 }
 auto resolve_require_path(lua_State* L, string name, span<const string> file_exts) -> expected<string, string> {

@@ -111,19 +111,34 @@ auto dluau_lazyrequire(lua_State* L, const char* name) -> int {
     return 1;
 }
 auto dluau_require(lua_State* L, const char* name) -> int {
-    auto resolved = ::dluau::resolve_require_path(L, name);
-    if (not resolved) ::dluau::error(L, resolved.error());
-    const string file_path{std::move(*resolved)};
-    if (luamodules.contains(file_path)) {
-        lua_getref(L, luamodules[file_path]);
-        return 1;
+    std::string file_path;
+    std::string source;
+    if (fs::path(name).is_absolute()) {
+        std::println("THIS IS GOOD {}", name);
+        if (luamodules.contains(name)) {
+            lua_getref(L, luamodules[name]);
+            return 1;
+        } else {
+            const auto& m = dluau::get_preprocessed_modules().at(name);
+            source = m.source;
+            file_path = m.normalized_path.string();
+        }
+    } else {
+        std::println("THIS SHOULDNT LOGICALLY BE CALLED {}", name);
+        auto resolved = dluau::resolve_require_path(L, name);
+        if (not resolved) dluau::error(L, resolved.error());
+        file_path = std::move(*resolved);
+            if (luamodules.contains(file_path)) {
+            lua_getref(L, luamodules[file_path]);
+            return 1;
+        }
+        auto e = dluau::preprocess_source(file_path);
+        if (!e) dluau::error(L, e.error()); 
+        if (source.empty()) [[unlikely]] luaL_errorL(L, "couldn't read source '%s'", file_path.c_str());
     }
-    auto source = common::read_file(file_path).value_or("");
-    if (source.empty()) [[unlikely]] luaL_errorL(L, "couldn't read source '%s'", file_path.c_str());
     lua_State* M = lua_newthread(lua_mainthread(L));
     luaL_sandboxthread(M);
     script_paths.emplace(M, file_path);
-    dluau::precompile(source, dluau::get_precompiled_library_values(file_path));
     size_t bc_len;
     char* bc_arr = luau_compile(source.data(), source.size(), ::dluau::compile_options, &bc_len);
     common::Raii free_after([&bc_arr]{std::free(bc_arr);});
@@ -172,11 +187,6 @@ static auto find_source(path p, const path& base, span<const string> file_exts =
     return std::nullopt;
 }
 namespace dluau {
-namespace detail {
-auto get_script_paths() -> flat_map<lua_State*, string>& {
-    return script_paths;
-}
-}
 auto resolve_require_path(const fs::path& base, string name, span<const string> file_exts) -> expected<string, string> {
     if (not config_file_initialized) {
         config_file_initialized = true;
@@ -219,7 +229,7 @@ auto resolve_path(string name, const path& base, span<const string> file_exts) -
 auto get_aliases() -> const flat_map<string, string>& {
     return aliases;
 }
-auto get_script_paths() -> const flat_map<lua_State*, string>& {
+auto get_script_paths() -> flat_map<lua_State*, string>& {
     return script_paths;
 }
 }

@@ -37,7 +37,7 @@ static auto namecall(lua_State* L) -> int {
 
 void dluau_Dlmodule::init(lua_State* L) {
     if (luaL_newmetatable(L, dluau_Dlmodule::tname)) {
-        importfunction_sa = dluau_stringatom(L, "import");
+        importfunction_sa = dluau_stringatom(L, "import_fn");
         lua_setlightuserdataname(L, dluau_Dlmodule::tag, dluau_Dlmodule::tname);
         const luaL_Reg meta[] = {
             {"__index", index},

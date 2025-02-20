@@ -18,7 +18,7 @@ DLUAUSTD_API auto dlrequire(lua_State *L) -> int {
     const luaL_Reg lib[] = {
         {"pointer_cast", pointer_cast},
         {"struct_info", cinterop::create_struct_info},
-        {"bind_function", cinterop::new_function_binding},
+        {"bind_fn", cinterop::new_function_binding},
         {nullptr, nullptr}
     };
     lua_newtable(L);

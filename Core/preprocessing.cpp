@@ -49,20 +49,22 @@ static auto replace_meta_specifiers(string source, const regex& expression, cons
             return std::unexpected(r.error());
         }
     }
-    return source;
+    return src;
 }
-static auto replace_nameof_specifiers(string& source) -> bool {
+static auto replace_nameof_specifiers(const string& source) -> decltype(auto) {
     const regex expression(R"(\bnameof\((.*?)\))");
-    auto to_string = [](const auto& str) {
+    auto to_string = [](const string& str) -> expected<string, string> {
         constexpr const char* fmt{"(\"{}\")"};
+        std::println("NAMEOF HERE {}", str);
+        /*
         if (str.find('.') != str.npos) {
             return format(fmt, str.substr(str.find_last_of('.') + 1));
         }
-        return format(fmt, str);
+    */
+        std::println("FORMAT HERE {}", format(fmt, str));
+        return expected<string, string>(format(fmt, str));
     };
-    auto r = replace_meta_specifiers(source, expression, to_string);
-    if (r) source = r.value();
-    return bool(r);
+    return replace_meta_specifiers(source, expression, to_string);
 }
 auto dluau::preprocess_source(const fs::path& path) -> expected<Preprocessed_file, string> {
     auto source = common::read_file(path);
@@ -80,14 +82,17 @@ auto dluau::preprocess_source(const fs::path& path) -> expected<Preprocessed_fil
     const fs::path dir = path.parent_path();
     data.depends_on_scripts = expand_require_specifiers(*source, dir);
     data.normalized_path = common::normalize_path(path);
-
-    dluau::precompile(*source, get_precompiled_library_values(data.normalized_path));
+    //dluau::precompile(*source, get_precompiled_library_values(data.normalized_path));
+    auto r = replace_nameof_specifiers(*source);
+    if (!r) return std::unexpected(r.error());
+    src = r.value();
+    //std::println("\n\nSOURCE OF {}:\n{}\n\n", path.string(), src);
 
     string identifier{fs::relative(path).string()};
     std::ranges::replace(identifier, '\\', '/');
     identifier = '=' + identifier;
     data.identifier = std::move(identifier);
-    data.source = std::move(*source);
+    data.source = std::move(src);
     return data;
 }
 auto dluau::expand_require_specifiers(string& source, const fs::path& base) -> std::vector<std::string> {
@@ -106,31 +111,13 @@ auto dluau::expand_require_specifiers(string& source, const fs::path& base) -> s
     auto r = replace_meta_specifiers(source, pattern, expanded);
     return expanded_sources;
 }
-auto dluau::precompile(string &source) -> bool {
-    return replace_nameof_specifiers(source);
-}
 auto dluau::precompile(string &source, span<const pair<regex, string>> static_values) -> bool {
-    bool did_something{};
-    did_something = replace_nameof_specifiers(source);
+    source = replace_nameof_specifiers(source).value_or(source);
     for (const auto& v : static_values) {
         auto to_value = [&val = v.second](const string& e) {return val;};
         auto r = replace_meta_specifiers(source, v.first, to_value);
         if (r) source = r.value();
     }
-    return did_something;
+    return true;
 }
 
-auto dluau_precompile(const char* src, size_t src_len, size_t* outsize) -> char* {
-    string source{src, src_len};
-    if (not dluau::precompile(source)) {
-        *outsize = 0;
-        return nullptr;
-    }
-    span<char> precompiled{
-        static_cast<char*>(std::malloc(source.size())),
-        source.size()
-    };
-    std::memcpy(precompiled.data(), source.data(), precompiled.size());
-    *outsize = precompiled.size();
-    return precompiled.data();
-}

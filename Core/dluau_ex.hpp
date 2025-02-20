@@ -9,6 +9,7 @@
 #include <print>
 #include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
+#include <unordered_map>
 #include <ranges>
 #include <bitset>
 #include <filesystem>
@@ -36,12 +37,15 @@ extern lua_CompileOptions* compile_options;
 static const array def_file_exts = {".luau"s, ".lua"s};
 constexpr char arg_separator{','};
 inline string_view args;
+void open_task_library(lua_State* L);
+void open_dlimport_library(lua_State* L);
+auto get_preprocessed_modules() -> const std::unordered_map<std::string, Preprocessed_file>&;
 auto expand_require_specifiers(
     string& source,
     const fs::path& path
 ) -> std::vector<std::string>;
 auto preprocess_source(const fs::path& path) -> expected<Preprocessed_file, string>;
-auto get_script_paths() -> const flat_map<lua_State*, string>&;
+auto get_script_paths() -> flat_map<lua_State*, string>&;
 auto get_aliases() -> const flat_map<string, string>&;
 auto resolve_require_path(lua_State* L, string name, span<const string> file_exts = def_file_exts) -> expected<string, string>;
 auto resolve_require_path(const fs::path& base, string name, span<const string> file_exts = def_file_exts) -> expected<string, string>;
@@ -54,11 +58,8 @@ auto tasks_in_progress() -> bool;
 auto task_step(lua_State* L) -> expected<void, string>;
 auto has_permissions(lua_State* L) -> bool;
 auto default_useratom(const char* key, size_t len) -> int16_t;
-auto precompile(string& source) -> bool;
 auto precompile(string& source, span<const std::pair<std::regex, string>> sv) -> bool;
-namespace detail {
-auto get_script_paths() -> flat_map<lua_State*, string>&;
-}
+
 inline auto get_precompiled_library_values(const fs::path& p) -> decltype(auto) {
     auto as_string_literal = [](const fs::path& path) {
         auto str = path.string();

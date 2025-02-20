@@ -44,7 +44,7 @@ declare class file
 end
 declare class directory
     function empty(self): boolean
-    function containes(self, child_path: string): boolean
+    function contains(self, child_path: string): boolean
     function each_child(self): (() -> pathlike?)
     function each_descendant(self): (() -> pathlike?)
     function open_file(self, subpath: string): file
@@ -205,14 +205,14 @@ type std_cinterop = {
         fields: field_info_map,
         metatable: any?
     ) -> struct_info,
-    bind_function: (<Return, Args...>(
+    bind_fn: (<Return, Args...>(
         module: dlmodule,
         returns: field_info_type | 'void' | struct_info,
         func_name: string,
         ...field_info_type | struct_info
     ) -> ((Args...)->Return)),
 }
-type std_os_windows_winapi = {
+type std_os_windows = {
     message_box: (message: string, title: string?, utype: number?) -> number,
     get_last_error: () -> number,
     format_message: (error_code: number) -> string,
@@ -258,9 +258,6 @@ type std_os_windows_winapi = {
     IDTRYAGAIN: number,
     IDYES: number,
 }
-type std_os_windows = {
-    winapi: std_os_windows_winapi,
-}
 type std_os = {
     execute: (command: string) -> number,
     exit: (code: number) -> never,
@@ -268,7 +265,7 @@ type std_os = {
     windows: std_os_windows,
 }
 type std_io = {
-    code: (escape_sequence: string) -> (), 
+    escape_code: (escape_sequence: string) -> string, 
     scan: () -> string,
     read: (to_buffer: buffer) -> (),
     write: ((from_buffer: buffer) -> ()),

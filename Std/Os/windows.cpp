@@ -66,7 +66,6 @@ void register_windows_lib(lua_State* L) {
         {nullptr, nullptr}
     };
     lua_newtable(L);
-    lua_newtable(L);
     register(L, MB_ABORTRETRYIGNORE);
     register(L, MB_CANCELTRYCONTINUE);
     register(L, MB_HELP);
@@ -107,7 +106,6 @@ void register_windows_lib(lua_State* L) {
     register(L, IDYES);
     luaL_register(L, nullptr, os_windows_winapi);
     lua_setreadonly(L, -1, true);
-    lua_setfield(L, -2,"winapi");
     lua_setfield(L, -2, "windows");
 }
 #undef register

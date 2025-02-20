@@ -1,5 +1,5 @@
 print(std.cinterop.struct_info) -- force loading the library
-local dls = dlimport.getmodules()
+local dls = dlimport.loaded_modules()
 local cinterop_dl: dlmodule
 for i, v in dls do
     if v.name == "dluau_std_cinterop" then
@@ -7,9 +7,8 @@ for i, v in dls do
     end
 end
 assert(cinterop_dl, "failed to find dl")
-local print_test_struct_info: () -> () = std.cinterop.bind_function(
-    cinterop_dl, 'void', "print_test_struct_info"
-)
+local print_test_struct_info: () -> () = std.cinterop.bind_fn(
+    cinterop_dl, 'void', "print_test_struct_info")
 print_test_struct_info()
 local Test_struct: struct_info
 local Test_struct_metatable = {

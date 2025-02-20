@@ -19,86 +19,78 @@ namespace fs = std::filesystem;
 using std::string_view, std::string;
 namespace vws = std::views;
 namespace rngs = std::ranges;
+using namespace dluau;
 
 static lua_CompileOptions copts{.debugLevel = 1};
 lua_CompileOptions* dluau::compile_options{&copts};
-
-static auto lua_require(lua_State* L) -> int {
-    return dluau_require(L, luaL_checkstring(L, 1));
-}
-static auto lua_lazyrequire(lua_State* L) -> int {
-    return dluau_lazyrequire(L, luaL_checkstring(L, 1));
+static std::vector<Preprocessed_file> files;
+static std::unordered_map<std::string, Preprocessed_file> modules;
+auto dluau::get_preprocessed_modules() -> const std::unordered_map<std::string, Preprocessed_file>& {
+    return modules;
 }
 
-static auto lua_loadstring(lua_State* L) -> int {
-    size_t l = 0;
-    const char* s = luaL_checklstring(L, 1, &l);
-    const char* chunkname = luaL_optstring(L, 2, s);
-    lua_setsafeenv(L, LUA_ENVIRONINDEX, false);
-    size_t outsize;
-    char* bc = luau_compile(s, l, dluau::compile_options, &outsize);
-    string bytecode(s, outsize);
-    std::free(bc);
-    if (luau_load(L, chunkname, bytecode.data(), bytecode.size(), 0) == 0)
+static auto setup_state() -> std::unique_ptr<lua_State, decltype(&lua_close)> {
+    auto loadstring = [](lua_State* L) -> int {
+        size_t l = 0;
+        const char* s = luaL_checklstring(L, 1, &l);
+        const char* chunkname = luaL_optstring(L, 2, s);
+        lua_setsafeenv(L, LUA_ENVIRONINDEX, false);
+        size_t outsize;
+        char* bc = luau_compile(s, l, dluau::compile_options, &outsize);
+        string bytecode(s, outsize);
+        std::free(bc);
+        if (luau_load(L, chunkname, bytecode.data(), bytecode.size(), 0) == 0) {
+            return 1;
+        }
+        lua_pushnil(L);
+        lua_insert(L, -2);
+        return 2;
+    };
+    auto collectgarbage = [](lua_State* L) -> int {
+        string_view option = luaL_optstring(L, 1, "collect");
+        if (option == "collect") {
+            lua_gc(L, LUA_GCCOLLECT, 0);
+            return 0;
+        }
+        if (option == "count") {
+            int c = lua_gc(L, LUA_GCCOUNT, 0);
+            lua_pushnumber(L, c);
+            return 1;
+        }
+        constexpr auto errmsg{"collectgarbage must be called with 'count' or 'collect'"};
+        dluau::error(L, errmsg);
+    };
+    auto require = [](lua_State* L) -> int {
+        dluau_require(L, luaL_checkstring(L, 1));
         return 1;
-    lua_pushnil(L);
-    lua_insert(L, -2);
-    return 2;
-}
-static auto lua_collectgarbage(lua_State* L) -> int {
-    string_view option = luaL_optstring(L, 1, "collect");
-    if (option == "collect") {
-        lua_gc(L, LUA_GCCOLLECT, 0);
-        return 0;
-    }
-    if (option == "count") {
-        int c = lua_gc(L, LUA_GCCOUNT, 0);
-        lua_pushnumber(L, c);
+    };
+    auto lazyrequire = [](lua_State* L) -> int {
+        dluau_lazyrequire(L, luaL_checkstring(L, 1));
         return 1;
-    }
-    dluau::error(L, "collectgarbage must be called with 'count' or 'collect'");
-}
-void dluau_registerglobals(lua_State* L) {
-    const luaL_Reg global_functions[] = {
-        {"loadstring", lua_loadstring},
-        {"collectgarbage", lua_collectgarbage},
-        {"require", lua_require},
-        {"lazyrequire", lua_lazyrequire},
+    };
+    constexpr luaL_Reg global_functions[] = {
+        {"loadstring", loadstring},
+        {"collectgarbage", collectgarbage},
+        {"require", require},
+        {"lazyrequire", lazyrequire},
         {nullptr, nullptr}
     };
-    lua_pushvalue(L, LUA_GLOBALSINDEX);
-    luaL_register(L, NULL, global_functions);
-    lua_pop(L, 1);
-}
-void dluau_openlibs(lua_State* L) {
-    luaL_openlibs(L);
-    //dluauopen_print(L);
-    //dluauopen_scan(L);
-    dluauopen_dlimport(L);
-    dluauopen_task(L);
-}
-auto dluau_newuserdatatag() -> int {
-    static int curr_type_tag = 1;
-    return curr_type_tag++; 
-}
-auto dluau_newlightuserdatatag() -> int {
-    static int curr_type_tag = 1;
-    return curr_type_tag++; 
-}
-auto dluau_newstate() -> lua_State* {
     lua_State* L = luaL_newstate();
     lua_callbacks(L)->useratom = dluau::default_useratom;
-    dluau_registerglobals(L);
-    return L;
+    luaL_openlibs(L);
+    lua_pushvalue(L, LUA_GLOBALSINDEX);
+    luaL_register(L, nullptr, global_functions);
+    lua_pop(L, 1);
+    return {L, lua_close}; 
 }
 
 auto dluau_run(const dluau_RunOptions* opts) -> int {
     dluau::compile_options->debugLevel = 3;
     dluau::compile_options->optimizationLevel = opts->optimization_level;
     if (opts->args) dluau::args = opts->args;
-    std::unique_ptr<lua_State, decltype(&lua_close)> state{dluau_newstate(), lua_close}; 
+    auto state = setup_state();
     lua_State* L = state.get();
-    dluau_openlibs(L);
+
     if (opts->global_functions) {
         lua_pushvalue(L, LUA_GLOBALSINDEX);
         luaL_register(L, nullptr, opts->global_functions);
@@ -109,13 +101,10 @@ auto dluau_run(const dluau_RunOptions* opts) -> int {
         std::println(std::cerr, errfmt, "no sources given");
         return -1;
     }
-    std::vector<dluau::Preprocessed_file> files;
-    std::unordered_map<std::string, dluau::Preprocessed_file> modules;
     std::set<std::string> std_dependencies;
     std::unordered_set<std::string> processed_scripts;
     std::queue<std::string> script_queue;
 
-    using Vec_str = std::vector<std::string>;
     for (auto sr : vws::split(string_view(opts->scripts), dluau::arg_separator)) {
         string_view script{sr.data(), sr.size()};
         auto r = dluau::preprocess_source(script);

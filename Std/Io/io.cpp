@@ -51,9 +51,9 @@ static auto flush(lua_State* L) -> int {
     std::cout.flush();
     return 0;
 }
-static auto code(lua_State* L) -> int {
-    std::print("\033{}", luaL_checkstring(L, 1));
-    return 0;
+static auto escape_code(lua_State* L) -> int {
+    dluau::push(L, "\033{}", luaL_checkstring(L, 1));
+    return 1;
 }
 
 DLUAUSTD_API auto dlrequire(lua_State* L) -> int {
@@ -61,7 +61,7 @@ DLUAUSTD_API auto dlrequire(lua_State* L) -> int {
         {"println", println},
         {"write", write},
         {"print", print},
-        {"code", code},
+        {"escape_code", escape_code},
         {"scan", scan},
         {"read", read},
         {nullptr, nullptr}

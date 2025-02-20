@@ -1,13 +1,18 @@
 print(std)
-std.io.code("[35m")
-std.io.println(`{std.io.code} YOOOOOOO {1}`)
-local buf = buffer.create(10)
-std.io.read(buf)
-std.io.write(buf)
-local str =  std.io.scan()
---require('eeeee: eee')
---local cc = require('console_codes')
---print.separator = '\t'
---print.noline(`{cc.cyan}yo input?: {cc.default}`)
---local input = tonumber(scan())
---print(`input is {input}`)
+local blue = std.io.escape_code'[34m'
+local reset_colors = std.io.escape_code'[0m'
+std.io.println(`{blue} blueing`)
+
+std.io.print("please give a number: ")
+local parsed = tonumber(std.io.scan())
+while not parsed do
+    std.io.print("not a number, try again: ")
+    parsed = tonumber(std.io.scan())
+end
+std.io.println(`the number is {parsed}{reset_colors}`)
+
+local buf = buffer.create(parsed :: number)
+std.io.print(`reading {parsed} characters: `); std.io.read(buf)
+std.io.print('the written characters are: '); std.io.write(buf)
+std.io.print('\n')
+

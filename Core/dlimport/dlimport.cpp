@@ -74,15 +74,15 @@ auto dluau_loaddlmodule(lua_State* L, const char* require_path) -> dluau_Dlmodul
     if (!res) return nullptr;
     return &(res->get());
 }
-void dluauopen_dlimport(lua_State* L) {
+void dluau::open_dlimport_library(lua_State* L) {
     dluau_Dlmodule::init(L);
     lua_newtable(L);
     const luaL_Reg lib[] = {
-        {"require", require_module},
+        {"dlrequire", require_module},
         {"load", load},
-        {"pload", protected_load},
-        {"searchpath", search_path},
-        {"getmodules", loaded_modules},
+        {"try_load", protected_load},
+        {"search_path", search_path},
+        {"loaded_modules", loaded_modules},
         {nullptr, nullptr}
     };
     luaL_register(L, nullptr, lib);

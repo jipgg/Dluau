@@ -51,7 +51,6 @@ DLUAU_API int dluau_require(lua_State* L, const char* name);
 DLUAU_API int dluau_lazyrequire(lua_State* L, const char* name);
 // Precompiles the source for precompiled features like `nameof()`
 // Returns nullptr on failure.
-DLUAU_API char* dluau_precompile(const char* src, size_t src_size, size_t* outsize);
 // Wrapper function to initialized a lua_State* that is correctly
 // set up for dluau.
 DLUAU_API lua_State* dluau_newstate();
@@ -71,29 +70,22 @@ struct dluau_RunOptions {
 };
 // standard run function
 DLUAU_API int dluau_run(const dluau_RunOptions* opts);
-// Registers dluau global functions.
-DLUAU_API void dluau_registerglobals(lua_State* L);
-// Registers luau and dluau standard libraries.
-DLUAU_API void dluau_openlibs(lua_State* L);
-DLUAU_API void dluauopen_dlimport(lua_State* L);
-//DLUAU_API void dluauopen_print(lua_State* L);
-//DLUAU_API void dluauopen_scan(lua_State* L);
-DLUAU_API void dluauopen_task(lua_State* L);
 enum dluau_CTaskStatus {
     DLUAU_CTASK_DONE,
     DLUAU_CTASK_CONTINUE,
     DLUAU_CTASK_ERROR,
 };
+// Adds a c task to the dluau task scheduler.
+typedef dluau_CTaskStatus(*dluau_CTask)(const char** errmsg);
+DLUAU_API void dluau_addctask(dluau_CTask step_callback);
+DLUAU_API bool dluau_tasksinprogress();
+DLUAU_API bool dluau_taskstep(lua_State* L);
+
 typedef void* dluau_Opaque;
 DLUAU_API void dluau_pushopaque(lua_State* L, dluau_Opaque pointer);
 DLUAU_API dluau_Opaque dluau_checkopaque(lua_State* L, int idx);
 DLUAU_API dluau_Opaque dluau_toopaque(lua_State* L, int idx);
 DLUAU_API bool dluau_isopaque(lua_State* L, int idx);
-typedef dluau_CTaskStatus(*dluau_CTask)(const char** errmsg);
-// Adds a c task to the dluau task scheduler.
-DLUAU_API void dluau_addctask(dluau_CTask step_callback);
-DLUAU_API bool dluau_tasksinprogress();
-DLUAU_API bool dluau_taskstep(lua_State* L);
 struct dluau_Dlmodule;
 
 DLUAU_API dluau_Dlmodule* dluau_todlmodule(lua_State* L, int idx);

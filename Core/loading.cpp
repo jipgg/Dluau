@@ -4,9 +4,11 @@
 using std::optional;
 namespace rngs = std::ranges;
 namespace vws = std::views;
+namespace fs = std::filesystem;
 using std::string_view, std::string, std::vector;
 using std::expected, std::unexpected;
 using boost::container::flat_set;
+using boost::container::flat_map;
 
 namespace dluau {
 auto load_file(lua_State* L, string_view path) -> expected<lua_State*, string> {
@@ -24,7 +26,7 @@ auto load_file(lua_State* L, const Preprocessed_file& pf) -> expected<lua_State*
     string bytecode{bc, outsize};
     std::free(bc);
     lua_State* script_thread = lua_newthread(L);
-    detail::get_script_paths().emplace(script_thread, full_path.string());
+    get_script_paths().emplace(script_thread, full_path.string());
     const int load_status = luau_load(script_thread, identifier.c_str(), bytecode.data(), bytecode.size(), 0);
     if (load_status == LUA_OK) {
         luaL_sandboxthread(script_thread);

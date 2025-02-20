@@ -15,7 +15,7 @@ auto load_file(lua_State* L, string_view path) -> expected<lua_State*, string> {
     return load_file(L, *result);
 }
 auto load_file(lua_State* L, const Preprocessed_file& pf) -> expected<lua_State*, string> {
-    const auto& [full_path, identifier, source] = pf;
+    const auto& [full_path, identifier, source, std_dep, require_dp] = pf;
     size_t outsize;
     char* bc = luau_compile(
         source.data(), source.size(),

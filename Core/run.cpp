@@ -8,13 +8,18 @@
 #include <boost/container/flat_map.hpp>
 #include <nlohmann/json.hpp>
 #include <dlimport/dlimport.hpp>
+#include <unordered_map>
 #include <print>
+#include <unordered_set>
+#include <stack>
+#include <queue>
 #include <iostream>
 using nlohmann::json;
 namespace fs = std::filesystem;
 using std::string_view, std::string;
 namespace vws = std::views;
 using std::println, std::cerr;
+namespace rngs = std::ranges;
 
 static lua_CompileOptions copts{.debugLevel = 1};
 lua_CompileOptions* dluau::compile_options{&copts};
@@ -87,6 +92,7 @@ auto dluau_newstate() -> lua_State* {
     dluau_registerglobals(L);
     return L;
 }
+
 auto dluau_run(const dluau_RunOptions* opts) -> int {
     dluau::compile_options->debugLevel = 3;
     dluau::compile_options->optimizationLevel = opts->optimization_level;
@@ -105,26 +111,54 @@ auto dluau_run(const dluau_RunOptions* opts) -> int {
         return -1;
     }
     std::vector<dluau::Preprocessed_file> files;
-    std::set<std::string> dependencies;
-    std::set<fs::path> require_dependencies;
+    std::unordered_map<std::string, dluau::Preprocessed_file> modules;
+    std::set<std::string> std_dependencies;
+    std::unordered_set<std::string> processed_scripts;
+    std::queue<std::string> script_queue;
+
+    using Vec_str = std::vector<std::string>;
     for (auto sr : vws::split(string_view(opts->scripts), dluau::arg_separator)) {
         string_view script{sr.data(), sr.size()};
-        auto r = dluau::preprocess_source(script, &dependencies, &require_dependencies);
+        auto r = dluau::preprocess_source(script);
         if (not r) {
             println(cerr, errfmt, r.error());
             return -1;
         }
-        files.emplace_back(std::move(*r));
-        /*if (auto result = dluau::run_file(L, script); !result) {*/
-        /*    println(cerr, errfmt, result.error());*/
-        /*    return -1;*/
-        /*}*/
+        auto& file = *r;
+        for (const auto& v : file.depends_on_std) std_dependencies.emplace(v);
+        script_queue.push_range(file.depends_on_scripts);
+        files.push_back(std::move(file));
     }
-    if (not dependencies.empty()) {
+    while (!script_queue.empty()) {
+        std::string current_script = script_queue.front();
+        script_queue.pop();
+        if (processed_scripts.contains(common::normalize_path(current_script).string())) {
+            continue;
+        }
+        processed_scripts.insert(current_script);
+        auto r = dluau::preprocess_source(current_script);
+        if (!r) {
+            println(cerr, errfmt, r.error());
+            return -1;
+        }
+        auto& file = *r;
+        for (const auto& std_dep : file.depends_on_std) std_dependencies.emplace(std_dep);
+        script_queue.push_range(file.depends_on_scripts);
+
+        if (not modules.contains(file.normalized_path.string())) {
+            modules.emplace(file.normalized_path.string(), std::move(file));
+        }
+    }
+    for (const auto& path : std_dependencies) {
+        std::println("STD_DEPENDENCY: {}", path);
+    }
+    for (const auto& [path, module] : modules) {
+        std::println("SCRIPT_DEPENDENCY: {}", path);
+    }
+    if (not std_dependencies.empty()) {
         const fs::path bin_dir = common::get_bin_path()->parent_path();
         lua_newtable(L);
-        for (const auto& dependency : dependencies) {
-            println("YO NEW DEPENDENCY {}", dependency);
+        for (const auto& dependency : std_dependencies) {
             constexpr const char* dll_fmt = "dluau_std_{}.dll";
             auto r = dlimport::init_require_module(
                 L, bin_dir / std::format(dll_fmt, dependency)

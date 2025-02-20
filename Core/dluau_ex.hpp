@@ -6,15 +6,19 @@
 #include <chrono>
 #include <span>
 #include <set>
+#include <print>
 #include <boost/container/flat_map.hpp>
+#include <boost/container/flat_set.hpp>
 #include <ranges>
 #include <bitset>
 #include <filesystem>
+#include <deque>
 #include <common.hpp>
 #include <variant>
 #include <memory>
 namespace dluau {
 using boost::container::flat_map;
+using boost::container::flat_set;
 using namespace std::string_literals;
 using std::string, std::string_view;
 using std::span, std::array;
@@ -29,10 +33,15 @@ struct Preprocessed_file {
     fs::path normalized_path;
     string identifier;
     string source;
+    std::vector<std::string> depends_on_std;
+    std::vector<std::string> depends_on_scripts;
 };
+auto expand_require_specifiers(
+    string& source,
+    const fs::path& path
+) -> std::vector<std::string>;
 auto get_script_paths() -> const flat_map<lua_State*, string>&;
 auto get_aliases() -> const flat_map<string, string>&;
-auto expand_require_specifiers(string& source, const fs::path& path, std::set<fs::path>* path_cache = nullptr) -> bool;
 auto resolve_require_path(lua_State* L, string name, span<const string> file_exts = def_file_exts) -> expected<string, string>;
 auto resolve_require_path(const fs::path& base, string name, span<const string> file_exts = def_file_exts) -> expected<string, string>;
 auto resolve_path(string name, const fs::path& base, span<const string> = def_file_exts) -> expected<string, string>;
@@ -62,22 +71,21 @@ inline auto get_precompiled_library_values(const fs::path& p) -> decltype(auto) 
     });
     return arr;
 }
-inline auto preprocess_source(const fs::path& path, std::set<std::string>* std_dep = nullptr, std::set<fs::path>* req_dep = nullptr) -> expected<Preprocessed_file, string> {
+inline auto preprocess_source(const fs::path& path) -> expected<Preprocessed_file, string> {
     auto source = common::read_file(path);
     if (not source) {
         return unexpected(format("couldn't read source '{}'.", path.string()));
     }
-    if (std_dep) {
-        std::regex pattern(R"(std\.(\w+))");
-        std::smatch match;
-        std::string src = *source;
-        while(std::regex_search(src, match, pattern)) {
-            std_dep->insert(match[1].str());
-            src = match.suffix();
-        }
-    }
-    if (req_dep) expand_require_specifiers(*source, path.parent_path());
     Preprocessed_file data{};
+    std::regex pattern(R"(std\.(\w+))");
+    std::smatch match;
+    std::string src = *source;
+    while(std::regex_search(src, match, pattern)) {
+        data.depends_on_std.emplace_back(match[1].str());
+        src = match.suffix();
+    }
+    const fs::path dir = path.parent_path();
+    data.depends_on_scripts = expand_require_specifiers(*source, dir);
     data.normalized_path = common::normalize_path(path);
     dluau::precompile(*source, get_precompiled_library_values(data.normalized_path));
     string identifier{fs::relative(path).string()};

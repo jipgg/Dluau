@@ -44,7 +44,6 @@ static auto replace_meta_specifiers(string& source, const regex& expression, con
         source.replace(match.position(), match.length(), fn(match.str(1)));
     }
     return not entries.empty();
-
 }
 static auto replace_nameof_specifiers(string& source) -> bool {
     const regex expression(R"(\bnameof\((.*?)\))");
@@ -57,22 +56,21 @@ static auto replace_nameof_specifiers(string& source) -> bool {
     };
     return replace_meta_specifiers(source, expression, to_string);
 }
-auto dluau::expand_require_specifiers(string& source, const fs::path& path, std::set<fs::path>* path_cache) -> bool {
+auto dluau::expand_require_specifiers(string& source, const fs::path& base) -> std::vector<std::string> {
     regex pattern(R"(require\s*[\(\s]*["'\[\[]([^"'\]\)]+)["'\]\]]\s*\)?)");
-    auto expanded = [&path_cache, &path](const string& str) -> string {
-        auto r = dluau::resolve_require_path(path, str);
-            std::println("PRENORMALIZED REQUIRE {}", str);
-        if (path_cache) {
-            path_cache->emplace(r.value_or(""));
-        }
-        if (r.has_value()) {
-            const std::string normalized = std::format("require(\"{}\")", *r);
-            std::println("NORMALIZED REQUIRE {}", normalized);
+    std::vector<std::string> expanded_sources;
+    auto expanded = [&base, &expanded_sources](const string& str) -> string {
+        auto r = dluau::resolve_require_path(base, str);
+        if (r) {
+            auto resolved = r.value();
+            expanded_sources.emplace_back(resolved);
+            const std::string normalized = std::format("require(\"{}\")", resolved);
             return normalized;
         }
-        return "require(*error-path*)";
+        return std::format("PREPROCESSOR ERROR: {}", r.error());
     };
-    return replace_meta_specifiers(source, pattern, expanded);
+    replace_meta_specifiers(source, pattern, expanded);
+    return expanded_sources;
 }
 auto dluau::precompile(string &source) -> bool {
     return replace_nameof_specifiers(source);

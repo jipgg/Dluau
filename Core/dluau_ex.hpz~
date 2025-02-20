@@ -32,7 +32,7 @@ struct Preprocessed_file {
 };
 auto get_script_paths() -> const flat_map<lua_State*, string>&;
 auto get_aliases() -> const flat_map<string, string>&;
-auto expand_require_specifiers(string& source, const fs::path& path, std::set<fs::path>* path_cache = nullptr) -> bool;
+auto expand_require_specifiers(string& source, const fs::path& path, std::set<std::expected<fs::path>* path_cache = nullptr) -> bool;
 auto resolve_require_path(lua_State* L, string name, span<const string> file_exts = def_file_exts) -> expected<string, string>;
 auto resolve_require_path(const fs::path& base, string name, span<const string> file_exts = def_file_exts) -> expected<string, string>;
 auto resolve_path(string name, const fs::path& base, span<const string> = def_file_exts) -> expected<string, string>;
@@ -76,7 +76,7 @@ inline auto preprocess_source(const fs::path& path, std::set<std::string>* std_d
             src = match.suffix();
         }
     }
-    if (req_dep) expand_require_specifiers(*source, path.parent_path());
+    if (req_dep) expand_require_specifiers(*source, path);
     Preprocessed_file data{};
     data.normalized_path = common::normalize_path(path);
     dluau::precompile(*source, get_precompiled_library_values(data.normalized_path));

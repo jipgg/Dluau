@@ -106,9 +106,10 @@ auto dluau_run(const dluau_RunOptions* opts) -> int {
     }
     std::vector<dluau::Preprocessed_file> files;
     std::set<std::string> dependencies;
+    std::set<fs::path> require_dependencies;
     for (auto sr : vws::split(string_view(opts->scripts), dluau::arg_separator)) {
         string_view script{sr.data(), sr.size()};
-        auto r = dluau::preprocess_source(script, &dependencies);
+        auto r = dluau::preprocess_source(script, &dependencies, &require_dependencies);
         if (not r) {
             println(cerr, errfmt, r.error());
             return -1;

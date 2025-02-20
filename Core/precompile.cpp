@@ -3,13 +3,16 @@
 #include <format>
 #include <common.hpp>
 #include <span>
+#include <print>
 #include <functional>
 #include <set>
 using std::string, std::size_t;
 using std::regex, std::smatch, std::sregex_iterator;
 using std::function, std::vector;
 using std::span, std::pair;
+using std::expected;
 using String_replace = function<string(const string& str)>;
+namespace fs = std::filesystem;
 constexpr const char* str_format{"(\"{}\")"};
 
 static auto is_global_scope(const string& input, const smatch& m) -> bool {
@@ -53,6 +56,23 @@ static auto replace_nameof_specifiers(string& source) -> bool {
         return format(fmt, str);
     };
     return replace_meta_specifiers(source, expression, to_string);
+}
+auto dluau::expand_require_specifiers(string& source, const fs::path& path, std::set<fs::path>* path_cache) -> bool {
+    regex pattern(R"(require\s*[\(\s]*["'\[\[]([^"'\]\)]+)["'\]\]]\s*\)?)");
+    auto expanded = [&path_cache, &path](const string& str) -> string {
+        auto r = dluau::resolve_require_path(path, str);
+            std::println("PRENORMALIZED REQUIRE {}", str);
+        if (path_cache) {
+            path_cache->emplace(r.value_or(""));
+        }
+        if (r.has_value()) {
+            const std::string normalized = std::format("require(\"{}\")", *r);
+            std::println("NORMALIZED REQUIRE {}", normalized);
+            return normalized;
+        }
+        return "require(*error-path*)";
+    };
+    return replace_meta_specifiers(source, pattern, expanded);
 }
 auto dluau::precompile(string &source) -> bool {
     return replace_nameof_specifiers(source);

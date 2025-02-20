@@ -177,16 +177,12 @@ auto get_script_paths() -> flat_map<lua_State*, string>& {
     return script_paths;
 }
 }
-auto resolve_require_path(lua_State* L, string name, span<const string> file_exts) -> expected<string, string> {
+auto resolve_require_path(const fs::path& base, string name, span<const string> file_exts) -> expected<string, string> {
     if (not config_file_initialized) {
         config_file_initialized = true;
         if (auto loaded = load_aliases(); !loaded) return loaded.error();
     }
-    path script_path{name};
-    if (not script_path.is_absolute()) {
-        if (script_paths.contains(L)) script_path = path(script_paths.at(L)).parent_path();
-        else unexpected("relative require is only allowed from a script thread");
-    } 
+    path script_path{base};
     if (name[0] == '@') {
         if (auto success = substitute_alias(name); !success) return success.error();
     } else if (name[0] == '~') {
@@ -197,6 +193,14 @@ auto resolve_require_path(lua_State* L, string name, span<const string> file_ext
     auto found_source = find_source(name, script_path, file_exts);
     if (not found_source) return unexpected(format("couldn't find source for '{}'", name));
     return common::normalize_path(*found_source).string();
+}
+auto resolve_require_path(lua_State* L, string name, span<const string> file_exts) -> expected<string, string> {
+    path script_path{name};
+    if (not script_path.is_absolute()) {
+        if (script_paths.contains(L)) script_path = path(script_paths.at(L)).parent_path();
+        else unexpected("runtime relative require is only allowed from a script thread");
+    } 
+    return resolve_require_path(script_path, name, file_exts);
 }
 auto resolve_path(string name, const path& base, span<const string> file_exts) -> expected<string, string> {
     if (has_alias(name)) {

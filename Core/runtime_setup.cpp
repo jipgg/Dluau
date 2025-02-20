@@ -81,6 +81,8 @@ static auto setup_state() -> std::unique_ptr<lua_State, decltype(&lua_close)> {
     lua_pushvalue(L, LUA_GLOBALSINDEX);
     luaL_register(L, nullptr, global_functions);
     lua_pop(L, 1);
+    dluau::open_dlimport_library(L);
+    dluau::open_task_library(L);
     return {L, lua_close}; 
 }
 

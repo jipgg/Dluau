@@ -1,4 +1,3 @@
-print('aa')
 print(std.time.now())
 local ESC = string.char(27)
 local function merge<T, U>(t: T, u: U): T & U

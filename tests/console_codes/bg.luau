@@ -1,5 +1,4 @@
 
-local ee = require('@gpm/BufferArray')
 local ESC = string.char(27)
 return table.freeze{
     black = `{ESC}[40m`,

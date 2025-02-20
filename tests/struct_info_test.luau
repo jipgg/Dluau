@@ -60,12 +60,12 @@ type Test_struct = {
     some_char: number,
     some_char_arr: {number},
 }
-local print_struct_by_value: (Test_struct) -> () = std.cinterop.bind_function(
+local print_struct_by_value: (Test_struct) -> () = std.cinterop.bind_fn(
     cinterop_dl, 'void', "print_struct_by_value", Test_struct
 )
 
 local print_struct_by_pointer: (opaque) -> ()
-= std.cinterop.bind_function(cinterop_dl, 'void', "print_struct_by_pointer", 'void*')
+= std.cinterop.bind_fn(cinterop_dl, 'void', "print_struct_by_pointer", 'void*')
 local test_obj: Test_struct = Test_struct:new_instance()
 test_obj.some_int = -10
 test_obj.some_unsigned_int = 0

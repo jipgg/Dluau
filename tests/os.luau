@@ -2,7 +2,7 @@ local winapi = std.os.windows
 print(std.time.now())
 print(std.time.minutes(10))
 local my_child = std.process.child("echo yoooooooooooo")
-my_child:join()
+my_child:detach()
 print(`{nameof(my_child)} exited with {my_child.exit_code}`)
 local id = winapi.message_box("hello world", "yo",
     bit32.bor(winapi.MB_CANCELTRYCONTINUE)

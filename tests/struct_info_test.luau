@@ -82,7 +82,7 @@ print(test_obj)
 print_struct_by_value(test_obj)
 print(test_obj.some_int)
 print(test_obj.some_unsigned_int)
-print_struct_by_pointer(std.cinterop.pointer_cast(test_obj))
+print_struct_by_pointer(test_obj)
 print_test_struct_info()
 
 -- local point: struct_info

@@ -80,7 +80,7 @@ auto dluau::preprocess_source(const fs::path& path) -> expected<Preprocessed_fil
         src = match.suffix();
     }
     const fs::path dir = path.parent_path();
-    data.depends_on_scripts = expand_require_specifiers(*source, dir);
+    //data.depends_on_scripts = expand_require_specifiers(*source, dir);
     data.normalized_path = common::normalize_path(path);
     //dluau::precompile(*source, get_precompiled_library_values(data.normalized_path));
     auto r = replace_nameof_specifiers(*source);

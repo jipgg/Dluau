@@ -68,8 +68,11 @@ static auto call_binding(lua_State* L) -> int {
                     dcArgPointer(vm, (DCpointer)luaL_checkstring(L, i));
                     break;
                 case Native_type::Void_ptr:
-                    if (not lua_islightuserdata(L, i)) luaL_typeerrorL(L, i, "not light userdata.");
-                    dcArgPointer(vm, lua_tolightuserdata(L, i));
+                    if (lua_islightuserdata(L, i)) {
+                        dcArgPointer(vm, lua_tolightuserdata(L, i));
+                    } else if (lua_isuserdata(L, i)) {
+                        dcArgPointer(vm, lua_touserdata(L, i));
+                    } else dluau::type_error(L, i, "not userdata or opaque");
                     break;
                 case Native_type::Void:
                     break;

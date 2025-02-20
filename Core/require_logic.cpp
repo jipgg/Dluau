@@ -111,34 +111,19 @@ auto dluau_lazyrequire(lua_State* L, const char* name) -> int {
     return 1;
 }
 auto dluau_require(lua_State* L, const char* name) -> int {
-    std::string file_path;
-    std::string source;
-    if (fs::path(name).is_absolute()) {
-        std::println("THIS IS GOOD {}", name);
-        if (luamodules.contains(name)) {
-            lua_getref(L, luamodules[name]);
-            return 1;
-        } else {
-            const auto& m = dluau::get_preprocessed_modules().at(name);
-            source = m.source;
-            file_path = m.normalized_path.string();
-        }
-    } else {
-        std::println("THIS SHOULDNT LOGICALLY BE CALLED {}", name);
-        auto resolved = dluau::resolve_require_path(L, name);
-        if (not resolved) dluau::error(L, resolved.error());
-        file_path = std::move(*resolved);
-            if (luamodules.contains(file_path)) {
-            lua_getref(L, luamodules[file_path]);
-            return 1;
-        }
-        auto e = dluau::preprocess_source(file_path);
-        if (!e) dluau::error(L, e.error()); 
-        if (source.empty()) [[unlikely]] luaL_errorL(L, "couldn't read source '%s'", file_path.c_str());
+    auto resolved = ::dluau::resolve_require_path(L, name);
+    if (not resolved) ::dluau::error(L, resolved.error());
+    const string file_path{std::move(*resolved)};
+    if (luamodules.contains(file_path)) {
+        lua_getref(L, luamodules[file_path]);
+        return 1;
     }
+    auto source = common::read_file(file_path).value_or("");
+    if (source.empty()) [[unlikely]] luaL_errorL(L, "couldn't read source '%s'", file_path.c_str());
     lua_State* M = lua_newthread(lua_mainthread(L));
     luaL_sandboxthread(M);
     script_paths.emplace(M, file_path);
+    dluau::precompile(source, dluau::get_precompiled_library_values(file_path));
     size_t bc_len;
     char* bc_arr = luau_compile(source.data(), source.size(), ::dluau::compile_options, &bc_len);
     common::Raii free_after([&bc_arr]{std::free(bc_arr);});

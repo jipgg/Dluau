@@ -5,7 +5,6 @@ end
 print(time.now())
 
 local my_buffer = buffer.create(100)
-print(std.cinterop.pointer_cast(my_buffer), my_buffer)
 
 local pwsh = std.process.search_path("powershell")
 if pwsh then

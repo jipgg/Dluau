@@ -1,7 +1,4 @@
 # Library settings
-set(Dluau.Core.VERSION_MAJOR 0)
-set(Dluau.Core.VERSION_MINOR 1)
-set(Dluau.Core.VERSION_PATCH 5)
 
 # Luau API export definitions
 set(Luau.VM.IMPORT "LUA_API=extern \"C\" __declspec(dllimport)")

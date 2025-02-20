@@ -6,6 +6,10 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+set(Dluau.Core.VERSION_MAJOR 0)
+set(Dluau.Core.VERSION_MINOR 0)
+set(Dluau.Core.VERSION_PATCH 1)
+
 
 # Dependencies
 find_package(Boost REQUIRED COMPONENTS container process filesystem)

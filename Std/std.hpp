@@ -5,10 +5,11 @@
 #define DLUAUSTD_API extern "C" __declspec(dllimport)
 #endif
 #include <memory>
+#include <dluau.hpp>
 #include "Lazy_type.hpp"
 #include <iostream>
 
-namespace gpm {
+namespace dluaustd {
 using Reader = std::unique_ptr<std::istream>;
 using Writer = std::unique_ptr<std::ostream>;
 struct Reader_type_info {

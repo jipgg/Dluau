@@ -38,6 +38,11 @@ template <class ...Ts>
 [[noreturn]] inline void type_error(lua_State* L, int idx, const std::string& msg) {
     luaL_typeerrorL(L, idx, msg.c_str());
 }
+[[nodiscard]] inline std::string_view tostring(lua_State* L, int idx) {
+    size_t len;
+    const char* str = luaL_tolstring(L, idx, &len);
+    return {str, len};
+}
 template <class ...Ts>
 void push(lua_State* L, const std::format_string<Ts...>& fmt, Ts&&...args) {
     lua_pushstring(L, std::format(fmt, std::forward<Ts>(args)...).c_str());

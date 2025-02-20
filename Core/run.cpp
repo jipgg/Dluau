@@ -72,8 +72,8 @@ void dluau_registerglobals(lua_State* L) {
 }
 void dluau_openlibs(lua_State* L) {
     luaL_openlibs(L);
-    dluauopen_print(L);
-    dluauopen_scan(L);
+    //dluauopen_print(L);
+    //dluauopen_scan(L);
     dluauopen_dlimport(L);
     dluauopen_task(L);
 }

@@ -1,7 +1,6 @@
 #include "fs.hpp"
 #include <fstream>
 #include <algorithm>
-#include <lua_utility.hpp>
 namespace fs = std::filesystem;
 
 void newindex_parent(lua_State* L, fs::path &p) {
@@ -32,9 +31,9 @@ void validate_path(lua_State* L, const fs::path &p) {
     ) luaL_errorL(L, "file type is unsupported.");
 }
 void create_new_file(lua_State* L, const fs::path& p) {
-    if (fs::exists(p)) lu::error(L, "file already exists.");
+    if (fs::exists(p)) dluau::error(L, "file already exists.");
     std::ofstream of{p};
-    if (not of.is_open()) lu::error(L, "couldn't open file");
+    if (not of.is_open()) dluau::error(L, "couldn't open file");
     T_file::create(L, p);
 }
 auto to_copy_options(std::string_view str) -> fs::copy_options {

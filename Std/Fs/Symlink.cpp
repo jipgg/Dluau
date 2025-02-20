@@ -1,6 +1,5 @@
 #include "fs.hpp"
 #include <fstream>
-#include <lua_utility.hpp>
 #include <filesystem>
 #include <memory>
 namespace fs = std::filesystem;
@@ -21,7 +20,7 @@ static const Registry namecall = {
                 T_symlink::make(L, p);
             break;
             default:
-                lu::push(L, p);
+                dluau::push(L, p);
             break;
         }
         return 1;
@@ -29,11 +28,11 @@ static const Registry namecall = {
 };
 static const T_symlink::Registry index = {
     {"link", [](lua_State* L, fs::path& s) -> int {
-        lu::push(L, fs::read_symlink(s));
+        dluau::push(L, fs::read_symlink(s));
         return 1;
     }},
     {"path", [](lua_State* L, fs::path& s) -> int {
-        lu::push(L, s.string());
+        dluau::push(L, s.string());
         return 1;
     }},
     {"parent", [](lua_State* L, fs::path& s) -> int {
@@ -41,7 +40,7 @@ static const T_symlink::Registry index = {
         return 1;
     }},
     {"name", [](lua_State* L, auto& s) -> int {
-        lu::push(L, s.filename().string());
+        dluau::push(L, s.filename().string());
         return 1;
     }},
 };
@@ -55,14 +54,14 @@ static const T_symlink::Registry newindex = {
         try {
             fs::rename(s, parent_dir / luaL_checkstring(L, 3));
         } catch (const fs::filesystem_error& e) {
-            lu::error(L, e.what());
+            dluau::error(L, e.what());
         }
         return 0;
     }},
 };
 static auto tostring(lua_State* L) -> int {
     auto& p = T_symlink::check(L, 1);
-    lu::push(L, p.string());
+    dluau::push(L, p.string());
     return 1;
 }
 

@@ -1,5 +1,4 @@
 #include "process.hpp"
-#include <lua_utility.hpp>
 
 static const T_child::Registry index {
     {"pid", [](lua_State* L, Child& child) {
@@ -7,19 +6,19 @@ static const T_child::Registry index {
         return 1;
     }},
     {"joinable", [](lua_State* L, Child& child) {
-        lu::push(L, child.joinable());
+        dluau::push(L, child.joinable());
         return 1;
     }},
     {"exit_code", [](lua_State* L, Child& child) {
-        lu::push(L, child.exit_code());
+        dluau::push(L, child.exit_code());
         return 1;
     }},
     {"native_exit_code", [](lua_State* L, Child& child) {
-        lu::push(L, child.native_exit_code());
+        dluau::push(L, child.native_exit_code());
         return 1;
     }},
     {"running", [](lua_State* L, Child& child) {
-        lu::push(L, child.running());
+        dluau::push(L, child.running());
         return 1;
     }},
 };

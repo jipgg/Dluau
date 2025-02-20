@@ -1,6 +1,5 @@
 #include "std.hpp"
-#include "lua_utility.hpp"
-using namespace gpm;
+using namespace dluaustd;
 
 static const Writer_type::Registry namecall = {
     {"free", [](lua_State* L, Writer& r) -> int {
@@ -78,7 +77,7 @@ template<> const Writer_type::Init_info Writer_type::init_info{
     .namecall = namecall,
     .checker = [](lua_State* L, Writer& self) {
         if (self == nullptr) {
-            lu::error(L, "{} resource was already freed", Writer_type::Type_info_t::type_name());
+            dluau::error(L, "{} resource was already freed", Writer_type::Type_info_t::type_name());
         }
         return 0;
     },

@@ -76,8 +76,8 @@ DLUAU_API void dluau_registerglobals(lua_State* L);
 // Registers luau and dluau standard libraries.
 DLUAU_API void dluau_openlibs(lua_State* L);
 DLUAU_API void dluauopen_dlimport(lua_State* L);
-DLUAU_API void dluauopen_print(lua_State* L);
-DLUAU_API void dluauopen_scan(lua_State* L);
+//DLUAU_API void dluauopen_print(lua_State* L);
+//DLUAU_API void dluauopen_scan(lua_State* L);
 DLUAU_API void dluauopen_task(lua_State* L);
 enum dluau_CTaskStatus {
     DLUAU_CTASK_DONE,

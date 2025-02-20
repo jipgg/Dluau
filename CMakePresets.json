@@ -44,7 +44,8 @@
                 "Dluau.Std.Process",
                 "Dluau.Std.Fs",
                 "Dluau.Std.Cinterop",
-                "Dluau.Std.Os"
+                "Dluau.Std.Os",
+                "Dluau.Std.Io"
             ]
         }
   ]

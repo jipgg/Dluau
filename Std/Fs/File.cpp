@@ -1,6 +1,5 @@
 #include "fs.hpp"
 #include <fstream>
-#include <lua_utility.hpp>
 #include <filesystem>
 #include <memory>
 namespace fs = std::filesystem;
@@ -11,28 +10,28 @@ static const Registry namecall = {
     {"reader", [](lua_State* L, auto& s) -> int {
         auto f = std::make_unique<std::ifstream>();
         f->open(s);
-        if (not f->is_open()) lu::error(L, "couldn't open file");
-        gpm::Reader_type::create(L, std::move(f));
+        if (not f->is_open()) dluau::error(L, "couldn't open file");
+        dluaustd::Reader_type::create(L, std::move(f));
         return 1;
     }},
     {"writer", [](lua_State* L, auto& s) -> int {
         auto f = std::make_unique<std::ofstream>();
         f->open(s, std::ios::app);
-        if (not f->is_open()) lu::error(L, "couldn't open file");
-        gpm::Writer_type::create(L, std::move(f));
+        if (not f->is_open()) dluau::error(L, "couldn't open file");
+        dluaustd::Writer_type::create(L, std::move(f));
         return 1;
     }},
     {"append_writer", [](lua_State* L, auto& s) -> int {
         auto f = std::make_unique<std::ofstream>();
         f->open(s, std::ios::app);
-        if (not f->is_open()) lu::error(L, "couldn't open file");
-        gpm::Writer_type::create(L, std::move(f));
+        if (not f->is_open()) dluau::error(L, "couldn't open file");
+        dluaustd::Writer_type::create(L, std::move(f));
         return 1;
     }},
 };
 static const Registry index = {
     {"path", [](lua_State* L, auto& s) -> int {
-        lu::push(L, s.string());
+        dluau::push(L, s.string());
         return 1;
     }},
     {"parent", [](lua_State* L, auto& s) -> int {
@@ -40,15 +39,15 @@ static const Registry index = {
         return 1;
     }},
     {"stem", [](lua_State* L, auto& s) -> int {
-        lu::push(L, s.stem().string());
+        dluau::push(L, s.stem().string());
         return 1;
     }},
     {"extension", [](lua_State* L, auto& s) -> int {
-        lu::push(L, s.extension().string());
+        dluau::push(L, s.extension().string());
         return 1;
     }},
     {"name", [](lua_State* L, auto& s) -> int {
-        lu::push(L, s.filename().string());
+        dluau::push(L, s.filename().string());
         return 1;
     }},
 };
@@ -62,14 +61,14 @@ static const Registry newindex = {
         try {
             fs::rename(s, parent_dir / luaL_checkstring(L, 3));
         } catch (const fs::filesystem_error& e) {
-            lu::error(L, e.what());
+            dluau::error(L, e.what());
         }
         return 0;
     }},
 };
 static auto tostring(lua_State* L) -> int {
     auto& p = T_file::check(L, 1);
-    lu::push(L, p.string());
+    dluau::push(L, p.string());
     return 1;
 }
 

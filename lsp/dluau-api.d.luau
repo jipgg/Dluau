@@ -21,20 +21,6 @@ type script = {
     path: string,
     name: string,
 }
-declare script: script
-
-type callable = {__call: (any) -> never}
-
-type print = {
-    separator: string,
-    noline: <Ts...>(Ts...)->(),
-}
-declare print: typeof(setmetatable({} :: print, {} :: callable)) & (<Ts...>(Ts...)->())
-type scan = {
-    buffer: ((buffersize: number) -> buffer) & ((b: buffer, len: number?)->buffer),
-    number: () -> number?,
-}
-declare scan: typeof(setmetatable({} :: scan, {} :: callable)) & (()->string)
 
 declare class dlmodule
     path: string

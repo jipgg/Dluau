@@ -267,7 +267,16 @@ type std_os = {
     platform: 'windows'|'linux'|'macOS'|'freeBSD',
     windows: std_os_windows,
 }
+type std_io = {
+    code: (escape_sequence: string) -> (), 
+    scan: () -> string,
+    read: (to_buffer: buffer) -> (),
+    write: ((from_buffer: buffer) -> ()),
+    print: <T>(output: T) -> (),
+    println: <T>(output: T) -> (),
+}
 type std = {
+    io: std_io,
     os: std_os,
     fs: std_fs,
     time: std_time,

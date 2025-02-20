@@ -1,7 +1,6 @@
 #include "std.hpp"
-#include <lua_utility.hpp>
-static const char* tname = "gpm.Reader";
-using namespace gpm;
+static const char* tname = "std.Reader";
+using namespace dluaustd;
 using std::string;
 
 static int reader_line_iterator(lua_State* L) {
@@ -9,7 +8,7 @@ static int reader_line_iterator(lua_State* L) {
     char delimiter = lua_tointeger(L, lua_upvalueindex(2));
     string line;
     if (std::getline(*reader, line, delimiter)) {
-        lu::push(L, line);
+        dluau::push(L, line);
         return 1;
     }
     return 0;
@@ -23,13 +22,13 @@ static const Reader_type::Registry namecall = {
         char delim = *luaL_optstring(L, 2, "\n");
         string line;
         if (not std::getline(*r, line, delim)) return 0;
-        lu::push(L, line);
+        dluau::push(L, line);
         return 1;
     }},
     {"each_line", [](lua_State* L, Reader& r) -> int {
         char delim = *luaL_optstring(L, 2, "\n");
         lua_pushvalue(L, 1);
-        lu::push(L, static_cast<int>(delim));
+        dluau::push(L, static_cast<int>(delim));
         lua_pushcclosure(L, reader_line_iterator, "line_iterator", 2);
         return 1;
     }},
@@ -129,7 +128,7 @@ template<> const Reader_type::Init_info Reader_type::init_info {
     .newindex = newindex,
     .namecall = namecall,
     .checker = [](lua_State* L, Reader& self) -> int {
-        if (self == nullptr) lu::error(L, "{} resource was already freed", tname);
+        if (self == nullptr) dluau::error(L, "{} resource was already freed", tname);
         return 0;
     },
 };

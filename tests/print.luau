@@ -1,7 +1,13 @@
 print(std)
+std.io.code("[35m")
+std.io.println(`{std.io.code} YOOOOOOO {1}`)
+local buf = buffer.create(10)
+std.io.read(buf)
+std.io.write(buf)
+local str =  std.io.scan()
 --require('eeeee: eee')
-local cc = require('console_codes')
-print.separator = '\t'
-print.noline(`{cc.cyan}yo input?: {cc.default}`)
-local input = tonumber(scan())
-print(`input is {input}`)
+--local cc = require('console_codes')
+--print.separator = '\t'
+--print.noline(`{cc.cyan}yo input?: {cc.default}`)
+--local input = tonumber(scan())
+--print(`input is {input}`)

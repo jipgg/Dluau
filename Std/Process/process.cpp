@@ -1,6 +1,5 @@
 #include "process.hpp"
 #include <filesystem>
-#include <lua_utility.hpp>
 #include <format>
 #include <variant>
 namespace fs = std::filesystem;
@@ -32,22 +31,22 @@ static auto system(lua_State* L) -> int {
     try {
         auto variant = resolve_procinfo(L);
         if (auto* shell_cmd = std::get_if<string>(&variant)) {
-            lu::push(L, bp::system(bp::shell, luaL_checkstring(L, 1)));
+            dluau::push(L, bp::system(bp::shell, luaL_checkstring(L, 1)));
             return 1;
         } else {
             auto& info = std::get<Resolved_proc_info>(variant);
-            lu::push(L, bp::system(bp::exe = info.exe, bp::args = info.args));
+            dluau::push(L, bp::system(bp::exe = info.exe, bp::args = info.args));
             return 1;
 
         }
     } catch (bp::process_error& e) {
-        lu::error(L, "{}", e.what());
+        dluau::error(L, "{}", e.what());
     }
 }
 static auto search_path(lua_State* L) -> int {
     std::string path = bp::search_path(luaL_checkstring(L, 1)).string();
     if (path.empty()) return 0;
-    lu::push(L, path);
+    dluau::push(L, path);
     return 1;
 }
 static auto spawn(lua_State* L) -> int {
@@ -62,7 +61,7 @@ static auto spawn(lua_State* L) -> int {
             return 0;
         }
     } catch (bp::process_error& e) {
-        lu::error(L, "{}", e.what());
+        dluau::error(L, "{}", e.what());
     }
 }
 static auto child_ctor(lua_State* L) -> int {
@@ -81,7 +80,7 @@ static auto child_ctor(lua_State* L) -> int {
             return 1;
         }
     } catch(bp::process_error& e) {
-        lu::error(L, e.what());
+        dluau::error(L, e.what());
     }
 }
 

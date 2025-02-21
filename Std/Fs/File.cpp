@@ -5,26 +5,56 @@
 namespace fs = std::filesystem;
 using Registry = T_file::Registry;
 using Init_info = T_file::Init_info;
+constexpr const char* err_file_not_open = "couldn't open file";
+template <class Ty>
+concept Has_is_open_method = requires(const Ty& obj) {
+    {obj.is_open()} -> std::same_as<bool>;
+};
+
+template <class Ty> requires Has_is_open_method<Ty>
+constexpr void check_file_open(lua_State* L, const Ty& fstream) {
+    if (not fstream.is_open()) dluau::error(L, err_file_not_open);
+}
 
 static const Registry namecall = {
+    {"read_contents", [](lua_State* L, auto& self) -> int {
+        auto file = std::ifstream(self);
+        check_file_open(L, file);
+        string line, contents;
+        while (std::getline(file, line)) {
+            contents.append(line) += '\n';
+        }
+        dluau::push(L, contents);
+        return 1;
+    }},
+    {"append", [](lua_State* L, auto& self) -> int {
+        auto file = std::ofstream{self, std::ios::app};
+        file << luaL_checkstring(L, 2) << std::endl;
+        return 1;
+    }},
+    {"overwrite", [](lua_State* L, auto& self) -> int {
+        auto file = std::ofstream{self};
+        file << luaL_checkstring(L, 2) << std::endl;
+        return 1;
+    }},
     {"reader", [](lua_State* L, auto& s) -> int {
         auto f = std::make_unique<std::ifstream>();
         f->open(s);
-        if (not f->is_open()) dluau::error(L, "couldn't open file");
+        check_file_open(L, *f);
         dluaustd::Reader_type::create(L, std::move(f));
         return 1;
     }},
     {"writer", [](lua_State* L, auto& s) -> int {
         auto f = std::make_unique<std::ofstream>();
         f->open(s, std::ios::app);
-        if (not f->is_open()) dluau::error(L, "couldn't open file");
+        check_file_open(L, *f);
         dluaustd::Writer_type::create(L, std::move(f));
         return 1;
     }},
     {"append_writer", [](lua_State* L, auto& s) -> int {
         auto f = std::make_unique<std::ofstream>();
         f->open(s, std::ios::app);
-        if (not f->is_open()) dluau::error(L, "couldn't open file");
+        check_file_open(L, *f);
         dluaustd::Writer_type::create(L, std::move(f));
         return 1;
     }},

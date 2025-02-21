@@ -12,12 +12,12 @@ using boost::container::flat_map;
 
 namespace dluau {
 auto load_file(lua_State* L, string_view path) -> expected<lua_State*, string> {
-    auto result = preprocess_source(path);
+    auto result = preprocess_script(path);
     if (!result) return unexpected(result.error());
     return load_file(L, *result);
 }
-auto load_file(lua_State* L, const Preprocessed_file& pf) -> expected<lua_State*, string> {
-    const auto& [full_path, identifier, source, std_dep, require_dp] = pf;
+auto load_file(lua_State* L, const Preprocessed_script& pf) -> expected<lua_State*, string> {
+    const auto& [full_path, identifier, source, std_dep, require_dp, dl_dp] = pf;
     size_t outsize;
     char* bc = luau_compile(
         source.data(), source.size(),
@@ -50,7 +50,7 @@ auto run_file(lua_State* L, string_view script_path) -> expected<void, string> {
     }
     return expected<void, string>{};
 }
-auto run_file(lua_State* L, const Preprocessed_file& pf) -> expected<void, string> {
+auto run_file(lua_State* L, const Preprocessed_script& pf) -> expected<void, string> {
     auto r = ::dluau::load_file(L, pf);
     if (not r) return unexpected(r.error());
     auto* co = *r;

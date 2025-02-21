@@ -62,12 +62,12 @@ static auto replace_nameof_specifiers(const string& source) -> decltype(auto) {
     };
     return replace_meta_specifiers(source, expression, to_string);
 }
-auto dluau::preprocess_source(const fs::path& path) -> expected<Preprocessed_file, string> {
+auto dluau::preprocess_script(const fs::path& path) -> expected<Preprocessed_script, string> {
     auto source = common::read_file(path);
     if (not source) {
         return unexpected(format("couldn't read source '{}'.", path.string()));
     }
-    Preprocessed_file data{};
+    Preprocessed_script data{};
     std::string src = *source;
     std::regex pattern(R"(std\.(\w+))");
     std::smatch match;
@@ -87,8 +87,8 @@ auto dluau::preprocess_source(const fs::path& path) -> expected<Preprocessed_fil
     data.source = std::move(*source);
     return data;
 }
-auto dluau::expand_require_specifiers(string& source, const fs::path& base) -> std::vector<std::string> {
-    regex pattern(R"(require\s*[\(\s]*["'\[\[]([^"'\]\)]+)["'\]\]]\s*\)?)");
+auto dluau::expand_require_specifiers(string& source, const fs::path& base, string_view fname) -> std::vector<std::string> {
+    regex pattern(std::format(R"({}\s*[\(\s]*["'\[\[]([^"'\]\)]+)["'\]\]]\s*\)?)", fname));
     std::vector<std::string> expanded_sources;
     auto expanded = [&](const string& str) -> expected<string, string> {
         auto r = dluau::resolve_require_path(base, str);

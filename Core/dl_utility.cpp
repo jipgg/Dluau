@@ -1,4 +1,4 @@
-#include "dlimport.hpp"
+#include <dluau.hpp>
 #include <filesystem>
 #include <functional>
 #include <boost/container/flat_set.hpp>
@@ -8,20 +8,34 @@ using boost::container::flat_map;
 using std::string, std::unexpected, std::array;
 static const array dl_file_extensions = {".so"s, ".dll"s, ".dylib"s};
 static boost::container::flat_set<std::filesystem::path> added_dll_directories; 
-static dlimport::Dlmodule_map dlmodules;
+static dluau::Dlmodule_map dlmodules;
 
-namespace dlimport {
+auto dluau_todlmodule(lua_State* L, int idx) -> dluau_Dlmodule* {
+    return dluau::to_dlmodule(L, idx);
+}
+void dluau_pushdlmodule(lua_State* L, dluau_Dlmodule* dlm) {
+    dluau::push_dlmodule(L, dlm);
+}
+auto dluau_dlmodulefind(dluau_Dlmodule* dlm, const char* symbol) -> uintptr_t {
+    return dluau::find_dlmodule_proc_address(*dlm, symbol).value_or(0);
+}
+auto dluau_loaddlmodule(lua_State* L, const char* require_path) -> dluau_Dlmodule* {
+    auto res = dluau::dlload(L, require_path);
+    if (!res) return nullptr;
+    return &(res->get());
+}
+namespace dluau {
 const Dlmodule_map& get_dlmodules() {
     return dlmodules;
 }
-auto load_module(lua_State* L, const std::string& require_path) -> Expect_dlmodule {
+auto dlload(lua_State* L, const std::string& require_path) -> Expect_dlmodule {
     if (not dluau::has_permissions(L)) return unexpected("current environment context does not allow loading");
     auto resolved = dluau::resolve_require_path(L, require_path, dl_file_extensions);
     if (!resolved) return unexpected(resolved.error());
-    return init_module(*resolved);
+    return init_dlmodule(*resolved);
 }
-auto load_module(lua_State* L) -> Expect_dlmodule {
-    return load_module(L, luaL_checkstring(L, 1));
+auto dlload(lua_State* L) -> Expect_dlmodule {
+    return dlload(L, luaL_checkstring(L, 1));
 }
 auto search_path(const fs::path& dlpath) -> std::optional<fs::path> {
     char buffer[MAX_PATH];
@@ -56,7 +70,7 @@ string get_last_error_as_string() {
     LocalFree(messageBuffer);
     return message;
 }
-auto init_module(const fs::path& path) -> Expect_dlmodule {
+auto init_dlmodule(const fs::path& path) -> Expect_dlmodule {
     if (auto it = dlmodules.find(path); it == dlmodules.end()) {
         if (not added_dll_directories.contains(path)) {
         auto cookie = AddDllDirectory(path.parent_path().c_str());
@@ -82,21 +96,21 @@ auto init_module(const fs::path& path) -> Expect_dlmodule {
     }
     return *dlmodules.at(path);
 }
-auto find_proc_address(dluau_Dlmodule& module, const string& symbol) -> std::optional<uintptr_t> {
+auto find_dlmodule_proc_address(dluau_Dlmodule& module, const string& symbol) -> std::optional<uintptr_t> {
     auto& cached = module.cached;
     if (auto found = cached.find(symbol); found != cached.end()) return cached.at(symbol);
     FARPROC proc = GetProcAddress(module.handle, symbol.c_str());
     if (proc) cached.emplace(symbol, reinterpret_cast<uintptr_t>(proc));
     return proc ? std::make_optional(reinterpret_cast<uintptr_t>(proc)) : std::nullopt;
 }
-auto lua_tomodule(lua_State* L, int idx) -> dluau_Dlmodule* {
+auto to_dlmodule(lua_State* L, int idx) -> dluau_Dlmodule* {
     if (lua_lightuserdatatag(L, idx) != dluau_Dlmodule::tag) {
         luaL_typeerrorL(L, idx, dluau_Dlmodule::tname);
     }
     auto mod = static_cast<dluau_Dlmodule*>(lua_tolightuserdatatagged(L, idx, dluau_Dlmodule::tag));
     return mod;
 }
-auto lua_pushmodule(lua_State* L, dluau_Dlmodule* module) -> dluau_Dlmodule* {
+auto push_dlmodule(lua_State* L, dluau_Dlmodule* module) -> dluau_Dlmodule* {
     lua_pushlightuserdatatagged(L, module, dluau_Dlmodule::tag);
     luaL_getmetatable(L, dluau_Dlmodule::tname);
     lua_setmetatable(L, -2);

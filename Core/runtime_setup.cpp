@@ -7,7 +7,6 @@
 #include <lualib.h>
 #include <boost/container/flat_map.hpp>
 #include <nlohmann/json.hpp>
-#include <dlimport/dlimport.hpp>
 #include <unordered_map>
 #include <print>
 #include <unordered_set>
@@ -23,9 +22,9 @@ using namespace dluau;
 
 static lua_CompileOptions copts{.debugLevel = 1};
 lua_CompileOptions* dluau::compile_options{&copts};
-static std::vector<Preprocessed_file> main_scripts;
-static std::unordered_map<std::string, Preprocessed_file> module_scripts;
-auto dluau::get_preprocessed_modules() -> const std::unordered_map<std::string, Preprocessed_file>& {
+static std::vector<Preprocessed_script> main_scripts;
+static std::unordered_map<std::string, Preprocessed_script> module_scripts;
+auto dluau::get_preprocessed_modules() -> const std::unordered_map<std::string, Preprocessed_script>& {
     return module_scripts;
 }
 
@@ -61,18 +60,33 @@ static auto setup_state(const luaL_Reg* global_fns) -> std::unique_ptr<lua_State
         dluau::error(L, errmsg);
     };
     auto require = [](lua_State* L) -> int {
-        dluau_require(L, luaL_checkstring(L, 1));
+        dluau::require(L, luaL_checkstring(L, 1));
         return 1;
     };
-    auto lazyrequire = [](lua_State* L) -> int {
-        dluau_lazyrequire(L, luaL_checkstring(L, 1));
+    auto dlload = [](lua_State* L) -> int {
+        auto module = dluau::dlload(L);
+        if (not module) dluau::error(L, module.error());
+        dluau::push_dlmodule(L, &module->get());
+        return 1;
+    };
+    auto dlrequire = [](lua_State* L) -> int {
+        const std::string name = luaL_checkstring(L, 1);
+        auto result = dluau::dlload(L);
+        if (!result) dluau::error(L, result.error());
+        dluau_Dlmodule& module = *result;
+        constexpr const char* function_signature = "dlrequire";
+        auto proc = dluau::find_dlmodule_proc_address(module, function_signature);
+        if (not proc) luaL_errorL(L, "module '%s' does not export a symbol '%s'.", name.c_str(), function_signature);
+        lua_pushcfunction(L, reinterpret_cast<lua_CFunction>(*proc), (name + std::format(" {}", function_signature)).c_str());
+        lua_call(L, 0, 1);
         return 1;
     };
     constexpr luaL_Reg default_global_fns[] = {
         {"loadstring", loadstring},
         {"collectgarbage", collectgarbage},
         {"require", require},
-        {"lazyrequire", lazyrequire},
+        {"dlload", dlload},
+        {"dlrequire", dlrequire},
         {nullptr, nullptr}
     };
     lua_State* L = luaL_newstate();
@@ -82,7 +96,6 @@ static auto setup_state(const luaL_Reg* global_fns) -> std::unique_ptr<lua_State
     luaL_register(L, nullptr, default_global_fns);
     if (global_fns) luaL_register(L, nullptr, global_fns);
     lua_pop(L, 1);
-    dluau::open_dlimport_library(L);
     dluau::open_task_library(L);
     return {L, lua_close}; 
 }
@@ -95,7 +108,7 @@ static auto preprocess_dependencies(lua_State* L, string_view scripts) -> expect
 
     for (auto sr : vws::split(scripts, dluau::arg_separator)) {
         string_view script{sr.data(), sr.size()};
-        auto r = dluau::preprocess_source(script);
+        auto r = dluau::preprocess_script(script);
         if (not r) return std::unexpected(r.error());
         auto& file = *r;
         for (const auto& v : file.depends_on_std) std_dependencies.emplace(v);
@@ -109,7 +122,7 @@ static auto preprocess_dependencies(lua_State* L, string_view scripts) -> expect
             continue;
         }
         processed_scripts.insert(current_script);
-        auto r = dluau::preprocess_source(current_script);
+        auto r = dluau::preprocess_script(current_script);
         if (!r) return std::unexpected(r.error());
         auto& file = *r;
         for (const auto& std_dep : file.depends_on_std) std_dependencies.emplace(std_dep);
@@ -124,7 +137,7 @@ static auto preprocess_dependencies(lua_State* L, string_view scripts) -> expect
         lua_newtable(L);
         for (const auto& dependency : std_dependencies) {
             constexpr const char* dll_fmt = "dluau_std_{}.dll";
-            auto r = dlimport::init_require_module(
+            auto r = dluau::init_require_module(
                 L, bin_dir / std::format(dll_fmt, dependency)
             );
             if (!r) return std::unexpected(r.error());

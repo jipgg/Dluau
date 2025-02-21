@@ -15,7 +15,8 @@ declare class reader
 end
 declare class writer
     function write(self, buf: buffer): ()
-    --print: <TyArgs...>(self: writer, TyArgs...) -> (),
+    function flush(self): ()
+    print: <TyArgs...>(self: writer, TyArgs...) -> ()
     function put(self, char: number)
     function reset(self): ()
     function try_offset(self, new_pos: number): boolean
@@ -36,6 +37,9 @@ declare class file
     function writer(self): writer
     function append_writer(self): writer
     function reader(self): reader
+    function read_contents(self): string
+    function append(self, ln: string): ()
+    function overwrite(self, contents: string): ()
     path: string
     name: string
     extension: string
@@ -271,7 +275,14 @@ type std_io = {
     print: <T>(output: T) -> (),
     println: <T>(output: T) -> (),
 }
+export type json_value = string | json_array | json_object | buffer | number | nil | boolean
+export type json_array = {json_value}
+export type json_object = {[string]: json_value}
+type std_json = {
+    parse: (json_source: string) -> {json_value},
+}
 type std = {
+    json: std_json,
     io: std_io,
     os: std_os,
     fs: std_fs,

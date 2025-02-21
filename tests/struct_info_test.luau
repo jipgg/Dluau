@@ -1,11 +1,4 @@
-print(std.cinterop.struct_info) -- force loading the library
-local dls = dlimport.loaded_modules()
-local cinterop_dl: dlmodule
-for i, v in dls do
-    if v.name == "dluau_std_cinterop" then
-        cinterop_dl = v
-    end
-end
+local cinterop_dl = dlload("../bin/Debug/dluau_std_cinterop.dll")
 assert(cinterop_dl, "failed to find dl")
 local print_test_struct_info: () -> () = std.cinterop.bind_fn(
     cinterop_dl, 'void', "print_test_struct_info")

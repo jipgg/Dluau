@@ -35,6 +35,10 @@ static const Writer_type::Registry namecall = {
         r->clear();
         return 0;
     }},
+    {"flush", [](lua_State* L, Writer& self) -> int {
+        self->flush();
+        return 0;
+    }},
     {"try_offset", [](lua_State* L, Writer& w) -> int {
         auto old_pos = w->tellp();
         bool success = true;

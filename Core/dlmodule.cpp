@@ -1,4 +1,4 @@
-#include "dlimport.hpp"
+#include <dluau.hpp>
 #include <format>
 #include <common.hpp>
 using std::string_view, std::string;
@@ -7,7 +7,7 @@ constexpr int unintialized{-1};
 static int importfunction_sa{unintialized};
 
 static auto index(lua_State* L) -> int {
-    dluau_Dlmodule* module = dlimport::lua_tomodule(L, 1);
+    dluau_Dlmodule* module = dluau::to_dlmodule(L, 1);
     const string_view key = luaL_checkstring(L, 2);
     if (key == "path") {
         lua_pushstring(L, module->path.string().c_str());
@@ -21,14 +21,14 @@ static auto index(lua_State* L) -> int {
 
 static auto import_function(lua_State* L) -> int {
     const string proc_key = string("dlexport_") + luaL_checkstring(L, 2);
-    auto opt = dlimport::find_proc_address(*dlimport::lua_tomodule(L, 1), proc_key);
+    auto opt = dluau::find_dlmodule_proc_address(*dluau::to_dlmodule(L, 1), proc_key);
     if (not opt) luaL_errorL(L, "lua_CFunction '%s' was not found ", proc_key.c_str());
     const auto fmt = std::format("dlimported:{}", proc_key);
     lua_pushcfunction(L, reinterpret_cast<lua_CFunction>(*opt), fmt.c_str());
     return 1;
 }
 static auto namecall(lua_State* L) -> int {
-    dluau_Dlmodule& module = *dlimport::lua_tomodule(L, 1);
+    dluau_Dlmodule& module = *dluau::to_dlmodule(L, 1);
     int atom;
     lua_namecallatom(L, &atom);
     if (atom == importfunction_sa) return import_function(L);

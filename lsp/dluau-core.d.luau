@@ -1,6 +1,5 @@
 declare collectgarbage: (("collect") -> ()) & (("count") -> number)
 declare nameof: <T>(variable: T) -> string
-declare lazyrequire: <T>(module_name: string) -> T
 declare class userdata end
 declare class opaque end
 
@@ -27,12 +26,6 @@ declare class dlmodule
     name: string
     import_fn: <As..., Rs...>(self: dlmodule, symbol: string) -> ((As...)->(Rs...))
 end
-type dlimport = {
-    dlrequire: (target_dl: string) -> unknown,
-    load: (target_dl: string) -> dlmodule,
-    try_load: (target_dl: string) -> (dlmodule?, string),
-    search_path: (dl_name: string) -> string?,
-    loaded_modules: () -> {dlmodule},
-}
-declare dlimport: dlimport 
 
+declare function dlload(target: string): dlmodule
+declare function dlrequire(target: string): unknown

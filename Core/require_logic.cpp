@@ -83,7 +83,7 @@ static auto substitute_alias(string& str) -> expected<void, string> {
 static auto lazyrequire_handler(lua_State* L) -> int {
     try {
         const string name = lua_tostring(L, lua_upvalueindex(1));
-        dluau_require(L, name.c_str());
+        dluau::require(L, name.c_str());
         lua_getmetatable(L, 1);
         lua_pushvalue(L, -2);
         lua_setfield(L, -2, "__index");
@@ -110,8 +110,8 @@ auto dluau_lazyrequire(lua_State* L, const char* name) -> int {
     lua_setmetatable(L, -2);
     return 1;
 }
-auto dluau_require(lua_State* L, const char* name) -> int {
-    auto resolved = ::dluau::resolve_require_path(L, name);
+auto dluau::require(lua_State* L, string_view name) -> int {
+    auto resolved = ::dluau::resolve_require_path(L, string(name));
     if (not resolved) ::dluau::error(L, resolved.error());
     const string file_path{std::move(*resolved)};
     if (luamodules.contains(file_path)) {

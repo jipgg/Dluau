@@ -27,18 +27,31 @@ target_compile_definitions(Dluau.Std.Process PRIVATE _WIN32_WINNT=0x0601)
 target_link_libraries(Dluau.Std.Process PRIVATE Dluau.Std Boost::process Boost::filesystem)
 set_target_properties(Dluau.Std.Process PROPERTIES OUTPUT_NAME dluau_std_process)
 
+# Std.Cinterop
 file(GLOB Dluau.Std.Cinterop.SOURCES ${Dluau.Std.SOURCE_DIR}/Cinterop/*.cpp)
 add_library(Dluau.Std.Cinterop SHARED ${Dluau.Std.Cinterop.SOURCES})
 target_link_libraries(Dluau.Std.Cinterop PRIVATE Dluau.Std dyncall_s)
 target_include_directories(Dluau.Std.Cinterop PRIVATE ${DynCall_DIR})
 set_target_properties(Dluau.Std.Cinterop PROPERTIES OUTPUT_NAME dluau_std_cinterop)
 
-file(GLOB Dluau.Std.Os.SOURCES ${Dluau.Std.SOURCE_DIR}/Os/*.cpp)
-add_library(Dluau.Std.Os SHARED ${Dluau.Std.Os.SOURCES})
-target_link_libraries(Dluau.Std.Os PRIVATE Dluau.Std)
-set_target_properties(Dluau.Std.Os PROPERTIES OUTPUT_NAME dluau_std_os)
+# Std.OS
+file(GLOB Dluau.Std.OS.SOURCES ${Dluau.Std.SOURCE_DIR}/OS/*.cpp)
+add_library(Dluau.Std.OS SHARED ${Dluau.Std.OS.SOURCES})
+target_link_libraries(Dluau.Std.OS PRIVATE Dluau.Std)
+set_target_properties(Dluau.Std.OS PROPERTIES OUTPUT_NAME dluau_std_os)
 
-file(GLOB Dluau.Std.Io.SOURCES ${Dluau.Std.SOURCE_DIR}/Io/*.cpp)
-add_library(Dluau.Std.Io SHARED ${Dluau.Std.Io.SOURCES})
-target_link_libraries(Dluau.Std.Io PRIVATE Dluau.Std)
-set_target_properties(Dluau.Std.Io PROPERTIES OUTPUT_NAME dluau_std_io)
+# Std.IO
+file(GLOB Dluau.Std.IO.SOURCES ${Dluau.Std.SOURCE_DIR}/IO/*.cpp)
+add_library(Dluau.Std.IO SHARED ${Dluau.Std.IO.SOURCES})
+target_link_libraries(Dluau.Std.IO PRIVATE Dluau.Std)
+set_target_properties(Dluau.Std.IO PROPERTIES OUTPUT_NAME dluau_std_io)
+
+# Std.Json
+file(GLOB Dluau.Std.Json.SOURCES ${Dluau.Std.SOURCE_DIR}/Json/*.cpp)
+add_library(Dluau.Std.Json SHARED ${Dluau.Std.Json.SOURCES})
+target_link_libraries(Dluau.Std.Json PRIVATE
+    Dluau.Std
+    nlohmann_json::nlohmann_json
+)
+set_target_properties(Dluau.Std.Json PROPERTIES OUTPUT_NAME dluau_std_json)
+

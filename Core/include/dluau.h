@@ -47,13 +47,9 @@ DLUAU_API int dluau_stringatom(lua_State* L, const char* key);
 // @return the atom
 DLUAU_API int dluau_lstringatom(lua_State* L, const char* key, size_t len);
 // the dluau require function implementation
-DLUAU_API int dluau_require(lua_State* L, const char* name);
-DLUAU_API int dluau_lazyrequire(lua_State* L, const char* name);
 // Precompiles the source for precompiled features like `nameof()`
 // Returns nullptr on failure.
 // Wrapper function to initialized a lua_State* that is correctly
-// set up for dluau.
-DLUAU_API lua_State* dluau_newstate();
 struct dluau_RunOptions {
     // source files to run separated with ','
     const char* scripts;

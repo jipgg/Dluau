@@ -44,8 +44,9 @@
                 "Dluau.Std.Process",
                 "Dluau.Std.Fs",
                 "Dluau.Std.Cinterop",
-                "Dluau.Std.Os",
-                "Dluau.Std.Io"
+                "Dluau.Std.OS",
+                "Dluau.Std.IO",
+                "Dluau.Std.Json"
             ]
         }
   ]

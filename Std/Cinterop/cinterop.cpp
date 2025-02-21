@@ -2,7 +2,7 @@
 #include <print>
 #include <dluau.h>
 
-#ifdef NDEBUG
+#ifndef NDEBUG
 #define DLUAUSTD_CINTEROP_BUILD_TESTS
 #endif
 

@@ -1,4 +1,4 @@
-local cinterop_dl = dlload("../bin/Debug/dluau_std_cinterop.dll")
+local cinterop_dl = dlload("../bin/Debug/dluau-std_cinterop.dll")
 assert(cinterop_dl, "failed to find dl")
 local print_test_struct_info: () -> () = std.cinterop.bind_fn(
     cinterop_dl, 'void', "print_test_struct_info")

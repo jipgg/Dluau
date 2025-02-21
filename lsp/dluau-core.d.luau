@@ -15,12 +15,6 @@ type task = {
 }
 declare task: task
 
-type script = {
-    directory: string,
-    path: string,
-    name: string,
-}
-
 declare class dlmodule
     path: string
     name: string

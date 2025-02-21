@@ -144,7 +144,7 @@ static auto preprocess_dependencies(lua_State* L, string_view scripts) -> expect
         const fs::path bin_dir = common::get_bin_path()->parent_path();
         lua_newtable(L);
         for (const auto& dependency : std_dependencies) {
-            constexpr const char* dll_fmt = "dluau_std_{}.dll";
+            constexpr const char* dll_fmt = "dluau-std_{}.dll";
             auto r = dluau::init_require_module(
                 L, bin_dir / std::format(dll_fmt, dependency)
             );

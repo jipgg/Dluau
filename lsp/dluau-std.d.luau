@@ -179,7 +179,6 @@ type std_process = {
 }
 -- cinterop
 declare class struct_info
-    function to_pointer(self, obj: unknown): opaque
     get_field: <Ty>(
         self: struct_info,
         data: opaque,

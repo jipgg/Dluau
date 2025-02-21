@@ -84,19 +84,6 @@ auto task_step(lua_State* L) -> expected<void, string>;
 auto has_permissions(lua_State* L) -> bool;
 auto default_useratom(const char* key, size_t len) -> int16_t;
 
-inline auto get_precompiled_script_library_values(const fs::path& p) -> decltype(auto) {
-    auto as_string_literal = [](const fs::path& path) {
-        auto str = path.string();
-        std::ranges::replace(str, '\\', '/');
-        return format("(\"{}\")", str);
-    };
-    const auto arr = std::to_array<std::pair<std::regex, string>>({
-        {std::regex(R"(\bscript.directory\b)"), as_string_literal(p.parent_path())},
-        {std::regex(R"(\bscript.path\b)"), as_string_literal(p)},
-        {std::regex(R"(\bscript.name\b)"), as_string_literal(fs::path(p).stem())},
-    });
-    return arr;
-}
 inline auto init_require_module(lua_State* L, fs::path path) -> std::expected<void, std::string> {
     path = common::normalize_path(path);
     auto r = init_dlmodule(L, path);

@@ -77,12 +77,11 @@ static auto get_last_error_as_string() -> string {
 auto dluau::init_dlmodule(lua_State* L, const fs::path& path) -> Expect_dlmodule {
     if (not loaded_dlmodules.contains(path)) {
         if (not added_dl_directories.contains(path)) {
-        auto cookie = AddDllDirectory(path.parent_path().c_str());
-        if (not cookie) return unexpected(format(
-            "failed to add dll directory '{}'\nmessage: {}",
-            path.parent_path().string(),
-            get_last_error_as_string()));
-        } else {
+            auto cookie = AddDllDirectory(path.parent_path().c_str());
+            if (not cookie) {
+                constexpr const char* errfmt{"failed to add dl directory '{}'\nmessage: {}"};
+                return unexpected(format(errfmt, path.parent_path().string(), get_last_error_as_string()));
+            }
             added_dl_directories.emplace(path);
         }
         HMODULE hm = LoadLibraryEx(
@@ -91,18 +90,18 @@ auto dluau::init_dlmodule(lua_State* L, const fs::path& path) -> Expect_dlmodule
             LOAD_LIBRARY_SEARCH_USER_DIRS |
             LOAD_LIBRARY_SEARCH_DEFAULT_DIRS
         );
-        if (not hm) return unexpected(format(
-            "failed to load library '{}'\nmessage: {}",
-            path.string(),
-            get_last_error_as_string()
-        ));
+        if (not hm) {
+            constexpr const char* errfmt{"failed to load library '{}'\nmessage: {}"};
+            return unexpected(format(errfmt, path.string(), get_last_error_as_string()));
+        }
         auto module = std::make_unique<dluau_Dlmodule>(hm, path.stem().string(), path);
         auto found = dluau::find_dlmodule_proc_address(*module, "dlinit");
         if (found) {
             auto dlinit = reinterpret_cast<void(*)(lua_State*)>(*found);
             dlinit(L);
         }
-        loaded_dlmodules.emplace(path, std::move(module));
+        auto it = loaded_dlmodules.emplace(path, std::move(module));
+        return *it.first->second;
     }
     return *loaded_dlmodules.at(path);
 }

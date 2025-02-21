@@ -25,14 +25,22 @@ auto dluau_loaddlmodule(lua_State* L, const char* require_path) -> dluau_Dlmodul
     return &(res->get());
 }
 namespace dluau {
+static auto use_dlmodule(const fs::path& path) -> Expect_dlmodule {
+}
 const Dlmodule_map& get_dlmodules() {
     return dlmodules;
 }
 auto dlload(lua_State* L, const std::string& require_path) -> Expect_dlmodule {
+    if (not dlmodules.contains(require_path)) {
+        return std::unexpected("dynamic library loaded is disabled at runtime");
+    }
+    return *dlmodules.at(require_path);
+    /*
     if (not dluau::has_permissions(L)) return unexpected("current environment context does not allow loading");
     auto resolved = dluau::resolve_require_path(L, require_path, dl_file_extensions);
     if (!resolved) return unexpected(resolved.error());
     return init_dlmodule(*resolved);
+    */
 }
 auto dlload(lua_State* L) -> Expect_dlmodule {
     return dlload(L, luaL_checkstring(L, 1));
@@ -71,7 +79,7 @@ string get_last_error_as_string() {
     return message;
 }
 auto init_dlmodule(const fs::path& path) -> Expect_dlmodule {
-    if (auto it = dlmodules.find(path); it == dlmodules.end()) {
+    if (not dlmodules.contains(path)) {
         if (not added_dll_directories.contains(path)) {
         auto cookie = AddDllDirectory(path.parent_path().c_str());
         if (not cookie) return unexpected(format(

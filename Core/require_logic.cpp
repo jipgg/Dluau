@@ -111,6 +111,7 @@ auto dluau_lazyrequire(lua_State* L, const char* name) -> int {
     return 1;
 }
 auto dluau::require(lua_State* L, string_view name) -> int {
+    /*
     auto resolved = ::dluau::resolve_require_path(L, string(name));
     if (not resolved) ::dluau::error(L, resolved.error());
     const string file_path{std::move(*resolved)};
@@ -127,6 +128,11 @@ auto dluau::require(lua_State* L, string_view name) -> int {
         if (source.empty()) [[unlikely]] luaL_errorL(L, "couldn't read source '%s'", file_path.c_str());
         dluau::precompile(source, dluau::get_precompiled_library_values(file_path));
     }
+    */
+    const auto& preprocessed = dluau::get_preprocessed_modules();
+    std::string file_path{name};
+    if (not preprocessed.contains(file_path)) dluau::error(L, "dynamic requiring is not allowed");
+    const std::string& source = preprocessed.at(file_path).source;
     lua_State* M = lua_newthread(lua_mainthread(L));
     luaL_sandboxthread(M);
     script_paths.emplace(M, file_path);

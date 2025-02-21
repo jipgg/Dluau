@@ -78,6 +78,8 @@ auto dluau::preprocess_script(const fs::path& path) -> expected<Preprocessed_scr
     const fs::path dir = path.parent_path();
     data.depends_on_scripts = expand_require_specifiers(*source, dir);
     data.normalized_path = common::normalize_path(path);
+    data.depends_on_dls = expand_require_specifiers(*source, dir, "dlload");
+    data.depends_on_dls.append_range(expand_require_specifiers(*source, dir, "dlrequire"));
     dluau::precompile(*source, get_precompiled_library_values(data.normalized_path));
 
     string identifier{fs::relative(path).string()};
@@ -95,7 +97,8 @@ auto dluau::expand_require_specifiers(string& source, const fs::path& base, stri
         if (r) {
             auto resolved = r.value();
             expanded_sources.emplace_back(resolved);
-            const std::string normalized = std::format("require(\"{}\")", resolved);
+            std::println("EXPANDED: {}, {}", fname, resolved);
+            const std::string normalized = std::format("{}(\"{}\")", fname, resolved);
             return normalized;
         }
         return std::unexpected(r.error());

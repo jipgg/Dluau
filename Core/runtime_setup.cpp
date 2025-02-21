@@ -152,8 +152,7 @@ static auto preprocess_dependencies(lua_State* L, string_view scripts) -> expect
     }
     if (not dl_dependencies.empty()) {
         for (const auto& dependency : dl_dependencies) {
-            std::println("DL DEPENDENCIES {}", dependency);
-            auto r = dluau::init_dlmodule(dependency);
+            auto r = dluau::init_dlmodule(L, dependency);
             if (!r) return std::unexpected(r.error());
         }
     }

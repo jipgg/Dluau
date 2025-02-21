@@ -83,6 +83,6 @@ DLUAUSTD_API auto test_function(long arg) -> int {
     return 123;
 }
 DLUAUSTD_API auto dlinit(lua_State* L) -> void {
-    std::println("CINTEROP WAS INITIALIZED");
+    std::println("CINTEROP WAS INITIALIZED {}", reinterpret_cast<uintptr_t>(L));
 }
 #endif

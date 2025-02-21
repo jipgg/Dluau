@@ -61,7 +61,7 @@ constexpr char arg_separator{','};
 inline string_view args;
 auto get_dlmodules() -> const Dlmodule_map&;
 auto find_module(const std::string& name) -> dluau_Dlmodule*;
-auto init_dlmodule(const fs::path& path) -> Expect_dlmodule;
+auto init_dlmodule(lua_State* L, const fs::path& path) -> Expect_dlmodule;
 auto dlload(lua_State* L, const std::string& require_path) -> Expect_dlmodule;
 auto dlload(lua_State* L) -> Expect_dlmodule;
 auto find_dlmodule_proc_address(dluau_Dlmodule& module, const std::string& symbol) -> std::optional<uintptr_t>;
@@ -105,7 +105,7 @@ inline auto get_precompiled_script_library_values(const fs::path& p) -> decltype
 }
 inline auto init_require_module(lua_State* L, fs::path path) -> std::expected<void, std::string> {
     path = common::normalize_path(path);
-    auto r = init_dlmodule(path);
+    auto r = init_dlmodule(L, path);
     if (!r) return std::unexpected(r.error());
     dluau_Dlmodule& module = *r;
     auto address = find_dlmodule_proc_address(module, "dlrequire");

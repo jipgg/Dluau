@@ -4,8 +4,6 @@ for v in std.fs.current_directory():each_child() do
 end
 print(time.now())
 
-local my_buffer = buffer.create(100)
-
 local pwsh = std.process.search_path("powershell")
 if pwsh then
     std.process.system(pwsh, 'echo', 'hello', 'world')

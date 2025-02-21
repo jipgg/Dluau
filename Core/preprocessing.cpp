@@ -106,7 +106,6 @@ auto dluau::expand_require_specifiers(string& source, const fs::path& base, stri
         if (r) {
             auto resolved = r.value();
             expanded_sources.emplace_back(resolved);
-            std::println("EXPANDED: {}, {}", fname, resolved);
             const std::string normalized = std::format("{}(\"{}\")", fname, resolved);
             return normalized;
         }

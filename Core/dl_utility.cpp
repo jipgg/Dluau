@@ -72,7 +72,7 @@ static auto get_last_error_as_string() -> string {
     LocalFree(messageBuffer);
     return message;
 }
-auto dluau::init_dlmodule(const fs::path& path) -> Expect_dlmodule {
+auto dluau::init_dlmodule(lua_State* L, const fs::path& path) -> Expect_dlmodule {
     if (not loaded_dlmodules.contains(path)) {
         if (not added_dl_directories.contains(path)) {
         auto cookie = AddDllDirectory(path.parent_path().c_str());
@@ -94,7 +94,13 @@ auto dluau::init_dlmodule(const fs::path& path) -> Expect_dlmodule {
             path.string(),
             get_last_error_as_string()
         ));
-        loaded_dlmodules.emplace(path, std::make_unique<dluau_Dlmodule>(hm, path.stem().string(), path));
+        auto module = std::make_unique<dluau_Dlmodule>(hm, path.stem().string(), path);
+        auto found = dluau::find_dlmodule_proc_address(*module, "dlinit");
+        if (found) {
+            auto dlinit = reinterpret_cast<void(*)(lua_State*)>(*found);
+            dlinit(L);
+        }
+        loaded_dlmodules.emplace(path, std::move(module));
     }
     return *loaded_dlmodules.at(path);
 }

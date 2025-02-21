@@ -16,15 +16,14 @@ using fs::path, std::string_view;
 using std::format, std::optional;
 
 static flat_map<string, string> aliases;
-static flat_map<string, int> loaded_module_scripts;
 static bool config_file_initialized{false};
 
 static auto find_config_file(path base = fs::current_path(), int search_depth = 5) -> expected<path, string> {
-    const auto config_file_names = std::to_array<>({
+    const std::array config_file_names = {
         ".luaurc", ".dluaurc",
         ".dluaurc.json", ".luaurc.json",
         "luaurc.json", "dluaurc.json",
-    });
+    };
     auto exists = [&cfn = config_file_names, &base](path& out) -> bool {
         for (string_view name : cfn) {
             const path potential_path = base / name;
@@ -97,42 +96,6 @@ static auto find_source(path p, const path& base, span<const string> file_exts =
     return std::nullopt;
 }
 
-auto dluau::require(lua_State* L, string_view name) -> int {
-    const auto& preprocessed = dluau::get_preprocessed_modules();
-    std::string file_path{name};
-    if (not preprocessed.contains(file_path)) dluau::error(L, "dynamic requiring is not allowed");
-    const std::string& source = preprocessed.at(file_path).source;
-    lua_State* M = lua_newthread(lua_mainthread(L));
-    luaL_sandboxthread(M);
-    size_t bc_len;
-    char* bc_arr = luau_compile(source.data(), source.size(), ::dluau::compile_options, &bc_len);
-    common::Raii free_after([&bc_arr]{std::free(bc_arr);});
-    string chunkname = file_path;
-    chunkname = '@' + chunkname;
-    int status{-1};
-    if (luau_load(M, chunkname.c_str(), bc_arr, bc_len, 0) == LUA_OK) {
-        status = lua_resume(M, L, 0);
-        const int top = lua_gettop(M);
-        switch (status) {
-            case LUA_OK:
-                if (top != 1) {
-                    lua_pushstring(M, "module must return 1 value.");
-                    status = -1;
-                }
-            break;
-            case LUA_YIELD:
-                lua_pushstring(M, "module can not yield.");
-            break;
-        }
-    }
-    lua_xmove(M, L, 1);
-    if (status != LUA_OK) {
-        luaL_errorL(L, lua_tostring(L, -1));
-    }
-    lua_pushvalue(L, -1);
-    loaded_module_scripts.emplace(file_path, lua_ref(L, -1));
-    return 1;
-}
 auto dluau::resolve_require_path(const fs::path& base, string name, span<const string> file_exts) -> expected<string, string> {
     if (not config_file_initialized) {
         config_file_initialized = true;

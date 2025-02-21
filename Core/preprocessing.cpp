@@ -10,7 +10,7 @@ using std::string, std::size_t;
 using std::regex, std::smatch, std::sregex_iterator;
 using std::function, std::vector;
 using std::span, std::pair;
-using std::expected;
+using std::expected, std::unexpected;
 using String_replace = function<expected<string, string>(const string& str)>;
 namespace vws = std::views;
 namespace fs = std::filesystem;
@@ -43,11 +43,8 @@ static auto replace_meta_specifiers(string source, const regex& expression, cons
     }
     for (const smatch& match : vws::reverse(entries)) {
         auto r = fn(match.str(1));
-        if (r) {
-            src.replace(match.position(), match.length(), *r);
-        } else {
-            return std::unexpected(r.error());
-        }
+        if (!r) return unexpected(r.error());
+        src.replace(match.position(), match.length(), *r);
     }
     return src;
 }
@@ -62,14 +59,17 @@ static auto replace_nameof_specifiers(const string& source) -> decltype(auto) {
     };
     return replace_meta_specifiers(source, expression, to_string);
 }
-static auto precompile(string &source, span<const pair<regex, string>> static_values) -> bool {
-    source = replace_nameof_specifiers(source).value_or(source);
+static auto precompile(string &source, span<const pair<regex, string>> static_values) -> expected<void, string> {
+    auto r = replace_nameof_specifiers(source);
+    if (r) source = r.value();
+    else return unexpected(r.error());
     for (const auto& v : static_values) {
         auto to_value = [&val = v.second](const string& e) {return val;};
         auto r = replace_meta_specifiers(source, v.first, to_value);
         if (r) source = r.value();
+        else return unexpected(r.error());
     }
-    return true;
+    return expected<void, string>{};
 }
 auto dluau::preprocess_script(const fs::path& path) -> expected<Preprocessed_script, string> {
     auto source = common::read_file(path);
@@ -85,11 +85,18 @@ auto dluau::preprocess_script(const fs::path& path) -> expected<Preprocessed_scr
         src = match.suffix();
     }
     const fs::path dir = path.parent_path();
-    data.depends_on_scripts = expand_require_specifiers(*source, dir);
+    auto script_dependencies = expand_require_specifiers(*source, dir);
+    if (!script_dependencies) return unexpected(script_dependencies.error());
+    data.depends_on_scripts = std::move(script_dependencies.value());
     data.normalized_path = common::normalize_path(path);
-    data.depends_on_dls = expand_require_specifiers(*source, dir, "dlload");
-    data.depends_on_dls.append_range(expand_require_specifiers(*source, dir, "dlrequire"));
-    precompile(*source, get_precompiled_script_library_values(data.normalized_path));
+    auto dlload_dependencies = expand_require_specifiers(*source, dir, "dlload");
+    if (!dlload_dependencies) return unexpected(dlload_dependencies.error());
+    data.depends_on_dls = std::move(dlload_dependencies.value());
+    auto dlrequire_dependencies = expand_require_specifiers(*source, dir, "dlrequire");
+    if (!dlrequire_dependencies) return unexpected(dlrequire_dependencies.error());
+    data.depends_on_dls.append_range(std::move(dlrequire_dependencies.value()));
+    auto precompiled = precompile(*source, get_precompiled_script_library_values(data.normalized_path));
+    if (!precompiled) return unexpected(precompiled.error());
 
     string identifier{fs::relative(path).string()};
     std::ranges::replace(identifier, '\\', '/');
@@ -98,11 +105,12 @@ auto dluau::preprocess_script(const fs::path& path) -> expected<Preprocessed_scr
     data.source = std::move(*source);
     return data;
 }
-auto dluau::expand_require_specifiers(string& source, const fs::path& base, string_view fname) -> std::vector<std::string> {
+auto dluau::expand_require_specifiers(string& source, const fs::path& base, string_view fname) -> expected<vector<string>, string> {
     regex pattern(std::format(R"({}\s*[\(\s]*["'\[\[]([^"'\]\)]+)["'\]\]]\s*\)?)", fname));
     std::vector<std::string> expanded_sources;
     auto expanded = [&](const string& str) -> expected<string, string> {
         auto r = dluau::resolve_require_path(base, str);
+        if (!r) return unexpected(r.error());
         if (r) {
             auto resolved = r.value();
             expanded_sources.emplace_back(resolved);
@@ -112,7 +120,8 @@ auto dluau::expand_require_specifiers(string& source, const fs::path& base, stri
         return std::unexpected(r.error());
     };
     auto r = replace_meta_specifiers(source, pattern, expanded);
-    if (r) source = r.value(); 
+    if (!r) return unexpected(r.error());
+    source = r.value(); 
     return expanded_sources;
 }
 

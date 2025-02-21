@@ -70,11 +70,7 @@ auto search_path(const fs::path& dlpath) -> std::optional<fs::path>;
 void open_task_library(lua_State* L);
 auto load_as_module_script(lua_State* L, const string& file_path, const Preprocessed_module_scripts& modules) -> expected<void, string>;
 auto get_preprocessed_modules() -> const std::unordered_map<std::string, Preprocessed_script>&;
-auto expand_require_specifiers(
-    string& source,
-    const fs::path& path,
-    string_view fname = "require"
-) -> std::vector<std::string>;
+auto expand_require_specifiers(string& source, const fs::path& path, string_view fname = "require") -> std::expected<std::vector<std::string>, std::string>;
 auto preprocess_script(const fs::path& path) -> expected<Preprocessed_script, string>;
 auto require(lua_State* L, std::string_view name) -> int;
 auto get_aliases() -> const flat_map<string, string>&;

@@ -2,7 +2,9 @@
 #include <print>
 #include <dluau.h>
 
+#ifdef NDEBUG
 #define DLUAUSTD_CINTEROP_BUILD_TESTS
+#endif
 
 
 DLUAUSTD_API auto dlrequire(lua_State *L) -> int {

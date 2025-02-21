@@ -102,7 +102,6 @@ static auto setup_state(const luaL_Reg* global_fns) -> std::unique_ptr<lua_State
 }
 
 static auto preprocess_dependencies(lua_State* L, string_view scripts) -> expected<void, string> {
-    constexpr const char* errfmt = "\033[31m{}\033[0m";
     std::set<std::string> std_dependencies;
     std::set<std::string> dl_dependencies;
     std::unordered_set<std::string> processed_scripts;
@@ -112,11 +111,15 @@ static auto preprocess_dependencies(lua_State* L, string_view scripts) -> expect
         for (const auto& dl_dep : script.depends_on_dls) dl_dependencies.emplace(dl_dep);
         module_script_queue.push_range(script.depends_on_scripts);
     };
+    auto preproc_error = [](auto& r) {
+        constexpr const char* errfmt = "\033[31mPreprocessing error: {}\033[0m";
+        return std::unexpected(std::format(errfmt, r.error()));
+    };
 
     for (auto sr : vws::split(scripts, dluau::arg_separator)) {
         string_view script{sr.data(), sr.size()};
         auto r = dluau::preprocess_script(script);
-        if (not r) return std::unexpected(r.error());
+        if (not r) return preproc_error(r);
         auto& file = *r;
         register_script_dependencies(file);
         main_scripts.push_back(std::move(file));
@@ -129,7 +132,7 @@ static auto preprocess_dependencies(lua_State* L, string_view scripts) -> expect
         }
         processed_scripts.insert(current_script);
         auto r = dluau::preprocess_script(current_script);
-        if (!r) return std::unexpected(r.error());
+        if (!r) return preproc_error(r);
         auto& file = *r;
         register_script_dependencies(file);
 
@@ -145,7 +148,7 @@ static auto preprocess_dependencies(lua_State* L, string_view scripts) -> expect
             auto r = dluau::init_require_module(
                 L, bin_dir / std::format(dll_fmt, dependency)
             );
-            if (!r) return std::unexpected(r.error());
+            if (!r) return preproc_error(r);
             lua_setfield(L, -2, dependency.c_str());
         }
         lua_setglobal(L, "std");
@@ -153,7 +156,7 @@ static auto preprocess_dependencies(lua_State* L, string_view scripts) -> expect
     if (not dl_dependencies.empty()) {
         for (const auto& dependency : dl_dependencies) {
             auto r = dluau::init_dlmodule(L, dependency);
-            if (!r) return std::unexpected(r.error());
+            if (!r) return preproc_error(r);
         }
     }
     return expected<void, string>{};
@@ -171,7 +174,8 @@ auto dluau_run(const dluau_RunOptions* opts) -> int {
         std::println(std::cerr, errfmt, "no sources given");
         return -1;
     }
-    if (auto r = preprocess_dependencies(L, opts->scripts); !r) {
+    auto r = preprocess_dependencies(L, opts->scripts);
+    if (!r) {
         std::println(std::cerr, errfmt, r.error());
         return -1;
     }

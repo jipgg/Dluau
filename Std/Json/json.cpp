@@ -52,6 +52,7 @@ static auto push_value(lua_State* L,  const Json_value& val) -> int {
             }
         } return 1;
     }
+    return 0;
 }
 
 static auto parse(lua_State* L) -> int {
@@ -62,9 +63,6 @@ static auto parse(lua_State* L) -> int {
     } catch (json::exception& e) {
         dluau::arg_error(L, 1, e.what());
     }
-}
-
-static auto to_json(lua_State* L) -> int {
 }
 
 DLUAUSTD_API auto dlrequire(lua_State* L) -> int {

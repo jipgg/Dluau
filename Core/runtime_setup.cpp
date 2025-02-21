@@ -65,14 +65,14 @@ static auto setup_state(const luaL_Reg* global_fns) -> std::unique_ptr<lua_State
         return 1;
     };
     auto dlload = [](lua_State* L) -> int {
-        auto module = dluau::dlload(L);
+        auto module = dluau::get_dlmodule(luaL_checkstring(L, 1));
         if (not module) dluau::error(L, module.error());
         dluau::push_dlmodule(L, &module->get());
         return 1;
     };
     auto dlrequire = [](lua_State* L) -> int {
         const std::string name = luaL_checkstring(L, 1);
-        auto result = dluau::dlload(L);
+        auto result = dluau::get_dlmodule(name);
         if (!result) dluau::error(L, result.error());
         dluau_Dlmodule& module = *result;
         constexpr const char* function_signature = "dlrequire";

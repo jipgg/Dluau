@@ -3,7 +3,7 @@ Any API, feature and/or functionality is volatile and open to change at any time
 The project lacks proper documentation, varying degrees of comprehensibility in error messages
 and does not ensure stability of implemented features.
 # Dluau
-A minimal 'runtime' that extends the [Luau](https://github.com/luau-lang/luau) language with a more flexible feature-set for loading and running external Luau C API DLLs.
+A minimal runtime that extends the [Luau](https://github.com/luau-lang/luau) language with a more flexible feature-set for loading and running external Luau C API DLLs.
 The goal of this project is to stay minimal, mostly serving as just an extended luau environment,
 meaning that this project does not come with a standard library with general purpose tools.
 However, i am working on a [General Purpose Library](https://github.com/jipgg/dluau.gpm) that serves as a substitute for the lack of standard library, focused on modularity, only loading the dynamic libraries that you are actually using.

@@ -62,8 +62,7 @@ inline string_view args;
 auto get_dlmodules() -> const Dlmodule_map&;
 auto find_module(const std::string& name) -> dluau_Dlmodule*;
 auto init_dlmodule(lua_State* L, const fs::path& path) -> Expect_dlmodule;
-auto dlload(lua_State* L, const std::string& require_path) -> Expect_dlmodule;
-auto dlload(lua_State* L) -> Expect_dlmodule;
+auto get_dlmodule(const fs::path& require_path) -> Expect_dlmodule;
 auto find_dlmodule_proc_address(dluau_Dlmodule& module, const std::string& symbol) -> std::optional<uintptr_t>;
 auto to_dlmodule(lua_State* L, int idx) -> dluau_Dlmodule*;
 auto push_dlmodule(lua_State* L, dluau_Dlmodule* module) -> dluau_Dlmodule*;
@@ -79,7 +78,6 @@ auto expand_require_specifiers(
 auto preprocess_script(const fs::path& path) -> expected<Preprocessed_script, string>;
 auto require(lua_State* L, std::string_view name) -> int;
 auto get_aliases() -> const flat_map<string, string>&;
-auto resolve_require_path(lua_State* L, string name, span<const string> file_exts = def_file_exts) -> expected<string, string>;
 auto resolve_require_path(const fs::path& base, string name, span<const string> file_exts = def_file_exts) -> expected<string, string>;
 auto load_file(lua_State* L, string_view path) -> expected<lua_State*, string>;
 auto load_file(lua_State* L, const Preprocessed_script& pf) -> expected<lua_State*, string>;

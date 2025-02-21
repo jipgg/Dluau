@@ -19,25 +19,27 @@ auto dluau_todlmodule(lua_State* L, int idx) -> dluau_Dlmodule* {
 void dluau_pushdlmodule(lua_State* L, dluau_Dlmodule* dlm) {
     dluau::push_dlmodule(L, dlm);
 }
-auto dluau_dlmodulefind(dluau_Dlmodule* dlm, const char* symbol) -> uintptr_t {
+auto dluau_dlfindprocaddress(dluau_Dlmodule* dlm, const char* symbol) -> uintptr_t {
     return dluau::find_dlmodule_proc_address(*dlm, symbol).value_or(0);
 }
-auto dluau_loaddlmodule(lua_State* L, const char* require_path) -> dluau_Dlmodule* {
-    auto res = dluau::dlload(L, require_path);
+auto dluau_getdlmodule(const char* require_path) -> dluau_Dlmodule* {
+    auto res = dluau::get_dlmodule(common::normalize_path(require_path));
     if (!res) return nullptr;
     return &(res->get());
 }
 const Dlmodule_map& dluau::get_dlmodules() {
     return loaded_dlmodules;
 }
-auto dluau::dlload(lua_State* L, const std::string& require_path) -> Expect_dlmodule {
+auto dluau::get_dlmodule(const fs::path& require_path) -> Expect_dlmodule {
     if (not loaded_dlmodules.contains(require_path)) {
-        return std::unexpected(std::format("Dynamic dl loading is not allowed. '{}' did not exist.", require_path));
+        return std::unexpected(
+            std::format(
+                "dynamic dl loading is not allowed. '{}' did not exist.",
+                require_path.string()
+            )
+        );
     }
     return *loaded_dlmodules.at(require_path);
-}
-auto dluau::dlload(lua_State* L) -> Expect_dlmodule {
-    return dlload(L, luaL_checkstring(L, 1));
 }
 auto dluau::search_path(const fs::path& dlpath) -> std::optional<fs::path> {
     char buffer[MAX_PATH];

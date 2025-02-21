@@ -171,7 +171,7 @@ auto cinterop::new_function_binding(lua_State* L) -> int {
         if (not res) luaL_argerrorL(L, 2, "not a c type");
         binding.types.push_back(std::move(*res));
     }
-    auto proc = dluau_dlmodulefind(module, luaL_checkstring(L, 3));
+    auto proc = dluau_dlfindprocaddress(module, luaL_checkstring(L, 3));
     if (proc == 0) luaL_argerrorL(L, 3, "couldn't find address");
     binding.function_pointer = proc;
     if (top > 3) {

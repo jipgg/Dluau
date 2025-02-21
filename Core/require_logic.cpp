@@ -104,7 +104,8 @@ auto dluau::resolve_require_path(const fs::path& base, string name, span<const s
     const fs::path path_name{name};
     const bool maybe_preprocessed = path_name.is_absolute() and fs::is_regular_file(path_name) and path_name.extension() == ".luau";
     if (maybe_preprocessed) {
-        return path_name.string();
+        //normalize just to be sure
+        return common::normalize_path(path_name).string();
     }
     path script_path{base};
     if (name[0] == '@') {

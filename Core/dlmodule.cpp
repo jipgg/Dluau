@@ -20,7 +20,7 @@ static auto index(lua_State* L) -> int {
 }
 
 static auto import_function(lua_State* L) -> int {
-    const string proc_key = string("dlexport_") + luaL_checkstring(L, 2);
+    const string proc_key = luaL_checkstring(L, 2);
     auto opt = dluau::find_dlmodule_proc_address(*dluau::to_dlmodule(L, 1), proc_key);
     if (not opt) luaL_errorL(L, "lua_CFunction '%s' was not found ", proc_key.c_str());
     const auto fmt = std::format("dlimported:{}", proc_key);

@@ -82,4 +82,7 @@ DLUAUSTD_API auto test_function(long arg) -> int {
     std::println("This is a test function {}", arg);
     return 123;
 }
+DLUAUSTD_API auto dlinit(lua_State* L) -> void {
+    std::println("CINTEROP WAS INITIALIZED");
+}
 #endif

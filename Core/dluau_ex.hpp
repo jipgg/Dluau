@@ -42,6 +42,10 @@ using std::span, std::array;
 using std::expected, std::unexpected;
 using std::format_string, std::format;
 namespace fs = std::filesystem;
+using Dlmodule = dluau_Dlmodule;
+using Dlmodule_ref = std::reference_wrapper<dluau_Dlmodule>;
+using Dlmodule_map = boost::container::flat_map<fs::path, std::unique_ptr<dluau_Dlmodule>>;
+using Expect_dlmodule = std::expected<Dlmodule_ref, std::string>;
 struct Preprocessed_script {
     fs::path normalized_path;
     string identifier;
@@ -50,12 +54,22 @@ struct Preprocessed_script {
     std::vector<std::string> depends_on_scripts;
     std::vector<std::string> depends_on_dls;
 };
+using Preprocessed_module_scripts = std::unordered_map<std::string, dluau::Preprocessed_script>;
 extern lua_CompileOptions* compile_options;
 static const array def_file_exts = {".luau"s, ".lua"s};
 constexpr char arg_separator{','};
 inline string_view args;
+auto get_dlmodules() -> const Dlmodule_map&;
+auto find_module(const std::string& name) -> dluau_Dlmodule*;
+auto init_dlmodule(const fs::path& path) -> Expect_dlmodule;
+auto dlload(lua_State* L, const std::string& require_path) -> Expect_dlmodule;
+auto dlload(lua_State* L) -> Expect_dlmodule;
+auto find_dlmodule_proc_address(dluau_Dlmodule& module, const std::string& symbol) -> std::optional<uintptr_t>;
+auto to_dlmodule(lua_State* L, int idx) -> dluau_Dlmodule*;
+auto push_dlmodule(lua_State* L, dluau_Dlmodule* module) -> dluau_Dlmodule*;
+auto search_path(const fs::path& dlpath) -> std::optional<fs::path>;
 void open_task_library(lua_State* L);
-void open_dlimport_library(lua_State* L);
+auto load_as_module_script(lua_State* L, const string& file_path, const Preprocessed_module_scripts& modules) -> expected<void, string>;
 auto get_preprocessed_modules() -> const std::unordered_map<std::string, Preprocessed_script>&;
 auto expand_require_specifiers(
     string& source,
@@ -64,11 +78,9 @@ auto expand_require_specifiers(
 ) -> std::vector<std::string>;
 auto preprocess_script(const fs::path& path) -> expected<Preprocessed_script, string>;
 auto require(lua_State* L, std::string_view name) -> int;
-auto get_script_paths() -> flat_map<lua_State*, string>&;
 auto get_aliases() -> const flat_map<string, string>&;
 auto resolve_require_path(lua_State* L, string name, span<const string> file_exts = def_file_exts) -> expected<string, string>;
 auto resolve_require_path(const fs::path& base, string name, span<const string> file_exts = def_file_exts) -> expected<string, string>;
-auto resolve_path(string name, const fs::path& base, span<const string> = def_file_exts) -> expected<string, string>;
 auto load_file(lua_State* L, string_view path) -> expected<lua_State*, string>;
 auto load_file(lua_State* L, const Preprocessed_script& pf) -> expected<lua_State*, string>;
 auto run_file(lua_State* L, const Preprocessed_script& pf) -> expected<void, string>;
@@ -77,9 +89,8 @@ auto tasks_in_progress() -> bool;
 auto task_step(lua_State* L) -> expected<void, string>;
 auto has_permissions(lua_State* L) -> bool;
 auto default_useratom(const char* key, size_t len) -> int16_t;
-auto precompile(string& source, span<const std::pair<std::regex, string>> sv) -> bool;
 
-inline auto get_precompiled_library_values(const fs::path& p) -> decltype(auto) {
+inline auto get_precompiled_script_library_values(const fs::path& p) -> decltype(auto) {
     auto as_string_literal = [](const fs::path& path) {
         auto str = path.string();
         std::ranges::replace(str, '\\', '/');
@@ -92,20 +103,6 @@ inline auto get_precompiled_library_values(const fs::path& p) -> decltype(auto) 
     });
     return arr;
 }
-namespace fs = std::filesystem;
-using Dlmodule = dluau_Dlmodule;
-using Dlmodule_ref = std::reference_wrapper<dluau_Dlmodule>;
-using Dlmodule_map = boost::container::flat_map<fs::path, std::unique_ptr<dluau_Dlmodule>>;
-auto get_dlmodules() -> const Dlmodule_map&;
-auto find_module(const std::string& name) -> dluau_Dlmodule*;
-using Expect_dlmodule = std::expected<Dlmodule_ref, std::string>;
-auto init_dlmodule(const fs::path& path) -> Expect_dlmodule;
-auto dlload(lua_State* L, const std::string& require_path) -> Expect_dlmodule;
-auto dlload(lua_State* L) -> Expect_dlmodule;
-auto find_dlmodule_proc_address(dluau_Dlmodule& module, const std::string& symbol) -> std::optional<uintptr_t>;
-auto to_dlmodule(lua_State* L, int idx) -> dluau_Dlmodule*;
-auto push_dlmodule(lua_State* L, dluau_Dlmodule* module) -> dluau_Dlmodule*;
-auto search_path(const fs::path& dlpath) -> std::optional<fs::path>;
 inline auto init_require_module(lua_State* L, fs::path path) -> std::expected<void, std::string> {
     path = common::normalize_path(path);
     auto r = init_dlmodule(path);

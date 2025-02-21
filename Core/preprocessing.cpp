@@ -62,6 +62,15 @@ static auto replace_nameof_specifiers(const string& source) -> decltype(auto) {
     };
     return replace_meta_specifiers(source, expression, to_string);
 }
+static auto precompile(string &source, span<const pair<regex, string>> static_values) -> bool {
+    source = replace_nameof_specifiers(source).value_or(source);
+    for (const auto& v : static_values) {
+        auto to_value = [&val = v.second](const string& e) {return val;};
+        auto r = replace_meta_specifiers(source, v.first, to_value);
+        if (r) source = r.value();
+    }
+    return true;
+}
 auto dluau::preprocess_script(const fs::path& path) -> expected<Preprocessed_script, string> {
     auto source = common::read_file(path);
     if (not source) {
@@ -80,7 +89,7 @@ auto dluau::preprocess_script(const fs::path& path) -> expected<Preprocessed_scr
     data.normalized_path = common::normalize_path(path);
     data.depends_on_dls = expand_require_specifiers(*source, dir, "dlload");
     data.depends_on_dls.append_range(expand_require_specifiers(*source, dir, "dlrequire"));
-    dluau::precompile(*source, get_precompiled_library_values(data.normalized_path));
+    precompile(*source, get_precompiled_script_library_values(data.normalized_path));
 
     string identifier{fs::relative(path).string()};
     std::ranges::replace(identifier, '\\', '/');
@@ -106,14 +115,5 @@ auto dluau::expand_require_specifiers(string& source, const fs::path& base, stri
     auto r = replace_meta_specifiers(source, pattern, expanded);
     if (r) source = r.value(); 
     return expanded_sources;
-}
-auto dluau::precompile(string &source, span<const pair<regex, string>> static_values) -> bool {
-    source = replace_nameof_specifiers(source).value_or(source);
-    for (const auto& v : static_values) {
-        auto to_value = [&val = v.second](const string& e) {return val;};
-        auto r = replace_meta_specifiers(source, v.first, to_value);
-        if (r) source = r.value();
-    }
-    return true;
 }
 

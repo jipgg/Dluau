@@ -60,7 +60,8 @@ static auto setup_state(const luaL_Reg* global_fns) -> std::unique_ptr<lua_State
         dluau::error(L, errmsg);
     };
     auto require = [](lua_State* L) -> int {
-        dluau::require(L, luaL_checkstring(L, 1));
+        auto r = dluau::load_as_module_script(L, luaL_checkstring(L, 1), module_scripts);
+        if (!r) dluau::error(L, r.error());
         return 1;
     };
     auto dlload = [](lua_State* L) -> int {

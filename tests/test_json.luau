@@ -23,5 +23,3 @@ local function describe(tbl: any): string
 end
 local a = std.json.parse(some_json)
 print(describe(a))
-local b = std.json.parse(some_invalid_json)
-print(b)

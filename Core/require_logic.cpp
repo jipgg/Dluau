@@ -183,6 +183,11 @@ auto resolve_require_path(const fs::path& base, string name, span<const string> 
         config_file_initialized = true;
         if (auto loaded = load_aliases(); !loaded) return loaded.error();
     }
+    const fs::path path_name{name};
+    const bool maybe_preprocessed = path_name.is_absolute() and fs::is_regular_file(path_name) and path_name.extension() == ".luau";
+    if (maybe_preprocessed) {
+        return path_name.string();
+    }
     path script_path{base};
     if (name[0] == '@') {
         if (auto success = substitute_alias(name); !success) return success.error();

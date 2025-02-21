@@ -23,13 +23,13 @@ using namespace dluau;
 
 static lua_CompileOptions copts{.debugLevel = 1};
 lua_CompileOptions* dluau::compile_options{&copts};
-static std::vector<Preprocessed_file> files;
-static std::unordered_map<std::string, Preprocessed_file> modules;
+static std::vector<Preprocessed_file> main_scripts;
+static std::unordered_map<std::string, Preprocessed_file> module_scripts;
 auto dluau::get_preprocessed_modules() -> const std::unordered_map<std::string, Preprocessed_file>& {
-    return modules;
+    return module_scripts;
 }
 
-static auto setup_state() -> std::unique_ptr<lua_State, decltype(&lua_close)> {
+static auto setup_state(const luaL_Reg* global_fns) -> std::unique_ptr<lua_State, decltype(&lua_close)> {
     auto loadstring = [](lua_State* L) -> int {
         size_t l = 0;
         const char* s = luaL_checklstring(L, 1, &l);
@@ -68,7 +68,7 @@ static auto setup_state() -> std::unique_ptr<lua_State, decltype(&lua_close)> {
         dluau_lazyrequire(L, luaL_checkstring(L, 1));
         return 1;
     };
-    constexpr luaL_Reg global_functions[] = {
+    constexpr luaL_Reg default_global_fns[] = {
         {"loadstring", loadstring},
         {"collectgarbage", collectgarbage},
         {"require", require},
@@ -79,64 +79,44 @@ static auto setup_state() -> std::unique_ptr<lua_State, decltype(&lua_close)> {
     lua_callbacks(L)->useratom = dluau::default_useratom;
     luaL_openlibs(L);
     lua_pushvalue(L, LUA_GLOBALSINDEX);
-    luaL_register(L, nullptr, global_functions);
+    luaL_register(L, nullptr, default_global_fns);
+    if (global_fns) luaL_register(L, nullptr, global_fns);
     lua_pop(L, 1);
     dluau::open_dlimport_library(L);
     dluau::open_task_library(L);
     return {L, lua_close}; 
 }
 
-auto dluau_run(const dluau_RunOptions* opts) -> int {
-    dluau::compile_options->debugLevel = 3;
-    dluau::compile_options->optimizationLevel = opts->optimization_level;
-    if (opts->args) dluau::args = opts->args;
-    auto state = setup_state();
-    lua_State* L = state.get();
-
-    if (opts->global_functions) {
-        lua_pushvalue(L, LUA_GLOBALSINDEX);
-        luaL_register(L, nullptr, opts->global_functions);
-        lua_pop(L, 1);
-    }
+static auto preprocess_dependencies(lua_State* L, string_view scripts) -> expected<void, string> {
     constexpr const char* errfmt = "\033[31m{}\033[0m";
-    if (opts->scripts == nullptr) {
-        std::println(std::cerr, errfmt, "no sources given");
-        return -1;
-    }
     std::set<std::string> std_dependencies;
     std::unordered_set<std::string> processed_scripts;
-    std::queue<std::string> script_queue;
+    std::queue<std::string> module_script_queue;
 
-    for (auto sr : vws::split(string_view(opts->scripts), dluau::arg_separator)) {
+    for (auto sr : vws::split(scripts, dluau::arg_separator)) {
         string_view script{sr.data(), sr.size()};
         auto r = dluau::preprocess_source(script);
-        if (not r) {
-            std::println(std::cerr, errfmt, r.error());
-            return -1;
-        }
+        if (not r) return std::unexpected(r.error());
         auto& file = *r;
         for (const auto& v : file.depends_on_std) std_dependencies.emplace(v);
-        script_queue.push_range(file.depends_on_scripts);
-        files.push_back(std::move(file));
+        module_script_queue.push_range(file.depends_on_scripts);
+        main_scripts.push_back(std::move(file));
     }
-    while (!script_queue.empty()) {
-        std::string current_script = script_queue.front();
-        script_queue.pop();
+    while (!module_script_queue.empty()) {
+        std::string current_script = module_script_queue.front();
+        module_script_queue.pop();
         if (processed_scripts.contains(common::normalize_path(current_script).string())) {
             continue;
         }
         processed_scripts.insert(current_script);
         auto r = dluau::preprocess_source(current_script);
-        if (!r) {
-            std::println(std::cerr, errfmt, r.error());
-            return -1;
-        }
+        if (!r) return std::unexpected(r.error());
         auto& file = *r;
         for (const auto& std_dep : file.depends_on_std) std_dependencies.emplace(std_dep);
-        script_queue.push_range(file.depends_on_scripts);
+        module_script_queue.push_range(file.depends_on_scripts);
 
-        if (not modules.contains(file.normalized_path.string())) {
-            modules.emplace(file.normalized_path.string(), std::move(file));
+        if (not module_scripts.contains(file.normalized_path.string())) {
+            module_scripts.emplace(file.normalized_path.string(), std::move(file));
         }
     }
     if (not std_dependencies.empty()) {
@@ -147,16 +127,32 @@ auto dluau_run(const dluau_RunOptions* opts) -> int {
             auto r = dlimport::init_require_module(
                 L, bin_dir / std::format(dll_fmt, dependency)
             );
-            if (!r) {
-                std::println(std::cerr, errfmt, r.error());
-                return -1;
-            }
+            if (!r) return std::unexpected(r.error());
             lua_setfield(L, -2, dependency.c_str());
         }
         lua_setglobal(L, "std");
     }
+    return expected<void, string>{};
+}
+
+auto dluau_run(const dluau_RunOptions* opts) -> int {
+    dluau::compile_options->debugLevel = 3;
+    dluau::compile_options->optimizationLevel = opts->optimization_level;
+    if (opts->args) dluau::args = opts->args;
+    auto state = setup_state(opts->global_functions);
+    lua_State* L = state.get();
+
+    constexpr const char* errfmt = "\033[31m{}\033[0m";
+    if (opts->scripts == nullptr) {
+        std::println(std::cerr, errfmt, "no sources given");
+        return -1;
+    }
+    if (auto r = preprocess_dependencies(L, opts->scripts); !r) {
+        std::println(std::cerr, errfmt, r.error());
+        return -1;
+    }
     luaL_sandbox(L);
-    for (const auto& pf : files) {
+    for (const auto& pf : main_scripts) {
         if (auto result = dluau::run_file(L, pf); !result) {
             std::println(std::cerr, errfmt, result.error());
             return -1;

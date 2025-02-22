@@ -3,7 +3,7 @@ An informal, work-in-progress [Luau](https://luau.org/) runtime with a minimal c
 of providing a synchronized environment for loading external luau C API dynamic libraries and statically resolving dependencies.
 
 In its current stage, the project does lack proper debugging information and error messages in certain aspects as well as
-a very volatile standard library API. Suggestions for the standard library features would be HIGHLY appreciated.
+a very volatile standard library API. Suggestions for the standard library features and design decisions would be HIGHLY appreciated.
 ## Resolves Dependencies Statically
 The runtime does some mild regex-based preprocessing at startup for `dlload`, `dlrequire`, `require` and `nameof`, which allows it
 to resolve dependencies (scripts, DLLs and Standard library dependencies) statically,
@@ -29,6 +29,9 @@ The core exports all the symbols of the Luau API as well as extra utility API fo
 * registering stringatoms for the `__namecall` userdata metamethod dynamically (the runtime registers a namecallatom in lua_callbacks for returning consistent atoms between dlls)
 
 I will probably set up a basic example/template for creating dlmodules soon.
+Main things to know is that at startup, when a `dlinit` symbol is exported by your DLL is invokes that function as a `void(*)(lua_State*)`. 
+If you specify a `dlrequire` function in your DLL this one gets automatically invoked and its data returned when you call `dlrequire` in luau.
+The type of this dlrequire in C is the same as `lua_CFunction`.
 
 ## Modular Standard Library
 The standard library is subdivided in a multitude of DLLs.
@@ -62,6 +65,7 @@ dluau some_source_file.luau some_source_dir/ -O1 -D2
 
 ## Installation
 Download the [latest]() binaries or build from source.
+While not necessary, it is recommended to the the binary directory to you PATH.
 ### Build from source.
 It does have a multitude of cmake package dependencies,
 which need to be resolved on your machine.

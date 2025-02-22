@@ -1,5 +1,5 @@
 # Dluau
-A work-in-progress Luau runtime with a minimal core, focused on ease of extensibility and minimalism in the form
+An informal, work-in-progress [Luau](https://luau.org/) runtime with a minimal core, focused on ease of extensibility and minimalism in the form
 of providing a synchronized environment for loading external luau C API dynamic libraries and statically resolving dependencies.
 
 In its current stage, the project does lack proper debugging information and error messages in certain aspects as well as
@@ -73,3 +73,5 @@ cmake --build --preset core
 cmake --build --preset cli
 cmake --build --preset std
 ```
+## Contact
+For any questions or suggestions you can contact me on Discord at `jipg`.

@@ -64,7 +64,7 @@ dluau some_source_file.luau some_source_dir/ -O1 -D2
 `source/` `source.luau` source specification -> can be done multiple times.
 
 ## Installation
-Download the [latest]() binaries or build from source.
+Download the latest [binaries](https://github.com/jipgg/Dluau/releases) or build from source.
 While not necessary, it is recommended to the the binary directory to you PATH.
 ### Build from source.
 It does have a multitude of cmake package dependencies,

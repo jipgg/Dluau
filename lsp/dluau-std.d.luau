@@ -219,6 +219,8 @@ export type std_os_windows = {
     get_module_handle: (name: string?) -> opaque?,
     load_library: (lib_name: string) -> opaque?,
     free_library: (a: opaque) -> boolean,
+    get_async_key_state: (vkey: number) -> number,
+    get_key_state: (vkey: number) -> number,
     MB_ABORTRETRYIGNORE: number,
     MB_CANCELTRYCONTINUE: number,
     MB_HELP: number,
@@ -262,6 +264,7 @@ export type std_os = {
     execute: (command: string) -> number,
     exit: (code: number) -> never,
     platform: 'windows'|'linux'|'macOS'|'freeBSD',
+    sleep: (milliseconds: number) -> (),
     windows: std_os_windows,
 }
 export type std_io = {
@@ -278,20 +281,7 @@ export type json_object = {[string]: json_value}
 export type std_json = {
     parse: (json_source: string) -> {json_value},
 }
-declare class window
-    function destroy(self): ()
-    function set_borderless(self, border: boolean?): ()
-    function set_always_on_top(self, always_on_top: boolean?): ()
-    size: vector
-    position: vector
-    title: string
-    opacity: number
-end
-type std_gui = {
-    window: (title: string, size: vector, position: vector?) -> window
-}
 type std = {
-    gui: std_gui,
     json: std_json,
     io: std_io,
     os: std_os,

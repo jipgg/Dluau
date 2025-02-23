@@ -19,10 +19,6 @@ add_subdirectory(extern/dyncall-1.4)
 set(DynLoad_DIR ${DynCall_SOURCE_DIR}/dynload)
 set(DynCall_DIR ${DynCall_SOURCE_DIR}/dyncall)
 set(DynCallback_DIR ${DynCall_SOURCE_DIR}/dyncallback)
-find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
-find_package(SDL2_ttf REQUIRED)
-find_package(SDL2_image REQUIRED)
-find_package(SDL2_mixer REQUIRED)
 
 # Add subdirectories
 add_subdirectory(Core)

@@ -46,8 +46,7 @@
                 "Dluau.Std.Cinterop",
                 "Dluau.Std.OS",
                 "Dluau.Std.IO",
-                "Dluau.Std.Json",
-                "Dluau.Std.GUI"
+                "Dluau.Std.Json"
             ]
         }
   ]

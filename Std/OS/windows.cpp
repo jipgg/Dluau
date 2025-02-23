@@ -35,6 +35,14 @@ static auto load_library(lua_State* L) -> int {
     dluau_pushopaque(L, hm);
     return 1;
 }
+static auto get_async_key_state(lua_State* L) -> int {
+    lua_pushinteger(L, GetAsyncKeyState(luaL_checkinteger(L, 1)));
+    return 1;
+}
+static auto get_key_state(lua_State* L) -> int {
+    lua_pushinteger(L, GetKeyState(luaL_checkinteger(L, 1)));
+    return 1;
+}
 static auto free_library(lua_State* L) -> int {
     const auto b = FreeLibrary(dluau::check_opaque<HINSTANCE__>(L, 1));
     lua_pushboolean(L, b);
@@ -63,6 +71,8 @@ void register_windows_lib(lua_State* L) {
         {"get_module_handle", get_module_handle},
         {"load_library", load_library},
         {"free_library", free_library},
+        {"get_async_key_state", get_async_key_state},
+        {"get_key_state", get_key_state},
         {nullptr, nullptr}
     };
     lua_newtable(L);

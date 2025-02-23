@@ -2,6 +2,12 @@
 #include <cstdio>
 #include <cstring>
 #include "os.hpp"
+#include <span>
+#include <print>
+#include <thread>
+#include <boost/container/flat_map.hpp>
+using std::span;
+using boost::container::flat_map;
 
 static auto execute(lua_State* L) -> int {
     lua_pushinteger(L, std::system(luaL_checkstring(L, 1)));
@@ -48,6 +54,12 @@ consteval auto os_name() -> const char* {
     #endif
 }
 
+
+static auto sleep(lua_State* L) -> int {
+    std::this_thread::sleep_for(std::chrono::milliseconds(luaL_checkinteger(L, 1)));
+    return 0;
+}
+
 DLUAUSTD_API auto dlrequire(lua_State* L) -> int {
     const luaL_Reg extendedlib[] = {
         {"execute", execute},
@@ -55,6 +67,7 @@ DLUAUSTD_API auto dlrequire(lua_State* L) -> int {
         {"getenv", getenv},
         {"remove", remove},
         {"rename", rename},
+        {"sleep", sleep},
         {nullptr, nullptr}
     };
     lua_newtable(L);

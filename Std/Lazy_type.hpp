@@ -15,10 +15,16 @@ concept Like_type_info = requires {
 };
 template <class Ty>
 struct Default_type_info {
-    static consteval const char* type_namespace() {return "gpm";};
+    static consteval const char* type_namespace() {return "std";};
     static const char* type_name() {return typeid(Ty).name();}
 };
-template<class Ty, Like_type_info Type_info = Default_type_info<Ty>>
+template <class Ty>
+constexpr void lazy_destructor(void* data) {static_cast<Ty*>(data)->~Ty();}
+template<
+    class Ty,
+    Like_type_info Type_info = Default_type_info<Ty>,
+    void(*Dtor)(void*) = lazy_destructor<Ty>
+>
 class Lazy_type {
 public:
     static constexpr const char* type_info_metamethod_key{"__cpp_std_type_info"};
@@ -71,7 +77,7 @@ public:
         return *p;
     }
     static Ty& create(lua_State* L, Ty&& v) {
-        Ty* p = static_cast<Ty*>(lua_newuserdatadtor(L, sizeof(Ty), [](void* ud) {static_cast<Ty*>(ud)->~Ty();}));
+        Ty* p = static_cast<Ty*>(lua_newuserdatadtor(L, sizeof(Ty), Dtor));
         push_metatable(L);
         lua_setmetatable(L, -2);
         new (p) Ty{std::move(v)};
@@ -79,7 +85,7 @@ public:
     }
     template <Makeable_from<Ty> ...Params>
     static Ty& make(lua_State* L, Params&&...args) {
-        Ty* p = static_cast<Ty*>(lua_newuserdatadtor(L, sizeof(Ty), [](void* ud) {static_cast<Ty*>(ud)->~Ty();}));
+        Ty* p = static_cast<Ty*>(lua_newuserdatadtor(L, sizeof(Ty), Dtor));
         new (p) Ty{std::forward<Params>(args)...};
         push_metatable(L);
         lua_setmetatable(L, -2);

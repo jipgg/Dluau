@@ -37,7 +37,9 @@ set_target_properties(Dluau.Std.Cinterop PROPERTIES OUTPUT_NAME dluau-std_cinter
 # Std.OS
 file(GLOB Dluau.Std.OS.SOURCES ${Dluau.Std.SOURCE_DIR}/OS/*.cpp)
 add_library(Dluau.Std.OS SHARED ${Dluau.Std.OS.SOURCES})
-target_link_libraries(Dluau.Std.OS PRIVATE Dluau.Std)
+target_link_libraries(Dluau.Std.OS PRIVATE
+    Dluau.Std
+)
 set_target_properties(Dluau.Std.OS PROPERTIES OUTPUT_NAME dluau-std_os)
 
 # Std.IO
@@ -55,13 +57,3 @@ target_link_libraries(Dluau.Std.Json PRIVATE
 )
 set_target_properties(Dluau.Std.Json PROPERTIES OUTPUT_NAME dluau-std_json)
 
-file (GLOB Dluau.Std.GUI.SOURCES ${Dluau.Std.SOURCE_DIR}/GUI/*.cpp)
-add_library(Dluau.Std.GUI SHARED ${Dluau.Std.GUI.SOURCES})
-target_link_libraries(Dluau.Std.GUI PRIVATE
-    Dluau.Std
-    SDL2::SDL2
-    SDL2_ttf::SDL2_ttf
-    SDL2_image::SDL2_image
-    SDL2_mixer::SDL2_mixer
-)
-set_target_properties(Dluau.Std.GUI PROPERTIES OUTPUT_NAME dluau-std_gui)

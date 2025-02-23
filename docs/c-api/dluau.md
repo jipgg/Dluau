@@ -46,29 +46,43 @@ struct dluau_Dlmodule;
 Opaque pointer to a dlmodule object.
 
 # Functions
-## dluau_newuserdatatag `(): int`
+## dluau_newuserdatatag
+```c
+DLUAU_API int dluau_newuserdatatag();
+```
 
-## dluau_newlightuserdatatag `(): int`
+## dluau_newlightuserdatatag
+```c
+DLUAU_API int dluau_newlightuserdatatag();
+```
 
-## dluau_gettagfromtype `(const char*): int`
+## dluau_gettagfromtype
+```c
+DLUAU_API int dluau_gettagfromtype(const char* tname);
+```
 
-## dluau_istyperegistered `(const char*): bool`
+## dluau_istyperegistered
 
-## dluau_registertype `(const char*): void`
+## dluau_registertype
 
-## dluau_findstringatom `(int): const char*`
+## dluau_registertypetagged
+```c
+DLUAU_API int dluau_registertypetagged(const char* tname);
+```
 
-## dluau_stringatom `(lua_State*, const char*): int`
+## dluau_findstringatom
 
-## dluau_lstringatom `(lua_State*, const char*, size_t): int`
+## dluau_stringatom
 
-## dluau_run `(const dluau_RunOptions*): int`
+## dluau_lstringatom
 
-## dluau_addctask `(dluau_CTask): void`
+## dluau_run
 
-## dluau_tasksinprogress `(): bool`
+## dluau_addctask
 
-## dluau_taskstep `(lua_State*): bool`
+## dluau_tasksinprogress
 
-## dluau_pushopaque `(lua_State*, dluau_Opaque): void`
+## dluau_taskstep
+
+## dluau_pushopaque
 

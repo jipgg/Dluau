@@ -61,7 +61,7 @@ declare class directory
 end
 export type pathlike = directory | symlink | file
 
-type std_fs = {
+export type std_fs = {
     canonical: (path: string) -> string,
     weakly_canonical: (path: string) -> string,
     proximate: (path: string, base: string?) -> string,
@@ -124,8 +124,6 @@ declare class time_point
     function __add(self, other: time_span): time_point
 end
 declare class nano_time_point
-    time_zone: string
-    zone_abbreviation: string
     hour: number
     minute: number
     second: number
@@ -169,7 +167,7 @@ declare class child
     native_exit_code: number
     running: boolean
 end
-type std_process = {
+export type std_process = {
     search_path: (exename: string) -> string?,
     system: ((command: string) -> number) & ((exe: string, ...string) -> number),
     spawn: ((command: string) -> ()) & ((exe: string, ...string) -> ()),
@@ -200,8 +198,8 @@ export type field_info = {
     memory_offset: number,
     array_size: number?,
 }
-type field_info_map = {[string]: field_info}
-type std_cinterop = {
+export type field_info_map = {[string]: field_info}
+export type std_cinterop = {
     struct_info: (
         memory_size: number,
         fields: field_info_map,
@@ -214,7 +212,7 @@ type std_cinterop = {
         ...field_info_type | struct_info
     ) -> ((Args...)->Return)),
 }
-type std_os_windows = {
+export type std_os_windows = {
     message_box: (message: string, title: string?, utype: number?) -> number,
     get_last_error: () -> number,
     format_message: (error_code: number) -> string,
@@ -260,13 +258,13 @@ type std_os_windows = {
     IDTRYAGAIN: number,
     IDYES: number,
 }
-type std_os = {
+export type std_os = {
     execute: (command: string) -> number,
     exit: (code: number) -> never,
     platform: 'windows'|'linux'|'macOS'|'freeBSD',
     windows: std_os_windows,
 }
-type std_io = {
+export type std_io = {
     escape_code: (escape_sequence: string) -> string, 
     scan: () -> string,
     read: (to_buffer: buffer) -> (),
@@ -277,10 +275,23 @@ type std_io = {
 export type json_value = string | json_array | json_object | buffer | number | nil | boolean
 export type json_array = {json_value}
 export type json_object = {[string]: json_value}
-type std_json = {
+export type std_json = {
     parse: (json_source: string) -> {json_value},
 }
+declare class window
+    function destroy(self): ()
+    function set_borderless(self, border: boolean?): ()
+    function set_always_on_top(self, always_on_top: boolean?): ()
+    size: vector
+    position: vector
+    title: string
+    opacity: number
+end
+type std_gui = {
+    window: (title: string, size: vector, position: vector?) -> window
+}
 type std = {
+    gui: std_gui,
     json: std_json,
     io: std_io,
     os: std_os,

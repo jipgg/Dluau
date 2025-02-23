@@ -55,3 +55,13 @@ target_link_libraries(Dluau.Std.Json PRIVATE
 )
 set_target_properties(Dluau.Std.Json PROPERTIES OUTPUT_NAME dluau-std_json)
 
+file (GLOB Dluau.Std.GUI.SOURCES ${Dluau.Std.SOURCE_DIR}/GUI/*.cpp)
+add_library(Dluau.Std.GUI SHARED ${Dluau.Std.GUI.SOURCES})
+target_link_libraries(Dluau.Std.GUI PRIVATE
+    Dluau.Std
+    SDL2::SDL2
+    SDL2_ttf::SDL2_ttf
+    SDL2_image::SDL2_image
+    SDL2_mixer::SDL2_mixer
+)
+set_target_properties(Dluau.Std.GUI PROPERTIES OUTPUT_NAME dluau-std_gui)

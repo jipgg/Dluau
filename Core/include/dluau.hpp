@@ -1,5 +1,6 @@
 #pragma once
 #include "dluau.h"
+#include <span>
 #include <string>
 #include <format>
 #include <filesystem>
@@ -17,6 +18,15 @@ template<class Ty>
 constexpr auto check_opaque(lua_State* L, int idx) -> Ty* {
     return static_cast<Ty*>(dluau_checkopaque(L, idx));
 }
+inline auto check_vector(lua_State* L, int idx) -> std::span<const float> {
+    return std::span<const float>{luaL_checkvector(L, idx), LUA_VECTOR_SIZE};
+}
+inline auto to_vector(lua_State* L, int idx) -> std::span<const float> {
+    return std::span<const float>{lua_tovector(L, idx), LUA_VECTOR_SIZE};
+}
+inline void push(lua_State* L, std::span<const float> vector) {
+    lua_pushvector(L, vector[0], vector[1], vector[2]);
+} 
 template <class ...Tys>
 [[noreturn]] constexpr void error(lua_State* L, const std::format_string<Tys...>& fmt, Tys&&...args) {
     luaL_errorL(L, std::format(fmt, std::forward<Tys>(args)...).c_str());

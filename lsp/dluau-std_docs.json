@@ -42,7 +42,7 @@
     "@roblox/globaltype/file.append": {
         "documentation": "Writes the specified string at the end of the file."
     },
-    "@roblox/globaltype/file.append": {
+    "@roblox/globaltype/file.overwrite": {
         "documentation": "Overwrites file's contents with the specified string."
     },
     "@roblox/globaltype/file.path": {
@@ -59,5 +59,200 @@
     },
     "@roblox/globaltype/file.parent": {
         "documentation": "The parent directory."
+    },
+    "@roblox/globaltype/directory.empty": {
+        "documentation": "Returns `true` if the directory is empty."
+    },
+    "@roblox/globaltype/directory.contains": {
+        "documentation": "Checks if a specified subpath exists in the directory."
+    },
+    "@roblox/globaltype/directory.each_child": {
+        "documentation": "Iterates over all the direct subpaths of the directory, use this in a `for` loop."
+    },
+    "@roblox/globaltype/directory.each_descendant": {
+        "documentation": "Iterates over all the subpaths in a directory recursively."
+    },
+    "@roblox/globaltype/directory.open_file": {
+        "documentation": "Opens an existing file relative to the directory base path."
+    },
+    "@roblox/globaltype/directory.make_file": {
+        "documentation": "Creates a new file relative to the directory base path."
+    },
+    "@roblox/globaltype/directory.open_directory": {
+        "documentation": "Opens an existing directory relative to the directory base path."
+    },
+    "@roblox/globaltype/directory.make_directory": {
+        "documentation": "Creates a new directory relative to the directory base path."
+    },
+    "@roblox/globaltype/directory.path": {
+        "documentation": "The real path of the directory."
+    },
+    "@roblox/globaltype/directory.name": {
+        "documentation": "Name of the directory."
+    },
+    "@roblox/globaltype/directory.parent": {
+        "documentation": "The parent directory."
+    },
+    "@roblox/globaltype/pathlike": {
+        "documentation": "Union type of path-like types."
+    },
+    "@roblox/global/std": {
+        "documentation": "Dluau standard library"
+    },
+    "@roblox/global/std.fs": {
+        "documentation": "Filesystem library"
+    },
+    "@roblox/global/std.time": {
+        "documentation": "Time library"
+    },
+    "@roblox/global/std.cinterop": {
+        "documentation": "C Interop library"
+    },
+    "@roblox/global/std.io": {
+        "documentation": "IO library"
+    },
+    "@roblox/global/std.os": {
+        "documentation": "OS library"
+    },
+    "@roblox/globaltype/std_fs.canonical": {
+        "documentation": "Returns the canonical path of a specified real path."
+    },
+    "@roblox/globaltype/std_fs.weakly_canonical": {
+        "documentation": "Returns the canonical path of a specified imaginary path."
+    },
+    "@roblox/globaltype/std_fs.proximate": {
+        "documentation": "Proximates the relative based on a base path. base defaults to the current working directory."
+    },
+    "@roblox/globaltype/std_fs.relative": {
+        "documentation": "Returns the relative path of a specified path based on a specified base path. base defaults to the current working directory."
+    },
+    "@roblox/globaltype/std_fs.absolute": {
+        "documentation": "Makes the specified path absolute."
+    },
+    "@roblox/globaltype/std_fs.each_child": {
+        "documentation": "Iterator function that iterates over each direct subpath of a directory."
+    },
+    "@roblox/globaltype/std_fs.each_descendant": {
+        "documentation": "Iterator function that iterates over each subpath in a directory recursively."
+    },
+    "@roblox/globaltype/std_fs.remove": {
+        "documentation": "Removes the `pathlike` object from the filesystem"
+    },
+    "@roblox/globaltype/std_fs.remove_all": {
+        "documentation": "Removes the a directory recursively."
+    },
+    "@roblox/globaltype/std_fs.open_directory": {
+        "documentation": "Opens an existing directory."
+    },
+    "@roblox/globaltype/std_fs.open_file": {
+        "documentation": "Opens an existing file."
+    },
+    "@roblox/globaltype/std_fs.make_directory": {
+        "documentation": "Creates a new directory."
+    },
+    "@roblox/globaltype/std_fs.make_file": {
+        "documentation": "Creates a new file."
+    },
+    "@roblox/globaltype/std_fs.make_symlink": {
+        "documentation": "Creates a new symlink file."
+    },
+    "@roblox/globaltype/std_fs.current_directory": {
+        "documentation": "Returns the current working directory."
+    },
+    "@roblox/globaltype/std_fs.temp_directory": {
+        "documentation": "Returns the temp directory. On Windows this is typically `%LOCALAPPDATA%/temp`."
+    },
+    "@roblox/globaltype/std_fs.find_environment_variable": {
+        "documentation": "Searches for an environment variable in the system."
+    },
+    "@roblox/globaltype/std_fs.exists": {
+        "documentation": "Checks if a path actually exists in the filesystem."
+    },
+    "@roblox/globaltype/std_fs.copy": {
+        "documentation": "Copy a file, directory or symlink"
+    },
+    "@roblox/globaltype/time_span_format_args": {
+        "documentation": "Union type of the `time_span` format specifiers."
+    },
+    "@roblox/globaltype/time_span": {
+        "documentation": "Represents a span of time."
+    },
+    "@roblox/globaltype/time_span.format": {
+        "documentation": "Formats the time_span based on a specified format."
+    },
+    "@roblox/globaltype/time_span.total_nanoseconds": {
+        "documentation": "The span of time represented in nanoseconds."
+    },
+    "@roblox/globaltype/time_span.total_microseconds": {
+        "documentation": "The span of time represented in microseconds."
+    },
+    "@roblox/globaltype/time_span.total_milliseconds": {
+        "documentation": "The span of time represented in milliseconds."
+    },
+    "@roblox/globaltype/time_span.total_minutes": {
+        "documentation": "The span of time represented in minutes."
+    },
+    "@roblox/globaltype/time_span.total_hours": {
+        "documentation": "The span of time represented in hours."
+    },
+    "@roblox/globaltype/time_point": {
+        "documentation": "Represents a point in time."
+    },
+    "@roblox/globaltype/time_point.change_zone": {
+        "documentation": "Returns a time_point based on the original with the time zone modified. time_zone takes in [IANA](https://www.iana.org/time-zones) time zone names"
+    },
+    "@roblox/globaltype/time_point.time_zone": {
+        "documentation": "The time zone of the time point. Uses the IANA time zone name."
+    },
+    "@roblox/globaltype/time_point.zone_abbreviation": {
+        "documentation": "The abbreviated version of the time zone."
+    },
+    "@roblox/globaltype/time_point.year": {
+        "documentation": "Year of the point in time."
+    },
+    "@roblox/globaltype/time_point.month": {
+        "documentation": "Month of the point in time."
+    },
+    "@roblox/globaltype/time_point.day": {
+        "documentation": "Day of the point in time."
+    },
+    "@roblox/globaltype/time_point.hour": {
+        "documentation": "Hour of the point in time."
+    },
+    "@roblox/globaltype/time_point.minute": {
+        "documentation": "Minute of the point in time."
+    },
+    "@roblox/globaltype/time_point.second": {
+        "documentation": "Second of the point in time."
+    },
+    "@roblox/globaltype/time_point.millisecond": {
+        "documentation": "Millisecond of the point in time."
+    },
+    "@roblox/globaltype/nano_time_point": {
+        "documentation": "Represents a time point with high precision."
+    },
+    "@roblox/globaltype/nano_time_point.hour": {
+        "documentation": "Hour of the point in time."
+    }, 
+    "@roblox/globaltype/nano_time_point.minute": {
+        "documentation": "Minute of the point in time."
+    }, 
+    "@roblox/globaltype/nano_time_point.second": {
+        "documentation": "Second of the point in time."
+    }, 
+    "@roblox/globaltype/nano_time_point.millisecond": {
+        "documentation": "Millisecond of the point in time."
+    }, 
+    "@roblox/globaltype/nano_time_point.microsecond": {
+        "documentation": "Microsecond of the point in time."
+    }, 
+    "@roblox/globaltype/nano_time_point.nanosecond": {
+        "documentation": "Nanosecond of the point in time."
+    }, 
+    "@roblox/globaltype/std_time.current_zone": {
+        "documentation": "IANA name of the time zone of the system."
+    },
+    "@roblox/globaltype/std_time.now": {
+        "documentation": "Returns the current local time. Optional string argument to target a specific time zone."
     }
 }

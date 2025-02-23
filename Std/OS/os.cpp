@@ -68,13 +68,17 @@ DLUAUSTD_API auto dlrequire(lua_State* L) -> int {
         {"remove", remove},
         {"rename", rename},
         {"sleep", sleep},
+        {"keydown", os::keydown},
+        {"messagebox", os::messagebox},
         {nullptr, nullptr}
     };
     lua_newtable(L);
     luaL_register(L, nullptr, extendedlib);
     lua_pushstring(L, os_name());
     lua_setfield(L, -2, "platform");
-    register_windows_lib(L);
+    lua_newtable(L);
+    os::register_windows_api(L);
+    lua_setfield(L, -2, "api");
     lua_setreadonly(L, -1, true);
     return 1;
 }

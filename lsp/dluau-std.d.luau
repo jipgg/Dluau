@@ -212,7 +212,7 @@ export type std_cinterop = {
         ...field_info_type | struct_info
     ) -> ((Args...)->Return)),
 }
-export type std_os_windows = {
+export type std_os_api_windows = {
     message_box: (message: string, title: string?, utype: number?) -> number,
     get_last_error: () -> number,
     format_message: (error_code: number) -> string,
@@ -221,51 +221,25 @@ export type std_os_windows = {
     free_library: (a: opaque) -> boolean,
     get_async_key_state: (vkey: number) -> number,
     get_key_state: (vkey: number) -> number,
-    MB_ABORTRETRYIGNORE: number,
-    MB_CANCELTRYCONTINUE: number,
-    MB_HELP: number,
-    MB_OK: number,
-    MB_OKCANCEL: number,
-    MB_RETRYCANCEL: number,
-    MB_YESNO: number,
-    MB_YESNOCANCEL: number,
-    MB_ICONEXCLAMATION: number,
-    MB_ICONWARNING: number,
-    MB_ICONINFORMATION: number,
-    MB_ICONASTERISK: number,
-    MB_ICONQUESTION: number,
-    MB_ICONSTOP: number,
-    MB_ICONERROR: number,
-    MB_ICONHAND: number,
-    MB_DEFBUTTON1: number,
-    MB_DEFBUTTON2: number,
-    MB_DEFBUTTON3: number,
-    MB_DEFBUTTON4: number,
-    MB_APPLMODAL: number,
-    MB_SYSTEMMODAL: number,
-    MB_TASKMODAL: number,
-    MB_DEFAULT_DESKTOP_ONLY: number,
-    MB_RIGHT: number,
-    MB_RTLREADING: number,
-    MB_SETFOREGROUND: number,
-    MB_TOPMOST: number,
-    MB_SERVICE_NOTIFICATION: number,
-    IDABORT: number,
-    IDCANCEL: number,
-    IDCONTINUE: number,
-    IDIGNORE: number,
-    IDNO: number,
-    IDOK: number,
-    IDRETRY: number,
-    IDTRYAGAIN: number,
-    IDYES: number,
 }
+export type virtual_key_args = 'mouse1'|'mouse2'|'mouse3'|'mouse4'|'mouse5'|'backspace'|'tab'|'clear'|'enter'|'shift'|'ctrl'|'alt'|'pause'|'caps lock'|'esc'|'space'|'page down'|'page up'|'end'|'home'|'left'|'right'|'up'|'down'|'select'|'print'|'execute'|'print screen'|'ins'|'del'|'help'|'0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9'|'a'|'b'|'c'|'d'|'e'|'f'|'g'|'h'|'i'|'j'|'k'|'l'|'m'|'n'|'o'|'p'|'u'|'v'|'w'|'x'|'y'|'z'|'lsuper'|'rsuper'|'num0'|'num1'|'num2'|'num3'|'num4'|'num5'|'num6'|'num7'|'num8'|'num9'|'f1'|'f2'|'f3'|'f4'|'f5'|'f6'|'f7'|'f8'|'f9'|'f10'|'f11'|'f12'|'lshift'|'rshift'|'lctrl'|'rctrl'|'lalt'|'ralt'
 export type std_os = {
     execute: (command: string) -> number,
     exit: (code: number) -> never,
     platform: 'windows'|'linux'|'macOS'|'freeBSD',
     sleep: (milliseconds: number) -> (),
-    windows: std_os_windows,
+    keydown: ((key: string) -> boolean)
+        & ((key: virtual_key_args) -> boolean),
+    messagebox: ((message: string, title: string?) -> 'ok')
+        & ((message: string, title: string?, 'ok cancel') -> 'ok' | 'cancel')
+        & ((message: string, title: string?, 'yes no') -> 'yes' | 'no')
+        & ((message: string, title: string?, 'abort retry ignore') -> 'abort' | 'retry' | 'ignore')
+        & ((message: string, title: string?, 'retry cancel') -> 'retry'|'cancel')
+        & ((message: string, title: string?, 'cancel try continue') -> 'cancel'|'try'|'continue')
+        & ((message: string, title: string?, 'yes no cancel') -> 'yes'|'no'|'cancel'),
+    api: {
+        windows: std_os_api_windows,
+    }
 }
 export type std_io = {
     escape_code: (escape_sequence: string) -> string, 

@@ -5,5 +5,8 @@
 #include "Windows.h"
 #endif
 
-void register_windows_lib(lua_State* L);
-
+namespace os {
+void register_windows_api(lua_State* L);
+auto keydown(lua_State* L) -> int;
+auto messagebox(lua_State* L) -> int;
+}

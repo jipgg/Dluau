@@ -64,6 +64,12 @@ static auto parse(lua_State* L) -> int {
         dluau::arg_error(L, 1, e.what());
     }
 }
+static auto serialize_table(lua_State* L) -> int {
+    lua_pushnil(L);
+    while(lua_next(L, 1)) {
+
+    }
+}
 
 DLUAUSTD_API auto dlrequire(lua_State* L) -> int {
     const luaL_Reg lib[] = {

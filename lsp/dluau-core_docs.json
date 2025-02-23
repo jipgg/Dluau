@@ -1,0 +1,53 @@
+{
+    "@roblox/global/nameof": {
+        "documentation": "Preprocessed function that returns the variable name."
+    },
+    "@roblox/globaltype/opaque": {
+        "documentation": "A tagged light userdata type that represents an opaque object like a void*."
+    },
+    "@roblox/global/task": {
+        "documentation": "Library based on the Roblox Task Library"
+    },
+    "@roblox/global/task.wait": {
+        "documentation": "Halts the current script thread for the specified amount of seconds."
+    },
+    "@roblox/global/task.spawn": {
+        "documentation": "Spawns a function or thread. executing the code in a non-blocking manner."
+    },
+    "@roblox/global/task.defer": {
+        "documentation": "Defers the task to be run the next resumption cycle. The order of execution for multiple deferred tasks is FIFO, the most recent deferred task gets resumed first."
+    },
+    "@roblox/global/task.delay": {
+        "documentation": "Delays a task for the specified amount of seconds."
+    },
+    "@roblox/global/task.cancel": {
+        "documentation": "Cancels a task, removing the task from the task scheduler prematurely."
+    },
+    "@roblox/global/task.wait_for": {
+        "documentation": "Same as `task.wait` but waits until the specified thread has finished."
+    },
+    "@roblox/global/task.do_after": {
+        "documentation": "Same as `task.delay` but delays the task until the specified thread has finished."
+    },
+    "@roblox/global/task.this": {
+        "documentation": "The currently running task. Identical to calling `coroutine.running()`"
+    },
+    "@roblox/globaltype/dlmodule": {
+        "documentation": "Represents a loaded dynamic library (DLL)."
+    },
+    "@roblox/globaltype/dlmodule.path": {
+        "documentation": "The filesystem path to the dlmodule."
+    },
+    "@roblox/globaltype/dlmodule.name": {
+        "documentation": "Name of the dlmodule."
+    },
+    "@roblox/globaltype/dlmodule.import_fn": {
+        "documentation": "Imports a `lua_CFunction` of the dlmodule"
+    },
+    "@roblox/global/dlload": {
+        "documentation": "Returns the dlmodule handle based on the specified name. Actual DLL loading is resolved statically and recurring dlload calls do not load a dlmodule multiple times."
+    },
+    "@roblox/global/dlrequire": {
+        "documentation": "Almost identical to `dlload`, but also calls the exported `dlrequire` function from a dlmodule and returns its data/library."
+    }
+}

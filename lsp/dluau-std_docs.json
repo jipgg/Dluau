@@ -1,0 +1,63 @@
+{
+    "@roblox/globaltype/reader": {
+        "documentation": "Represents a generic reader interface. Internally this is a `std::unique_ptr<std::istream>`."
+    },
+    "@roblox/globaltype/reader.get_line": {
+        "documentation": "Reads and returns the next line in the stream."
+    },
+    "@roblox/globaltype/reader.each_line": {
+        "documentation": "Iterator that iterates over each line, use this in a `for` loop"
+    },
+    "@roblox/globaltype/reader.read": {
+        "documentation": "Reads the characters in the stream and writes the inside the specified buffer until the end of the stream or the buffer max size. Returns the amount of characters read as the same buffer that was passed to the function for convenience."
+    },
+
+    "@roblox/globaltype/symlink": {
+        "documentation": "Represents a real filesystem path to a symlink."
+    },
+    "@roblox/globaltype/symlink.link": {
+        "documentation": "The path the symlink points to."
+    },
+    "@roblox/globaltype/symlink.path": {
+        "documentation": "The real path of the symlink file."
+    },
+    "@roblox/globaltype/symlink.porent": {
+        "documentation": "The parent directory of the symlink file."
+    },
+    "@roblox/globaltype/symlink.name": {
+        "documentation": "The symlink file name."
+    },
+    "@roblox/globaltype/file.writer": {
+        "documentation": "Opens the file in a `writer` object to overwrite the file data. This locks the file resource for the lifetime of the `writer` object. To unlock explicitly use `writer:free()`."
+    },
+    "@roblox/globaltype/file.append_writer": {
+        "documentation": "Same as `file:writer()`, but opens the writer in append mode."
+    },
+    "@roblox/globaltype/file.reader": {
+        "documentation": "Opens the file in a `reader` object." 
+    },
+    "@roblox/globaltype/file.read_contents": {
+        "documentation": "Reads the whole file and returns the data as a string."
+    },
+    "@roblox/globaltype/file.append": {
+        "documentation": "Writes the specified string at the end of the file."
+    },
+    "@roblox/globaltype/file.append": {
+        "documentation": "Overwrites file's contents with the specified string."
+    },
+    "@roblox/globaltype/file.path": {
+        "documentation": "The real path of the file."
+    },
+    "@roblox/globaltype/file.name": {
+        "documentation": "The file name. E.g. 'file.luau'."
+    },
+    "@roblox/globaltype/file.extension": {
+        "documentation": "The file extension. E.g. '.luau'."
+    },
+    "@roblox/globaltype/file.stem": {
+        "documentation": "The file stem. E.g. `file`."
+    },
+    "@roblox/globaltype/file.parent": {
+        "documentation": "The parent directory."
+    }
+}

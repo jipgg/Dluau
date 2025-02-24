@@ -23,8 +23,15 @@ set_target_properties(Dluau.Std.Fs PROPERTIES OUTPUT_NAME dluau-std_fs)
 # Std.Process
 file(GLOB Dluau.Std.Process.SOURCES ${Dluau.Std.SOURCE_DIR}/Process/*.cpp)
 add_library(Dluau.Std.Process SHARED ${Dluau.Std.Process.SOURCES})
-target_compile_definitions(Dluau.Std.Process PRIVATE _WIN32_WINNT=0x0601)
-target_link_libraries(Dluau.Std.Process PRIVATE Dluau.Std Boost::process Boost::filesystem)
+target_compile_definitions(Dluau.Std.Process PRIVATE
+    _WIN32_WINNT=0x0601
+)
+target_link_options(Dluau.Std.Process PRIVATE /NODEFAULTLIB:LIBCMTD)
+target_link_libraries(Dluau.Std.Process PRIVATE
+    Dluau.Std
+    Boost::filesystem
+    Boost::process
+)
 set_target_properties(Dluau.Std.Process PROPERTIES OUTPUT_NAME dluau-std_process)
 
 # Std.Cinterop

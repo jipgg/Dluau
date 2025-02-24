@@ -30,7 +30,7 @@ auto host_main(const Args& args) -> int {
     try {
         auto src = get_if_param(args, "--sources=");
         auto ar = get_if_param(args, "--args=");
-        dluau_RunOptions opts{};
+        dluau_InitOptions opts{};
         opts.scripts = src ? src->c_str() : nullptr;
         opts.args = ar ? ar->c_str() : nullptr;
         opts.optimization_level = contains(args, "-O2") ? 2 : contains(args, "-O1") ? 1 : 0;

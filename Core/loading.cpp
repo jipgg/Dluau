@@ -30,7 +30,7 @@ auto dluau::load_file(lua_State* L, const Preprocessed_script& script) -> expect
         luaL_sandboxthread(script_thread);
         return script_thread;
     }
-    return unexpected(format("failed to load '{}': {}", script.normalized_path.string(), lua_tostring(script_thread, -1)));
+    return unexpected(format("failed to load '{}': {}; in source:\n{}", script.normalized_path.string(), lua_tostring(script_thread, -1), script.source));
 }
 auto dluau::run_file(lua_State* L, string_view script_path) -> expected<void, string> {
     auto r = ::dluau::load_file(L, script_path);

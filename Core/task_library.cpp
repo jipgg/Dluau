@@ -257,8 +257,7 @@ auto dluau::task_step(lua_State* L) -> expected<void, string> {
         }
     }
     for (dluau_CTask& task : c_based_tasks) {
-        const char* errmsg{nullptr};
-        dluau_CTaskStatus status = task(&errmsg);
+        dluau_CTaskStatus status = task();
         switch (status) {
             case DLUAU_CTASK_CONTINUE:
                 continue;
@@ -266,7 +265,7 @@ auto dluau::task_step(lua_State* L) -> expected<void, string> {
                 cleaning_buffer.emplace_back(reinterpret_cast<uintptr_t>(task), Task_type::ctask);
                 continue;
             case DLUAU_CTASK_ERROR:
-                return unexpected(errmsg ? errmsg : "external process failed");
+                return unexpected(dluau_getlasterror());
         }
     }
     for (const auto& v : cleaning_buffer) {
@@ -308,7 +307,7 @@ auto dluau_tasksinprogress() -> bool {
 auto dluau_taskstep(lua_State* L) -> bool {
     auto r = dluau::task_step(L);
     if (not r) {
-        lua_pushstring(L, r.error().c_str());
+        dluau_setlasterror(r.error().c_str());
         return false;
     }
     return true;

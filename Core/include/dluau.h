@@ -20,20 +20,23 @@ DLUAU_API void dluau_registertype(const char* tname);
 DLUAU_API const char* dluau_findstringatom(int atom);
 DLUAU_API int dluau_stringatom(lua_State* L, const char* key);
 DLUAU_API int dluau_lstringatom(lua_State* L, const char* key, size_t len);
-struct dluau_RunOptions {
+struct dluau_InitOptions {
     const char* scripts;
     const char* args;
     const luaL_Reg* global_functions;
     int debug_level;
     int optimization_level;
 };
-DLUAU_API int dluau_run(const dluau_RunOptions* opts);
+DLUAU_API lua_State* dluau_init(const dluau_InitOptions* opts);
+DLUAU_API const char* dluau_getlasterror();
+DLUAU_API void dluau_setlasterror(const char* error);
+DLUAU_API int dluau_run(const dluau_InitOptions* opts);
 enum dluau_CTaskStatus {
     DLUAU_CTASK_DONE,
     DLUAU_CTASK_CONTINUE,
     DLUAU_CTASK_ERROR,
 };
-typedef dluau_CTaskStatus(*dluau_CTask)(const char** errmsg);
+typedef dluau_CTaskStatus(*dluau_CTask)(void);
 DLUAU_API void dluau_addctask(dluau_CTask step_callback);
 DLUAU_API bool dluau_tasksinprogress();
 DLUAU_API bool dluau_taskstep(lua_State* L);

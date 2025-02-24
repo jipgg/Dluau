@@ -17,6 +17,7 @@ using nlohmann::json;
 namespace fs = std::filesystem;
 using std::string_view, std::string;
 namespace vws = std::views;
+static std::string last_error;
 namespace rngs = std::ranges;
 using namespace dluau;
 
@@ -96,8 +97,11 @@ static auto setup_state(const luaL_Reg* global_fns) -> std::unique_ptr<lua_State
     lua_pushvalue(L, LUA_GLOBALSINDEX);
     luaL_register(L, nullptr, default_global_fns);
     if (global_fns) luaL_register(L, nullptr, global_fns);
+    dluau::push(L, "dluau{}", DLUAUCORE_VERSION_MAJOR);
+    lua_setfield(L, -2, "_VERSION");
     lua_pop(L, 1);
     dluau::open_task_library(L);
+    dluau_Dlmodule::init(L);
     return {L, lua_close}; 
 }
 
@@ -162,7 +166,31 @@ static auto preprocess_dependencies(lua_State* L, string_view scripts) -> expect
     return expected<void, string>{};
 }
 
-auto dluau_run(const dluau_RunOptions* opts) -> int {
+auto dluau_getlasterror() -> const char* {
+    return last_error.c_str();
+}
+void dluau_setlasterror(const char* error) {
+    last_error = error;
+}
+auto dluau_init(const dluau_InitOptions* opts) -> lua_State* {
+    dluau::compile_options->debugLevel = 3;
+    dluau::compile_options->optimizationLevel = opts->optimization_level;
+    if (opts->args) dluau::args = opts->args;
+    auto state = setup_state(opts->global_functions);
+    auto L = state.get();
+    constexpr const char* errfmt = "\033[31m{}\033[0m";
+    if (opts->scripts == nullptr) {
+        last_error = "no sources given";
+        return nullptr;
+    }
+    auto r = preprocess_dependencies(L, opts->scripts);
+    if (!r) {
+        last_error = r.error();
+        return nullptr;
+    }
+    return state.release();
+}
+auto dluau_run(const dluau_InitOptions* opts) -> int {
     dluau::compile_options->debugLevel = 3;
     dluau::compile_options->optimizationLevel = opts->optimization_level;
     if (opts->args) dluau::args = opts->args;

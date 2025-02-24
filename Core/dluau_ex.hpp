@@ -1,6 +1,5 @@
 #pragma once
 #include <dluau.h>
-#include <regex>
 #include <expected>
 #include <optional>
 #include <chrono>

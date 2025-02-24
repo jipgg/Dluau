@@ -12,7 +12,7 @@ target_compile_definitions(Luau.Compiler PRIVATE ${Luau.Compiler.EXPORT})
 target_compile_definitions(Luau.CodeGen PRIVATE ${Luau.CodeGen.EXPORT})
 
 set(Dluau.Core.SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-file(GLOB_RECURSE Dluau.Core.SOURCES ${Dluau.Core.SOURCE_DIR}/*.cpp)
+file(GLOB Dluau.Core.SOURCES ${Dluau.Core.SOURCE_DIR}/*.cpp)
 
 add_library(Dluau.Core SHARED ${Dluau.Core.SOURCES})
 
@@ -43,6 +43,9 @@ target_link_libraries(Dluau.Core PUBLIC
     Luau.CodeGen
     Boost::container
     nlohmann_json::nlohmann_json
+)
+target_link_libraries(Dluau.Core PRIVATE
+    Boost::regex
 )
 # Set output name
 set(Dluau.Core.OUTPUT_NAME dluau-core)

@@ -43,20 +43,39 @@ static auto run_windows_host(span<char> zarg) -> int {
     GetExitCodeProcess(process_info.hProcess, &exit_code);
     return exit_code;
 }
+
 auto cli::run(const Configuration& config, const string* const args) -> int {
-    using namespace std::string_literals;
-    auto path = common::get_bin_path();
-    if (not path) {
-        std::println(std::cerr, "\033[31mFailed to get executable path.\033[0m");
-        return -2;
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD dwMode = 0;
+    if (GetConsoleMode(hOut, &dwMode)) {
+        dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+        SetConsoleMode(hOut, dwMode);
     }
-    string exe = (path->parent_path() / runtime_host_name).string();
-    string cmd = format("{} --sources={}", exe, config.sources);
-    if (args) cmd += format(" --args={}", *args);
-    cmd += format(" -O{}", config.optimization_level);
-    auto exit_code = run_windows_host(cmd);
+    const dluau_InitOptions opts {
+        .scripts = config.sources.c_str(),
+        .args = args->c_str(),
+        .debug_level = config.debug_level,
+        .optimization_level = config.optimization_level,
+    };
+    FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+    const int exit_code = dluau_run(&opts);
+    FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
     return exit_code;
 }
+/*auto cli::run(const Configuration& config, const string* const args) -> int {*/
+/*    using namespace std::string_literals;*/
+/*    auto path = common::get_bin_path();*/
+/*    if (not path) {*/
+/*        std::println(std::cerr, "\033[31mFailed to get executable path.\033[0m");*/
+/*        return -2;*/
+/*    }*/
+/*    string exe = (path->parent_path() / runtime_host_name).string();*/
+/*    string cmd = format("{} --sources={}", exe, config.sources);*/
+/*    if (args) cmd += format(" --args={}", *args);*/
+/*    cmd += format(" -O{}", config.optimization_level);*/
+/*    auto exit_code = run_windows_host(cmd);*/
+/*    return exit_code;*/
+/*}*/
 #else
 int cli::run(const configuration& config, const string* const args) {
     const dluau_RunOptions opts {

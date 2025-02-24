@@ -23,3 +23,5 @@ end
 
 declare function dlload(target: string): dlmodule
 declare function dlrequire(target: string): unknown
+declare function dlsearch(target: string): string
+declare function dlsearch(target: string): string

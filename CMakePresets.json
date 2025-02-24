@@ -8,7 +8,8 @@
             "binaryDir": "${sourceDir}/cmake",
             "cacheVariables": {
                 "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/bin",
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+                "VCPKG_TARGET_TRIPLET": "x64-windows-static"
             }
         },
         {
@@ -41,7 +42,6 @@
             "configurePreset": "default",
             "targets": [
                 "Dluau.Std.Time",
-                "Dluau.Std.Process",
                 "Dluau.Std.Fs",
                 "Dluau.Std.Cinterop",
                 "Dluau.Std.OS",

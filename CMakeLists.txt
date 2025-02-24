@@ -11,7 +11,12 @@ set(Dluau.Core.VERSION_MINOR 0)
 set(Dluau.Core.VERSION_PATCH 1)
 
 # Dependencies
-find_package(Boost REQUIRED COMPONENTS container process filesystem)
+find_package(Boost REQUIRED COMPONENTS
+    container
+    process
+    filesystem
+    regex
+)
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 add_subdirectory(extern/nlohmann_json)
 add_subdirectory(luau)

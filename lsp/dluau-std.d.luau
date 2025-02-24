@@ -246,8 +246,11 @@ export type std_io = {
     scan: () -> string,
     read: (to_buffer: buffer) -> (),
     write: ((from_buffer: buffer) -> ()),
-    print: <T>(output: T) -> (),
-    println: <T>(output: T) -> (),
+    print: (output: string) -> (),
+    println: (output: string) -> (),
+    err_print: (output: string) -> (),
+    err_println: (output: string) -> (),
+    err_write: ((from_buffer: buffer) -> ()),
 }
 export type json_value = string | json_array | json_object | buffer | number | nil | boolean
 export type json_array = {json_value}

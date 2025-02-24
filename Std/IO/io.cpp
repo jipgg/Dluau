@@ -22,17 +22,31 @@ static auto get_print_statement(lua_State* L, int offset = 0) -> string {
     return to_print;
 }
 static auto println(lua_State* L) -> int {
-    std::println("{}", dluau::tostring(L, 1));
+    std::println("{}", luaL_checkstring(L, 1));
     return 0;
 }
 static auto print(lua_State* L) -> int {
-    std::print("{}", dluau::tostring(L, 1));
+    std::print("{}", luaL_checkstring(L, 1));
     return 0;
 }
 static auto write(lua_State* L) -> int {
     size_t len;
     std::span buf{static_cast<char*>(luaL_checkbuffer(L, 1, &len)), len};
     std::cout.write(buf.data(), buf.size());
+    return 0;
+}
+static auto err_println(lua_State* L) -> int {
+    std::println(std::cerr, "{}", luaL_checkstring(L, 1));
+    return 0;
+}
+static auto err_print(lua_State* L) -> int {
+    std::print(std::cerr, "{}", luaL_checkstring(L, 1));
+    return 0;
+}
+static auto err_write(lua_State* L) -> int {
+    size_t len;
+    std::span buf{static_cast<char*>(luaL_checkbuffer(L, 1, &len)), len};
+    std::cerr.write(buf.data(), buf.size());
     return 0;
 }
 static auto scan(lua_State* L) -> int {
@@ -61,6 +75,9 @@ DLUAUSTD_API auto dlrequire(lua_State* L) -> int {
         {"println", println},
         {"write", write},
         {"print", print},
+        {"err_println", err_println},
+        {"err_write", err_write},
+        {"err_print", err_print},
         {"escape_code", escape_code},
         {"scan", scan},
         {"read", read},

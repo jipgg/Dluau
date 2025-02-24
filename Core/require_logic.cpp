@@ -5,12 +5,13 @@
 #include <nlohmann/json.hpp>
 #include <string>
 #include <optional>
+#include <boost/regex.hpp>
 namespace fs = std::filesystem;
 using nlohmann::json;
 using std::span;
 using dluau::def_file_exts;
 using boost::container::flat_map;
-using std::string, std::regex;
+using std::string;
 using std::expected, std::unexpected;
 using fs::path, std::string_view;
 using std::format, std::optional;
@@ -65,9 +66,9 @@ static auto load_aliases(const path& base = fs::current_path(), int search_depth
     return expected<void, string>();
 }
 static auto substitute_alias(string& str) -> expected<void, string> {
-    static const regex alias_regex{R"(\@[A-Za-z][A-Za-z0-9_-]*)"};
-    std::smatch sm;
-    if (not std::regex_search(str, sm, alias_regex)) {
+    static const boost::regex alias_regex{R"(\@[A-Za-z][A-Za-z0-9_-]*)"};
+    boost::smatch sm;
+    if (not boost::regex_search(str, sm, alias_regex)) {
         return unexpected(format("failed match allias regex {}", str));
     }
     const string alias = sm.str().substr(1);
